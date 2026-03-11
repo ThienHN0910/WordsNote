@@ -52,3 +52,17 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Node.js / Frontend
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+*.local
+
+# Vue / Vite
+.vite/
+
+# Chrome Extension build
+src/extension/dist/

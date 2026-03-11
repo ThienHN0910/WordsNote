@@ -28,11 +28,20 @@ public class CardRepository : ICardRepository
 
     public async Task<IEnumerable<Card>> GetDueCardsAsync(string userId, DateTime date)
     {
-        // Filter cards that are due and belong to decks owned by the given user.
-        // We query all due cards first, then cross-reference deck ownership.
-        // For large datasets, consider denormalising userId onto the Card document.
-        var filter = Builders<Card>.Filter.Lte(c => c.NextReviewDate, date);
-        return await _context.Cards.Find(filter).ToListAsync();
+        // Resolve deck IDs owned by this user, then return due cards within those decks.
+        var deckFilter = Builders<Deck>.Filter.Eq(d => d.UserId, userId);
+        var userDeckIds = await _context.Decks.Find(deckFilter)
+            .Project(d => d.Id)
+            .ToListAsync();
+
+        if (userDeckIds.Count == 0)
+            return Enumerable.Empty<Card>();
+
+        var cardFilter = Builders<Card>.Filter.And(
+            Builders<Card>.Filter.In(c => c.DeckId, userDeckIds),
+            Builders<Card>.Filter.Lte(c => c.NextReviewDate, date));
+
+        return await _context.Cards.Find(cardFilter).ToListAsync();
     }
 
     public async Task AddAsync(Card card)

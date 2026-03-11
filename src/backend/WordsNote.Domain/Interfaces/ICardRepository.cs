@@ -11,4 +11,5 @@ public interface ICardRepository
     Task UpdateAsync(Card card);
     Task DeleteAsync(Guid id);
     Task AddRangeAsync(IEnumerable<Card> cards);
+    Task UpdateRangeAsync(IEnumerable<Card> cards);
 }

@@ -19,13 +19,11 @@ public class ResetDeckProgressCommandHandler : IRequestHandler<ResetDeckProgress
         var deck = await _deckRepository.GetByIdAsync(request.DeckId);
         if (deck == null) return false;
 
-        var cards = await _cardRepository.GetByDeckIdAsync(request.DeckId);
+        var cards = (await _cardRepository.GetByDeckIdAsync(request.DeckId)).ToList();
         foreach (var card in cards)
-        {
             card.ResetProgress();
-            await _cardRepository.UpdateAsync(card);
-        }
 
+        await _cardRepository.UpdateRangeAsync(cards);
         return true;
     }
 }

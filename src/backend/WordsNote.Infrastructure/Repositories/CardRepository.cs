@@ -65,4 +65,16 @@ public class CardRepository : ICardRepository
     {
         await _context.Cards.InsertManyAsync(cards);
     }
+
+    public async Task UpdateRangeAsync(IEnumerable<Card> cards)
+    {
+        var writes = cards.Select(card =>
+        {
+            var filter = Builders<Card>.Filter.Eq(c => c.Id, card.Id);
+            return new ReplaceOneModel<Card>(filter, card);
+        }).ToList();
+
+        if (writes.Count > 0)
+            await _context.Cards.BulkWriteAsync(writes);
+    }
 }

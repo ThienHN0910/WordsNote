@@ -39,6 +39,8 @@ public static class InfrastructureServiceExtensions
         return services;
     }
 
+    private const string DeckCardsFieldName = "_cards";
+
     private static void ConfigureMongoDbSerialization()
     {
         BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
@@ -60,7 +62,7 @@ public static class InfrastructureServiceExtensions
                 cm.AutoMap();
                 cm.SetIgnoreExtraElements(true);
                 cm.MapIdMember(c => c.Id).SetSerializer(new GuidSerializer(GuidRepresentation.Standard));
-                cm.MapField("_cards").SetElementName("Cards");
+                cm.MapField(DeckCardsFieldName).SetElementName("Cards");
                 cm.UnmapMember(c => c.Cards);
             });
         }

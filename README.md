@@ -32,6 +32,12 @@ WordsNote/
 - **JWT Authentication**: Secure API access
 - **MongoDB Atlas**: Flexible document storage
 
+### Authentication (Supabase Google Auth)
+
+- Frontend login uses **Supabase Auth** with Google provider.
+- Backend validates Supabase JWT bearer tokens.
+- Legacy username/password login endpoint is deprecated.
+
 ### Running the Backend
 
 #### With Docker Compose
@@ -56,6 +62,50 @@ cd src/backend
 dotnet restore
 dotnet run --project WordsNote.API
 ```
+
+Note: the API runs locally on these ports by default (see `WordsNote.API/Properties/launchSettings.json`):
+- HTTP: http://localhost:5251
+- HTTPS: https://localhost:7137
+
+For Supabase auth, configure `src/backend/WordsNote.API/appsettings.Development.json`:
+
+```json
+"SupabaseAuth": {
+  "Enabled": true,
+  "Authority": "https://YOUR_PROJECT_REF.supabase.co/auth/v1",
+  "Audience": "authenticated"
+}
+```
+
+`Authority` must include `/auth/v1`.
+
+### Supabase Free Tier Setup (Google)
+
+1. Create project on free tier:
+   - Go to Supabase dashboard and create a new project on **Free Plan**.
+2. Get project URL and anon key:
+   - Dashboard -> Project Settings -> API
+   - Copy `Project URL` and `anon public` key.
+3. Enable Google provider:
+   - Authentication -> Providers -> Google -> Enable.
+   - In Google Cloud Console, create OAuth 2.0 Client ID (Web application).
+   - Add redirect URL from Supabase provider page into Google OAuth config.
+4. Add frontend env values in `src/frontend/.env`:
+
+```bash
+VITE_API_URL=http://localhost:5251
+VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+VITE_SUPABASE_REDIRECT_URL=http://localhost:5173/login
+```
+
+5. Add backend Supabase settings (`appsettings.Development.json`) and run API.
+
+If missing credentials (`client id`, `client secret`, project ref), see:
+- Supabase Dashboard -> Authentication -> Providers -> Google
+- Supabase Dashboard -> Settings -> API
+
+To run with Docker Compose (recommended for matching prod-like env):
 
 ### API Endpoints
 

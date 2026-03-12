@@ -1,10 +1,41 @@
-import api from './api'
+import { supabase } from './supabaseClient'
+
+const TOKEN_KEY = 'token'
 
 export default {
-  login: (username, password) => api.post('/api/auth/login', { username, password }),
-  logout: () => {
-    localStorage.removeItem('token')
+  async loginWithGoogle() {
+    const redirectTo = import.meta.env.VITE_SUPABASE_REDIRECT_URL || `${window.location.origin}/login`
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo },
+    })
+    if (error) {
+      throw error
+    }
   },
-  getToken: () => localStorage.getItem('token'),
-  isAuthenticated: () => !!localStorage.getItem('token'),
+
+  async syncSession() {
+    const { data, error } = await supabase.auth.getSession()
+    if (error) {
+      localStorage.removeItem(TOKEN_KEY)
+      return null
+    }
+
+    const accessToken = data.session?.access_token || null
+    if (accessToken) {
+      localStorage.setItem(TOKEN_KEY, accessToken)
+    } else {
+      localStorage.removeItem(TOKEN_KEY)
+    }
+
+    return accessToken
+  },
+
+  async logout() {
+    await supabase.auth.signOut()
+    localStorage.removeItem(TOKEN_KEY)
+  },
+
+  getToken: () => localStorage.getItem(TOKEN_KEY),
+  isAuthenticated: () => !!localStorage.getItem(TOKEN_KEY),
 }

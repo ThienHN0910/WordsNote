@@ -66,3 +66,5 @@ dist/
 
 # Chrome Extension build
 src/extension/dist/
+src/backend/WordsNote.API/appsettings.json
+src/backend/WordsNote.API/appsettings.Development.json

@@ -45,13 +45,23 @@ public static class InfrastructureServiceExtensions
     {
         BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
 
+        if (!BsonClassMap.IsClassMapRegistered(typeof(BaseEntity)))
+        {
+            BsonClassMap.RegisterClassMap<BaseEntity>(cm =>
+            {
+                cm.AutoMap();
+                cm.SetIgnoreExtraElements(true);
+                cm.MapIdMember(b => b.Id).SetSerializer(new GuidSerializer(GuidRepresentation.Standard));
+            });
+        }
+
         if (!BsonClassMap.IsClassMapRegistered(typeof(Card)))
         {
             BsonClassMap.RegisterClassMap<Card>(cm =>
             {
                 cm.AutoMap();
                 cm.SetIgnoreExtraElements(true);
-                cm.MapIdMember(c => c.Id).SetSerializer(new GuidSerializer(GuidRepresentation.Standard));
+                // Id is mapped on BaseEntity
             });
         }
 
@@ -61,7 +71,7 @@ public static class InfrastructureServiceExtensions
             {
                 cm.AutoMap();
                 cm.SetIgnoreExtraElements(true);
-                cm.MapIdMember(c => c.Id).SetSerializer(new GuidSerializer(GuidRepresentation.Standard));
+                // Id is mapped on BaseEntity
                 cm.MapField(DeckCardsFieldName).SetElementName("Cards");
                 cm.UnmapMember(c => c.Cards);
             });

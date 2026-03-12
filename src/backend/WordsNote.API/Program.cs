@@ -1,4 +1,3 @@
-using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -33,12 +32,38 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-var jwtSettings = builder.Configuration.GetSection("Jwt");
-var key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? "default-secret-key-minimum-256-bits-long!!");
+var supabaseAuthSettings = builder.Configuration.GetSection("SupabaseAuth");
+var isSupabaseAuthEnabled = bool.TryParse(supabaseAuthSettings["Enabled"], out var enabled) && enabled;
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        if (isSupabaseAuthEnabled)
+        {
+            var authority = supabaseAuthSettings["Authority"]?.TrimEnd('/')
+                ?? throw new InvalidOperationException("SupabaseAuth:Authority is required when SupabaseAuth:Enabled=true");
+            var audience = supabaseAuthSettings["Audience"] ?? "authenticated";
+
+            options.Authority = authority;
+            options.MetadataAddress = $"{authority}/.well-known/openid-configuration";
+            options.RequireHttpsMetadata = true;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = authority,
+                ValidAudience = audience,
+                NameClaimType = "sub"
+            };
+
+            return;
+        }
+
+        var jwtSettings = builder.Configuration.GetSection("Jwt");
+        var key = System.Text.Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? "default-secret-key-minimum-256-bits-long!!");
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -47,7 +72,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtSettings["Issuer"],
             ValidAudience = jwtSettings["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(key)
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            NameClaimType = "sub"
         };
     });
 

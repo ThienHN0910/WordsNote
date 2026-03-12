@@ -32,14 +32,18 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to) => {
+  await authService.syncSession()
+
   if (to.meta.requiresAuth && !authService.isAuthenticated()) {
-    next('/login')
-  } else if (to.path === '/login' && authService.isAuthenticated()) {
-    next('/')
-  } else {
-    next()
+    return '/login'
   }
+
+  if (to.path === '/login' && authService.isAuthenticated()) {
+    return '/'
+  }
+
+  return true
 })
 
 export default router

@@ -12,24 +12,28 @@ export const useAuthStore = defineStore('auth', {
     isAuthenticated: (state) => !!state.token,
   },
   actions: {
-    async login(username, password) {
+    async syncSession() {
+      this.token = await authService.syncSession()
+      this.error = null
+    },
+
+    async loginWithGoogle() {
       this.loading = true
       this.error = null
       try {
-        const response = await authService.login(username, password)
-        this.token = response.data.token
-        localStorage.setItem('token', this.token)
+        await authService.loginWithGoogle()
       } catch (err) {
-        this.error = err.response?.data?.message || 'Login failed'
+        this.error = err.message || 'Google login failed'
         throw err
       } finally {
         this.loading = false
       }
     },
-    logout() {
+
+    async logout() {
       this.token = null
       this.user = null
-      authService.logout()
+      await authService.logout()
     },
   },
 })

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Text;
 using WordsNote.Application.Extensions;
 using WordsNote.Infrastructure.Extensions;
 
@@ -9,12 +10,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
+// --- Cấu hình Swagger ---
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "WordsNote API", Version = "v1" });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header using the Bearer scheme.",
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
@@ -32,66 +34,65 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// --- Cấu hình Supabase Auth ---
 var supabaseAuthSettings = builder.Configuration.GetSection("SupabaseAuth");
 var isSupabaseAuthEnabled = bool.TryParse(supabaseAuthSettings["Enabled"], out var enabled) && enabled;
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+if (!isSupabaseAuthEnabled)
+{
+    throw new InvalidOperationException("SupabaseAuth:Enabled must be true in appsettings.json.");
+}
+
+var authority = supabaseAuthSettings["Authority"]?.TrimEnd('/') 
+                ?? throw new InvalidOperationException("SupabaseAuth:Authority is missing.");
+var audience = supabaseAuthSettings["Audience"] ?? "authenticated";
+var jwtSecret = supabaseAuthSettings["JwtSecret"] 
+                ?? throw new InvalidOperationException("SupabaseAuth:JwtSecret is missing.");
+
+var key = Encoding.UTF8.GetBytes(jwtSecret);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false; // Set true in production
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        if (isSupabaseAuthEnabled)
-        {
-            var authority = supabaseAuthSettings["Authority"]?.TrimEnd('/')
-                ?? throw new InvalidOperationException("SupabaseAuth:Authority is required when SupabaseAuth:Enabled=true");
-            var audience = supabaseAuthSettings["Audience"] ?? "authenticated";
-
-            options.Authority = authority;
-            options.MetadataAddress = $"{authority}/.well-known/openid-configuration";
-            options.RequireHttpsMetadata = true;
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = authority,
-                ValidAudience = audience,
-                NameClaimType = "sub"
-            };
-
-            return;
-        }
-
-        var jwtSettings = builder.Configuration.GetSection("Jwt");
-        var key = System.Text.Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? "default-secret-key-minimum-256-bits-long!!");
-
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            NameClaimType = "sub"
-        };
-    });
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = true,
+        ValidIssuer = authority,
+        ValidateAudience = true,
+        ValidAudience = audience,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero // Loại bỏ thời gian trễ 5 phút mặc định
+    };
+});
 
 builder.Services.AddAuthorization();
 
+// --- Cấu hình CORS ---
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
 });
 
+// --- Các dịch vụ tầng Application & Infrastructure ---
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
 var app = builder.Build();
 
+// --- Pipeline xử lý Request ---
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -99,8 +100,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
 
 app.Run();

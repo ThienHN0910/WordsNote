@@ -56,8 +56,9 @@ npm run build
 - Launch profile ports in `WordsNote.API/Properties/launchSettings.json`:
   - HTTP: `http://localhost:5251`
   - HTTPS: `https://localhost:7137`
-- Current JWT section in `WordsNote.API/appsettings.json` is configured for local run.
-- Current `Audience` is set to frontend origin (`http://localhost:5173`) so browser-issued tokens can be validated against that audience.
+- Backend auth is Supabase-only (`SupabaseAuth.Enabled=true`).
+- Authority format must be: `https://<project-ref>.supabase.co/auth/v1`.
+- Audience should be `authenticated` for standard Supabase access tokens.
 - `MongoDb.ConnectionString` is currently hardcoded in `appsettings.json` (security risk for production).
 
 ## 5) Known Fixed Bug (do not regress)
@@ -76,20 +77,21 @@ npm run build
 
 - `401 Unauthorized` on protected endpoints is expected when no JWT is provided.
 - Root path `/` returns `404` (normal because only API routes + swagger are mapped).
+- Frontend now signs out Supabase session on `401` to prevent redirect flicker loop.
 
 ## 7) Security Notes (must address soon)
 
 - `src/backend/WordsNote.API/appsettings.json` is in `.gitignore`, but if it was committed in history, credentials are still exposed in git history.
 - Recommended next action:
-  - Rotate MongoDB credential and JWT secret.
+  - Rotate MongoDB credential and Supabase credentials if leaked.
   - Move secrets to env vars / user-secrets / secret manager.
 
 ## 8) High-Value Next Tasks
 
-1. Replace hardcoded MongoDB + JWT values with placeholders in repo-safe config.
-2. Add startup validation for required settings (`Jwt:Key`, `MongoDb:ConnectionString`, etc.).
+1. Replace hardcoded MongoDB values with placeholders in repo-safe config.
+2. Add startup validation for required settings (`SupabaseAuth:Authority`, `MongoDb:ConnectionString`, etc.).
 3. Add a simple health endpoint (`/health`) and database connectivity check.
-4. Add integration test for auth flow (`/api/auth/login` + protected endpoint).
+4. Add integration test for auth flow (`/api/auth/me` + protected endpoint).
 5. Keep this file updated whenever architecture/config changes.
 
 ## 9) Fast Read Order For Next Agent

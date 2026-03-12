@@ -23,20 +23,20 @@ WordsNote/
 | `WordsNote.Domain` | Entities (Deck, Card), Value Objects, Domain Events, Repository Interfaces |
 | `WordsNote.Application` | MediatR CQRS, DTOs, AutoMapper profiles |
 | `WordsNote.Infrastructure` | MongoDB Atlas repositories, External Services |
-| `WordsNote.API` | ASP.NET Core Controllers, JWT Authentication, Swagger |
+| `WordsNote.API` | ASP.NET Core Controllers, Supabase JWT Validation, Swagger |
 
 ### Key Features
 
 - **Spaced Repetition** (SM-2 / Leitner System): Cards scheduled using the SM-2 algorithm
 - **CQRS with MediatR**: Clean separation of reads and writes
-- **JWT Authentication**: Secure API access
+- **Supabase Google Authentication**: OAuth login with JWT bearer validation on backend
 - **MongoDB Atlas**: Flexible document storage
 
 ### Authentication (Supabase Google Auth)
 
 - Frontend login uses **Supabase Auth** with Google provider.
 - Backend validates Supabase JWT bearer tokens.
-- Legacy username/password login endpoint is deprecated.
+- Local JWT username/password flow has been removed.
 
 ### Running the Backend
 
@@ -67,7 +67,7 @@ Note: the API runs locally on these ports by default (see `WordsNote.API/Propert
 - HTTP: http://localhost:5251
 - HTTPS: https://localhost:7137
 
-For Supabase auth, configure `src/backend/WordsNote.API/appsettings.Development.json`:
+For Supabase auth, configure `src/backend/WordsNote.API/appsettings.json` (local file, ignored in git):
 
 ```json
 "SupabaseAuth": {
@@ -99,7 +99,7 @@ VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 VITE_SUPABASE_REDIRECT_URL=http://localhost:5173/login
 ```
 
-5. Add backend Supabase settings (`appsettings.Development.json`) and run API.
+5. Add backend Supabase settings and run API.
 
 If missing credentials (`client id`, `client secret`, project ref), see:
 - Supabase Dashboard -> Authentication -> Providers -> Google
@@ -126,7 +126,8 @@ To run with Docker Compose (recommended for matching prod-like env):
 - `DELETE /api/cards/{id}` — Delete a card
 
 #### Auth
-- `POST /api/auth/login` — Get JWT token
+- `GET /api/auth/provider` — Get auth provider info
+- `GET /api/auth/me` — Get current authenticated user info
 
 ### CSV Import Format
 

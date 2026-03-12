@@ -22,6 +22,8 @@ public static class InfrastructureServiceExtensions
         var mongoSettings = configuration.GetSection("MongoDb").Get<MongoDbSettings>()
             ?? new MongoDbSettings { ConnectionString = "mongodb://localhost:27017", DatabaseName = "WordsNote" };
 
+        ValidateMongoConnectionString(mongoSettings.ConnectionString);
+
         services.AddSingleton<IMongoClient>(sp => new MongoClient(mongoSettings.ConnectionString));
         services.AddSingleton<IMongoDatabase>(sp =>
         {
@@ -37,6 +39,41 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         return services;
+    }
+
+    private static void ValidateMongoConnectionString(string connectionString)
+    {
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException("MongoDb:ConnectionString is required.");
+        }
+
+        try
+        {
+            _ = MongoUrl.Create(connectionString);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                "MongoDb:ConnectionString is invalid. Use format mongodb+srv://<username>:<password>@<cluster-host>/?...",
+                ex);
+        }
+
+        var schemeSplit = connectionString.Split("://", 2, StringSplitOptions.None);
+        if (schemeSplit.Length == 2)
+        {
+            var authorityAndPath = schemeSplit[1];
+            var atIndex = authorityAndPath.IndexOf('@');
+            if (atIndex > 0)
+            {
+                var userInfo = authorityAndPath[..atIndex];
+                if (!userInfo.Contains(':'))
+                {
+                    throw new InvalidOperationException(
+                        "MongoDb:ConnectionString appears to include credentials but missing ':' between username and password.");
+                }
+            }
+        }
     }
 
     private const string DeckCardsFieldName = "_cards";

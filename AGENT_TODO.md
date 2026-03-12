@@ -2,15 +2,16 @@
 
 ## Auth Migration (Supabase + Google)
 
-- [ ] Create Supabase free project and enable Google provider.
-- [ ] Fill frontend env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_SUPABASE_REDIRECT_URL`.
-- [ ] Fill backend config: `SupabaseAuth:Enabled=true`, `SupabaseAuth:Authority`, `SupabaseAuth:Audience`.
+- [x] Create Supabase free project and enable Google provider.
+- [x] Fill frontend env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_SUPABASE_REDIRECT_URL`.
+- [x] Fill backend config: `SupabaseAuth:Enabled=true`, `SupabaseAuth:Authority`, `SupabaseAuth:Audience`.
 - [ ] Verify `/api/auth/me` works with Supabase Bearer token.
-- [ ] Remove/lock old local JWT login path in client and docs.
+- [x] Remove old local JWT login path in backend/client/docs.
 
 ## Security / Config
 
 - [ ] Rotate leaked MongoDB credentials and JWT secrets.
+- [ ] Rotate leaked MongoDB credentials and Supabase keys if exposed.
 - [ ] Move secrets to env/user-secrets/secret manager.
 - [ ] Add startup config validation for required auth/db settings.
 - [ ] Add secret scanning in CI.

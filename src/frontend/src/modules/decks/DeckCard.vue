@@ -16,19 +16,22 @@
 
     <div class="flex items-center gap-2 pt-1 border-t border-gray-100">
       <RouterLink
-        :to="`/decks/${deck.id}/play`"
+        :to="`/decks/${deckId}/play`"
+        :class="{ 'pointer-events-none opacity-50': !deckId }"
         class="flex-1 text-center bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 rounded-lg transition-colors"
       >
         Study
       </RouterLink>
       <RouterLink
-        :to="`/decks/${deck.id}`"
+        :to="`/decks/${deckId}`"
+        :class="{ 'pointer-events-none opacity-50': !deckId }"
         class="flex-1 text-center bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium py-2 rounded-lg transition-colors"
       >
         Manage
       </RouterLink>
       <button
-        @click="$emit('delete', deck.id)"
+        @click="$emit('delete', deckId)"
+        :disabled="!deckId"
         class="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
         title="Delete deck"
       >
@@ -52,6 +55,8 @@ const props = defineProps({
 })
 
 defineEmits(['delete'])
+
+const deckId = computed(() => props.deck.id ?? props.deck.Id ?? props.deck.deck_id ?? null)
 
 const cardCount = computed(() => props.deck.card_count ?? props.deck.cardCount ?? 0)
 const dueCount = computed(() => props.deck.due_count ?? props.deck.dueCount ?? 0)

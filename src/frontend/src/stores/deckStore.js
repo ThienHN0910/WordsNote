@@ -1,6 +1,19 @@
 import { defineStore } from 'pinia'
 import deckService from '../services/deckService'
 
+function normalizeDeck(deck) {
+  if (!deck || typeof deck !== 'object') return deck
+
+  return {
+    ...deck,
+    id: deck.id ?? deck.Id ?? deck.deck_id ?? null,
+    name: deck.name ?? deck.Name ?? '',
+    description: deck.description ?? deck.Description ?? '',
+    cardCount: deck.cardCount ?? deck.CardCount ?? deck.card_count ?? 0,
+    dueCardCount: deck.dueCardCount ?? deck.DueCardCount ?? deck.due_card_count ?? 0,
+  }
+}
+
 export const useDeckStore = defineStore('deck', {
   state: () => ({
     decks: [],
@@ -14,7 +27,9 @@ export const useDeckStore = defineStore('deck', {
       this.error = null
       try {
         const response = await deckService.getDecks()
-        this.decks = response.data
+        this.decks = Array.isArray(response.data)
+          ? response.data.map(normalizeDeck)
+          : []
       } catch (err) {
         this.error = err.response?.data?.message || 'Failed to fetch decks'
       } finally {
@@ -26,7 +41,7 @@ export const useDeckStore = defineStore('deck', {
       this.error = null
       try {
         const response = await deckService.getDeck(id)
-        this.currentDeck = response.data
+        this.currentDeck = normalizeDeck(response.data)
       } catch (err) {
         this.error = err.response?.data?.message || 'Failed to fetch deck'
       } finally {
@@ -38,8 +53,9 @@ export const useDeckStore = defineStore('deck', {
       this.error = null
       try {
         const response = await deckService.createDeck(data)
-        this.decks.push(response.data)
-        return response.data
+        const deck = normalizeDeck(response.data)
+        this.decks.push(deck)
+        return deck
       } catch (err) {
         this.error = err.response?.data?.message || 'Failed to create deck'
         throw err
@@ -52,10 +68,11 @@ export const useDeckStore = defineStore('deck', {
       this.error = null
       try {
         const response = await deckService.updateDeck(id, data)
+        const updatedDeck = normalizeDeck(response.data)
         const index = this.decks.findIndex((d) => d.id === id)
-        if (index !== -1) this.decks[index] = response.data
-        if (this.currentDeck?.id === id) this.currentDeck = response.data
-        return response.data
+        if (index !== -1) this.decks[index] = updatedDeck
+        if (this.currentDeck?.id === id) this.currentDeck = updatedDeck
+        return updatedDeck
       } catch (err) {
         this.error = err.response?.data?.message || 'Failed to update deck'
         throw err

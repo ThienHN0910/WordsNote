@@ -1,8 +1,9 @@
 import axios from 'axios';
 import router from '@/router';
 import { useAuthStore } from '@/stores/AS/AuthStore';
+import { pinia } from '@/stores/pinia';
 
-const authStore = useAuthStore();
+const authStore = useAuthStore(pinia);
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_APP_API_URL,

@@ -13,7 +13,7 @@
           <RouterLink to="/profile" class="dropdown-item">Profile</RouterLink>
         </li>
         <li>
-          <RouterLink @click="logout" to="/logout" class="dropdown-item">Logout</RouterLink>
+          <button type="button" @click="logout" class="dropdown-item">Logout</button>
         </li>
       </ul>
     </div>

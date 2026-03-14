@@ -11,6 +11,14 @@ const routesAS: Array<RouteRecordRaw> = [
     name: 'register',
     component: () => import('@/pages/AS/RegisterPage.vue'),
   },
+  {
+    path: '/logout',
+    redirect: { name: 'login' },
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: { name: 'home' },
+  },
 ]
 
 export default routesAS

@@ -6,11 +6,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="4.0.14" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.16">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.16">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -18,16 +13,10 @@
     <PackageReference Include="MongoDB.Driver" Version="3.5.0" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(Configuration)'=='Debug'">
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.16" />
-  </ItemGroup>
-  
-  <ItemGroup Condition="'$(Configuration)'=='Release'">
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
-  </ItemGroup>
-
   <ItemGroup>
     <Folder Include="Helpers\" />
+    <Folder Include="Persistence\" />
+    <Folder Include="Services\" />
   </ItemGroup>
 
   <PropertyGroup>

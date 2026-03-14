@@ -25,6 +25,10 @@ namespace FeatureFusion.Controllers.AS
             {
                 return BadRequest(new { Error = ex.Message });
             }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new { Error = "Authentication service is temporarily unavailable." });
+            }
         }
 
         [HttpPost("login")]
@@ -38,6 +42,10 @@ namespace FeatureFusion.Controllers.AS
             catch (UnauthorizedAccessException ex)
             {
                 return Unauthorized(new { Error = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new { Error = "Authentication service is temporarily unavailable." });
             }
         }
     }

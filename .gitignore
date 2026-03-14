@@ -70,3 +70,4 @@ src/backend/WordsNote.API/appsettings.json
 src/backend/WordsNote.API/appsettings.Development.json
 .vs/
 .vscode/
+PublishProfiles/

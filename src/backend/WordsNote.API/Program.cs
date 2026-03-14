@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Text;
 using WordsNote.Application.Extensions;
 using WordsNote.Infrastructure.Extensions;
 
@@ -46,10 +45,7 @@ if (!isSupabaseAuthEnabled)
 var authority = supabaseAuthSettings["Authority"]?.TrimEnd('/') 
                 ?? throw new InvalidOperationException("SupabaseAuth:Authority is missing.");
 var audience = supabaseAuthSettings["Audience"] ?? "authenticated";
-var jwtSecret = supabaseAuthSettings["JwtSecret"] 
-                ?? throw new InvalidOperationException("SupabaseAuth:JwtSecret is missing.");
-
-var key = Encoding.UTF8.GetBytes(jwtSecret);
+var jwtSecret = supabaseAuthSettings["JwtSecret"];
 
 builder.Services.AddAuthentication(options =>
 {
@@ -60,16 +56,43 @@ builder.Services.AddAuthentication(options =>
 {
     options.RequireHttpsMetadata = false; // Set true in production
     options.SaveToken = true;
+
+    // Supabase commonly signs access tokens via JWKS. Use Authority metadata as the primary source.
+    options.Authority = authority;
+    options.MapInboundClaims = false;
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = true,
         ValidIssuer = authority,
         ValidateAudience = true,
         ValidAudience = audience,
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero // Loại bỏ thời gian trễ 5 phút mặc định
+    };
+
+    // Optional legacy fallback for projects still using HS256 with shared JWT secret.
+    if (!string.IsNullOrWhiteSpace(jwtSecret))
+    {
+        options.TokenValidationParameters.IssuerSigningKey =
+            new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtSecret));
+    }
+
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            var logger = context.HttpContext.RequestServices
+                .GetRequiredService<ILoggerFactory>()
+                .CreateLogger("JwtBearer");
+
+            logger.LogWarning(context.Exception,
+                "JWT authentication failed for {Path}",
+                context.Request.Path);
+
+            return Task.CompletedTask;
+        }
     };
 });
 

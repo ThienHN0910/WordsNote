@@ -15,7 +15,7 @@ public class DeleteDeckCommandHandler : IRequestHandler<DeleteDeckCommand, bool>
     public async Task<bool> Handle(DeleteDeckCommand request, CancellationToken cancellationToken)
     {
         var deck = await _deckRepository.GetByIdAsync(request.Id);
-        if (deck == null) return false;
+        if (deck == null || deck.UserId != request.UserId) return false;
 
         await _deckRepository.DeleteAsync(request.Id);
         return true;

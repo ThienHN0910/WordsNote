@@ -35,11 +35,16 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   await authService.syncSession()
 
-  if (to.meta.requiresAuth && !authService.isAuthenticated()) {
+  const hasToken = authService.isAuthenticated()
+  const hasValidBackendToken = hasToken
+    ? await authService.validateBackendToken()
+    : false
+
+  if (to.meta.requiresAuth && !hasValidBackendToken) {
     return '/login'
   }
 
-  if (to.path === '/login' && authService.isAuthenticated()) {
+  if (to.path === '/login' && hasValidBackendToken) {
     return '/'
   }
 

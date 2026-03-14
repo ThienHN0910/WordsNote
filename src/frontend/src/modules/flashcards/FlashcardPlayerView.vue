@@ -115,7 +115,7 @@ const currentCard = computed(() => cardStore.dueCards[0] ?? null)
 const progressPercent = computed(() => (total.value > 0 ? (reviewed.value / total.value) * 100 : 0))
 
 onMounted(async () => {
-  await cardStore.fetchDueCards(deckId.value)
+  await cardStore.fetchDueCards()
   total.value = cardStore.dueCards.length
 })
 

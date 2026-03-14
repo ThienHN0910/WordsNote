@@ -38,8 +38,16 @@ const authStore = useAuthStore()
 
 onMounted(async () => {
   await authStore.syncSession()
-  if (authStore.isAuthenticated) {
+
+  if (!authStore.isAuthenticated) {
+    return
+  }
+
+  const backendValid = await authStore.validateBackendToken()
+  if (backendValid) {
     router.push('/')
+  } else {
+    authStore.error = 'Phiên đăng nhập hợp lệ ở Supabase nhưng backend từ chối token. Kiểm tra cấu hình SupabaseAuth (Authority/Audience/JwtSecret) ở backend.'
   }
 })
 

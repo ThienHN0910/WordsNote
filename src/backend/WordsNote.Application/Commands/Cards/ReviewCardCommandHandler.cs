@@ -9,11 +9,13 @@ namespace WordsNote.Application.Commands.Cards;
 public class ReviewCardCommandHandler : IRequestHandler<ReviewCardCommand, CardDto?>
 {
     private readonly ICardRepository _cardRepository;
+    private readonly IDeckRepository _deckRepository;
     private readonly IMapper _mapper;
 
-    public ReviewCardCommandHandler(ICardRepository cardRepository, IMapper mapper)
+    public ReviewCardCommandHandler(ICardRepository cardRepository, IDeckRepository deckRepository, IMapper mapper)
     {
         _cardRepository = cardRepository;
+        _deckRepository = deckRepository;
         _mapper = mapper;
     }
 
@@ -21,6 +23,10 @@ public class ReviewCardCommandHandler : IRequestHandler<ReviewCardCommand, CardD
     {
         var card = await _cardRepository.GetByIdAsync(request.CardId);
         if (card == null) return null;
+
+        var deck = await _deckRepository.GetByIdAsync(card.DeckId);
+        if (deck == null || deck.UserId != request.UserId)
+            return null;
 
         var result = (CardReviewResult)request.Result;
         bool wasCorrect = result >= CardReviewResult.Good;

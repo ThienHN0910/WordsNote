@@ -33,7 +33,7 @@ public class DecksController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<DeckDto>> GetDeck(Guid id)
     {
-        var result = await _mediator.Send(new GetDeckQuery(id));
+        var result = await _mediator.Send(new GetDeckQuery(id, _currentUserService.UserId));
         return result == null ? NotFound() : Ok(result);
     }
 
@@ -47,14 +47,14 @@ public class DecksController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult<DeckDto>> UpdateDeck(Guid id, [FromBody] UpdateDeckDto dto)
     {
-        var result = await _mediator.Send(new UpdateDeckCommand(id, dto.Name, dto.Description));
+        var result = await _mediator.Send(new UpdateDeckCommand(id, dto.Name, dto.Description, _currentUserService.UserId));
         return result == null ? NotFound() : Ok(result);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteDeck(Guid id)
     {
-        var result = await _mediator.Send(new DeleteDeckCommand(id));
+        var result = await _mediator.Send(new DeleteDeckCommand(id, _currentUserService.UserId));
         return result ? NoContent() : NotFound();
     }
 
@@ -68,14 +68,17 @@ public class DecksController : ControllerBase
         using (var reader = new StreamReader(file.OpenReadStream()))
             csvContent = await reader.ReadToEndAsync();
 
-        var count = await _mediator.Send(new ImportFromCsvCommand(id, csvContent));
+        var count = await _mediator.Send(new ImportFromCsvCommand(id, csvContent, _currentUserService.UserId));
+        if (count == null)
+            return NotFound();
+
         return Ok(new { ImportedCount = count });
     }
 
     [HttpPost("{id}/reset")]
     public async Task<IActionResult> ResetProgress(Guid id)
     {
-        var result = await _mediator.Send(new ResetDeckProgressCommand(id));
+        var result = await _mediator.Send(new ResetDeckProgressCommand(id, _currentUserService.UserId));
         return result ? NoContent() : NotFound();
     }
 }

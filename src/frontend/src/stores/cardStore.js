@@ -1,6 +1,22 @@
 import { defineStore } from 'pinia'
 import cardService from '../services/cardService'
 
+function normalizeCard(card) {
+  if (!card || typeof card !== 'object') return card
+
+  return {
+    ...card,
+    id: card.id ?? card.Id ?? null,
+    deckId: card.deckId ?? card.DeckId ?? card.deck_id ?? null,
+    front: card.front ?? card.Front ?? '',
+    back: card.back ?? card.Back ?? '',
+    notes: card.notes ?? card.Notes ?? '',
+    status: card.status ?? card.Status ?? 0,
+    interval: card.interval ?? card.Interval ?? 0,
+    nextReviewDate: card.nextReviewDate ?? card.NextReviewDate ?? null,
+  }
+}
+
 export const useCardStore = defineStore('card', {
   state: () => ({
     cards: [],
@@ -14,19 +30,23 @@ export const useCardStore = defineStore('card', {
       this.error = null
       try {
         const response = await cardService.getCards(deckId)
-        this.cards = response.data
+        this.cards = Array.isArray(response.data)
+          ? response.data.map(normalizeCard)
+          : []
       } catch (err) {
         this.error = err.response?.data?.message || 'Failed to fetch cards'
       } finally {
         this.loading = false
       }
     },
-    async fetchDueCards(deckId) {
+    async fetchDueCards() {
       this.loading = true
       this.error = null
       try {
-        const response = await cardService.getDueCards(deckId)
-        this.dueCards = response.data
+        const response = await cardService.getDueCards()
+        this.dueCards = Array.isArray(response.data)
+          ? response.data.map(normalizeCard)
+          : []
       } catch (err) {
         this.error = err.response?.data?.message || 'Failed to fetch due cards'
       } finally {
@@ -38,8 +58,9 @@ export const useCardStore = defineStore('card', {
       this.error = null
       try {
         const response = await cardService.createCard(data)
-        this.cards.push(response.data)
-        return response.data
+        const card = normalizeCard(response.data)
+        this.cards.push(card)
+        return card
       } catch (err) {
         this.error = err.response?.data?.message || 'Failed to create card'
         throw err

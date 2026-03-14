@@ -156,7 +156,7 @@ onMounted(async () => {
 
 async function handleAddCard() {
   try {
-    await cardStore.createCard({ ...newCard.value, deck_id: route.params.id })
+    await cardStore.createCard({ ...newCard.value, deckId: route.params.id })
     newCard.value = { front: '', back: '', notes: '' }
   } catch {
     // error shown via cardStore.error

@@ -26,6 +26,34 @@ public class CardRepository : ICardRepository
         return await _context.Cards.Find(filter).ToListAsync();
     }
 
+    public async Task<Dictionary<Guid, int>> GetCardCountsByDeckIdsAsync(IEnumerable<Guid> deckIds)
+    {
+        var ids = deckIds.Distinct().ToList();
+        if (ids.Count == 0)
+            return new Dictionary<Guid, int>();
+
+        var grouped = await _context.Cards.Aggregate()
+            .Match(c => ids.Contains(c.DeckId))
+            .Group(c => c.DeckId, g => new { DeckId = g.Key, Count = g.Count() })
+            .ToListAsync();
+
+        return grouped.ToDictionary(x => x.DeckId, x => x.Count);
+    }
+
+    public async Task<Dictionary<Guid, int>> GetDueCardCountsByDeckIdsAsync(IEnumerable<Guid> deckIds, DateTime date)
+    {
+        var ids = deckIds.Distinct().ToList();
+        if (ids.Count == 0)
+            return new Dictionary<Guid, int>();
+
+        var grouped = await _context.Cards.Aggregate()
+            .Match(c => ids.Contains(c.DeckId) && c.NextReviewDate <= date)
+            .Group(c => c.DeckId, g => new { DeckId = g.Key, Count = g.Count() })
+            .ToListAsync();
+
+        return grouped.ToDictionary(x => x.DeckId, x => x.Count);
+    }
+
     public async Task<IEnumerable<Card>> GetDueCardsAsync(string userId, DateTime date)
     {
         // Resolve deck IDs owned by this user, then return due cards within those decks.

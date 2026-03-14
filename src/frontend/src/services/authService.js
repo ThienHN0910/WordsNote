@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient'
+import api from './api'
 
 const TOKEN_KEY = 'token'
 
@@ -29,6 +30,19 @@ export default {
     }
 
     return accessToken
+  },
+
+  async validateBackendToken() {
+    const token = localStorage.getItem(TOKEN_KEY)
+    if (!token) return false
+
+    try {
+      await api.get('/api/auth/me', { skipAuthRedirect: true })
+      return true
+    } catch {
+      localStorage.removeItem(TOKEN_KEY)
+      return false
+    }
   },
 
   async logout() {

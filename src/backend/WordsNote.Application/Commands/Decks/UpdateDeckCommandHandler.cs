@@ -19,7 +19,7 @@ public class UpdateDeckCommandHandler : IRequestHandler<UpdateDeckCommand, DeckD
     public async Task<DeckDto?> Handle(UpdateDeckCommand request, CancellationToken cancellationToken)
     {
         var deck = await _deckRepository.GetByIdAsync(request.Id);
-        if (deck == null) return null;
+        if (deck == null || deck.UserId != request.UserId) return null;
 
         deck.Update(request.Name, request.Description);
         await _deckRepository.UpdateAsync(deck);

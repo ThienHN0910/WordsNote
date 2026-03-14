@@ -17,7 +17,7 @@ public class ResetDeckProgressCommandHandler : IRequestHandler<ResetDeckProgress
     public async Task<bool> Handle(ResetDeckProgressCommand request, CancellationToken cancellationToken)
     {
         var deck = await _deckRepository.GetByIdAsync(request.DeckId);
-        if (deck == null) return false;
+        if (deck == null || deck.UserId != request.UserId) return false;
 
         var cards = (await _cardRepository.GetByDeckIdAsync(request.DeckId)).ToList();
         foreach (var card in cards)

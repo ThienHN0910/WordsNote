@@ -17,6 +17,12 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
     },
 
+    async validateBackendToken() {
+      const isValid = await authService.validateBackendToken()
+      this.token = authService.getToken()
+      return isValid
+    },
+
     async loginWithGoogle() {
       this.loading = true
       this.error = null

@@ -3,4 +3,4 @@ using WordsNote.Application.DTOs;
 
 namespace WordsNote.Application.Commands.Cards;
 
-public record ReviewCardCommand(Guid CardId, int Result) : IRequest<CardDto?>;
+public record ReviewCardCommand(Guid CardId, int Result, string UserId) : IRequest<CardDto?>;

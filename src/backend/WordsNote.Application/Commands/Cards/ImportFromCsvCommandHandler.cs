@@ -4,7 +4,7 @@ using WordsNote.Domain.Interfaces;
 
 namespace WordsNote.Application.Commands.Cards;
 
-public class ImportFromCsvCommandHandler : IRequestHandler<ImportFromCsvCommand, int>
+public class ImportFromCsvCommandHandler : IRequestHandler<ImportFromCsvCommand, int?>
 {
     private readonly ICardRepository _cardRepository;
     private readonly IDeckRepository _deckRepository;
@@ -15,10 +15,10 @@ public class ImportFromCsvCommandHandler : IRequestHandler<ImportFromCsvCommand,
         _deckRepository = deckRepository;
     }
 
-    public async Task<int> Handle(ImportFromCsvCommand request, CancellationToken cancellationToken)
+    public async Task<int?> Handle(ImportFromCsvCommand request, CancellationToken cancellationToken)
     {
         var deck = await _deckRepository.GetByIdAsync(request.DeckId);
-        if (deck == null) return 0;
+        if (deck == null || deck.UserId != request.UserId) return null;
 
         var lines = request.CsvContent.Split('\n', StringSplitOptions.RemoveEmptyEntries);
         var cards = new List<Card>();

@@ -18,12 +18,6 @@
             <RouterLink to="/" class="nav-link"><img src="/favicon.ico" alt="Home" class="app-logo" /></RouterLink>
           </li>
           <li class="nav-item">
-            <RouterLink to="/dms/" class="nav-link">Document Manager System</RouterLink>
-          </li>
-          <li class="nav-item">
-            <RouterLink to="/cms/" class="nav-link">Community System</RouterLink>
-          </li>
-          <li class="nav-item">
             <RouterLink to="/study" class="nav-link">WordsNote Study</RouterLink>
           </li>
         </ul>

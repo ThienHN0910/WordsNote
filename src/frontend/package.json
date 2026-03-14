@@ -16,8 +16,6 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "@ckeditor/ckeditor5-build-decoupled-document": "^41.4.2",
-    "@ckeditor/ckeditor5-vue": "^7.3.1",
     "@supabase/supabase-js": "^2.99.1",
     "@vueuse/core": "^14.0.0",
     "axios": "^1.12.2",

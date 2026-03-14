@@ -1,6 +1,5 @@
 ﻿using Application.IServices.AS;
 using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace Infrastructure.Repositories.AS;
@@ -21,7 +20,7 @@ public class CurrentUserService : ICurrentUserService
                 ?? user?.FindFirst("sub")?.Value;
             if (string.IsNullOrEmpty(userIdClaim))
             {
-                throw new InvalidOperationException("User ID claim not found.");
+                return null;
             }
 
             if (Guid.TryParse(userIdClaim, out Guid userId))
@@ -29,7 +28,7 @@ public class CurrentUserService : ICurrentUserService
                 return userId;
             }
 
-            throw new InvalidOperationException("User ID claim not found.");
+            return null;
         }
     }
 }

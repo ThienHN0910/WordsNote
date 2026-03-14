@@ -29,8 +29,13 @@ namespace FeatureFusion.Controllers.WordsNote
         [HttpGet]
         public async Task<ActionResult<IEnumerable<StudyCardDTO>>> GetAllAsync([FromQuery] string? deckId = null)
         {
-            var userId = GetUserId();
-            var filter = Builders<CardDocument>.Filter.Eq(card => card.UserId, userId);
+            var userId = _currentUserService.UserId;
+            if (userId is null)
+            {
+                return Unauthorized(new { Error = "Invalid or unsupported token subject." });
+            }
+
+            var filter = Builders<CardDocument>.Filter.Eq(card => card.UserId, userId.Value);
 
             if (!string.IsNullOrWhiteSpace(deckId))
             {
@@ -48,6 +53,12 @@ namespace FeatureFusion.Controllers.WordsNote
         [HttpPost]
         public async Task<ActionResult<StudyCardDTO>> CreateAsync([FromBody] CardUpsertRequestDTO request)
         {
+            var userId = _currentUserService.UserId;
+            if (userId is null)
+            {
+                return Unauthorized(new { Error = "Invalid or unsupported token subject." });
+            }
+
             var desk = await RequireDeskAsync(request.DeskId);
             if (desk is null)
             {
@@ -66,7 +77,7 @@ namespace FeatureFusion.Controllers.WordsNote
             {
                 Id = CreateId("card"),
                 DeskId = desk.Id,
-                UserId = GetUserId(),
+                UserId = userId.Value,
                 Front = front,
                 Back = back,
                 Hint = NormalizeHint(request.Hint),
@@ -83,8 +94,13 @@ namespace FeatureFusion.Controllers.WordsNote
         [HttpPut("{id}")]
         public async Task<ActionResult<StudyCardDTO>> UpdateAsync(string id, [FromBody] CardUpsertRequestDTO request)
         {
-            var userId = GetUserId();
-            var card = await _cards.Find(item => item.Id == id && item.UserId == userId).FirstOrDefaultAsync();
+            var userId = _currentUserService.UserId;
+            if (userId is null)
+            {
+                return Unauthorized(new { Error = "Invalid or unsupported token subject." });
+            }
+
+            var card = await _cards.Find(item => item.Id == id && item.UserId == userId.Value).FirstOrDefaultAsync();
             if (card is null)
             {
                 return NotFound();
@@ -102,7 +118,7 @@ namespace FeatureFusion.Controllers.WordsNote
             card.Hint = NormalizeHint(request.Hint);
             card.Tags = NormalizeTags(request.Tags);
 
-            await _cards.ReplaceOneAsync(item => item.Id == id && item.UserId == userId, card);
+            await _cards.ReplaceOneAsync(item => item.Id == id && item.UserId == userId.Value, card);
             await TouchDeskAsync(card.DeskId);
             return Ok(MapCard(card));
         }
@@ -110,14 +126,19 @@ namespace FeatureFusion.Controllers.WordsNote
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAsync(string id)
         {
-            var userId = GetUserId();
-            var existing = await _cards.Find(card => card.Id == id && card.UserId == userId).FirstOrDefaultAsync();
+            var userId = _currentUserService.UserId;
+            if (userId is null)
+            {
+                return Unauthorized(new { Error = "Invalid or unsupported token subject." });
+            }
+
+            var existing = await _cards.Find(card => card.Id == id && card.UserId == userId.Value).FirstOrDefaultAsync();
             if (existing is null)
             {
                 return NotFound();
             }
 
-            await _cards.DeleteOneAsync(card => card.Id == id && card.UserId == userId);
+            await _cards.DeleteOneAsync(card => card.Id == id && card.UserId == userId.Value);
             await TouchDeskAsync(existing.DeskId);
             return NoContent();
         }
@@ -125,6 +146,12 @@ namespace FeatureFusion.Controllers.WordsNote
         [HttpPost("import")]
         public async Task<ActionResult<ImportCardsResultDTO>> ImportAsync([FromBody] CardImportRequestDTO request)
         {
+            var userId = _currentUserService.UserId;
+            if (userId is null)
+            {
+                return Unauthorized(new { Error = "Invalid or unsupported token subject." });
+            }
+
             var desk = await RequireDeskAsync(request.DeskId);
             if (desk is null)
             {
@@ -163,7 +190,7 @@ namespace FeatureFusion.Controllers.WordsNote
                 {
                     Id = CreateId("card"),
                     DeskId = desk.Id,
-                    UserId = GetUserId(),
+                    UserId = userId.Value,
                     Front = front,
                     Back = back,
                     Tags = [],
@@ -188,8 +215,13 @@ namespace FeatureFusion.Controllers.WordsNote
         [HttpPost("{id}/review")]
         public async Task<ActionResult<StudyCardDTO>> ReviewAsync(string id, [FromBody] CardReviewRequestDTO request)
         {
-            var userId = GetUserId();
-            var card = await _cards.Find(item => item.Id == id && item.UserId == userId).FirstOrDefaultAsync();
+            var userId = _currentUserService.UserId;
+            if (userId is null)
+            {
+                return Unauthorized(new { Error = "Invalid or unsupported token subject." });
+            }
+
+            var card = await _cards.Find(item => item.Id == id && item.UserId == userId.Value).FirstOrDefaultAsync();
             if (card is null)
             {
                 return NotFound();
@@ -209,14 +241,9 @@ namespace FeatureFusion.Controllers.WordsNote
             card.LastReviewedAt = now;
             card.DueAt = now.AddDays(intervalDays);
 
-            await _cards.ReplaceOneAsync(item => item.Id == id && item.UserId == userId, card);
+            await _cards.ReplaceOneAsync(item => item.Id == id && item.UserId == userId.Value, card);
             await TouchDeskAsync(card.DeskId);
             return Ok(MapCard(card));
-        }
-
-        private Guid GetUserId()
-        {
-            return _currentUserService.UserId ?? throw new InvalidOperationException("Current user is unavailable.");
         }
 
         private async Task<DeskDocument?> RequireDeskAsync(string deskId)
@@ -226,14 +253,25 @@ namespace FeatureFusion.Controllers.WordsNote
                 return null;
             }
 
-            var userId = GetUserId();
-            return await _desks.Find(desk => desk.Id == deskId && desk.UserId == userId).FirstOrDefaultAsync();
+            var userId = _currentUserService.UserId;
+            if (userId is null)
+            {
+                return null;
+            }
+
+            return await _desks.Find(desk => desk.Id == deskId && desk.UserId == userId.Value).FirstOrDefaultAsync();
         }
 
         private async Task TouchDeskAsync(string deskId)
         {
+            var userId = _currentUserService.UserId;
+            if (userId is null)
+            {
+                return;
+            }
+
             await _desks.UpdateOneAsync(
-                desk => desk.Id == deskId && desk.UserId == GetUserId(),
+                desk => desk.Id == deskId && desk.UserId == userId.Value,
                 Builders<DeskDocument>.Update.Set(desk => desk.UpdatedAt, DateTime.UtcNow));
         }
 

@@ -1,0 +1,45 @@
+@use 'variables' as v;
+
+body {
+  &[data-theme='dark'] {
+    background-color: v.$DARK_THEME_BG_COLOR;
+    color: v.$DARK_THEME_TEXT_COLOR;
+  }
+
+  &[data-theme='light'] {
+    background-color: v.$LIGHT_THEME_BG_COLOR;
+    color: v.$LIGHT_THEME_TEXT_COLOR;
+  } 
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.7s;
+  animation-timing-function: ease;
+}
+
+::view-transition-old(root) {
+  animation-name: diagonal-hide;
+}
+
+::view-transition-new(root) {
+  animation-name: diagonal-show;
+}
+
+@keyframes diagonal-show {
+  from {
+    clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+  }
+  to {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+}
+
+@keyframes diagonal-hide {
+  from {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+  to {
+    clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%);
+  }
+}

@@ -1,0 +1,6 @@
+body[data-theme='light'] {
+  RouterLink,
+  a {
+    color: $LIGHT_THEME_LINK_COLOR;
+  }
+}

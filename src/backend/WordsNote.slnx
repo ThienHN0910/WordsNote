@@ -1,6 +1,0 @@
-<Solution>
-  <Project Path="WordsNote.API/WordsNote.API.csproj" />
-  <Project Path="WordsNote.Application/WordsNote.Application.csproj" />
-  <Project Path="WordsNote.Domain/WordsNote.Domain.csproj" />
-  <Project Path="WordsNote.Infrastructure/WordsNote.Infrastructure.csproj" />
-</Solution>

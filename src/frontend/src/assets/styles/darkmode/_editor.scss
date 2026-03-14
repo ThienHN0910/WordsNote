@@ -1,0 +1,35 @@
+/* Custom properties for theme support */
+body[data-theme='dark'] {
+    .post-editor-container {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .document-editor {
+        --editor-border: #4b5563;
+        --editor-bg-outer: #1f2937;
+        --editor-toolbar-bg: #374151;
+    }
+
+    .document-editor__editable-container .ck-editor__editable {
+        --editor-bg-inner: #111827;
+        --editor-border: #374151;
+        --editor-text: #f3f4f6;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    .document-editor__toolbar .ck-toolbar {
+        background: transparent !important;
+        border: none !important;
+    }
+
+    .document-editor__toolbar .ck-button {
+        color: #e5e7eb !important;
+        transition: background-color 0.2s;
+    }
+
+    .document-editor__toolbar .ck-button:hover,
+    .document-editor__toolbar .ck-button.ck-on {
+        background: #4b5563 !important;
+        color: #ffffff !important;
+    }
+}

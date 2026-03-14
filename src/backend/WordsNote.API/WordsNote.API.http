@@ -1,6 +1,0 @@
-@WordsNote.API_HostAddress = http://localhost:5251
-
-GET {{WordsNote.API_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

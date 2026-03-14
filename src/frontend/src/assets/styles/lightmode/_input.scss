@@ -1,0 +1,10 @@
+body[data-theme='light'] {
+  .app-base-input {
+    background-color: $LIGHT_THEME_INPUT_COLOR;
+    color: $LIGHT_THEME_TEXT_COLOR;
+  }
+  .app-base-input-error {
+  }
+  .app-base-input-label {
+  }
+}

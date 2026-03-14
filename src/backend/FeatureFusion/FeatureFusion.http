@@ -1,0 +1,6 @@
+@FeatureFusion_HostAddress = http://localhost:5035
+
+GET {{FeatureFusion_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

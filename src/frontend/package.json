@@ -1,25 +1,61 @@
 {
-  "name": "frontend",
-  "private": true,
+  "name": "feature-fusion",
   "version": "0.0.0",
+  "private": true,
   "type": "module",
+  "engines": {
+    "node": "^20.19.0"
+  },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "vite build --mode production",
+    "preview": "vite preview",
+    "build-only": "vite build",
+    "type-check": "vue-tsc --build",
+    "lint": "eslint . --fix",
+    "format": "prettier --write src/"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.56.1",
-    "axios": "^1.13.6",
-    "pinia": "^3.0.4",
-    "vue": "^3.5.25",
-    "vue-router": "^5.0.3"
+    "@ckeditor/ckeditor5-build-decoupled-document": "^41.4.2",
+    "@ckeditor/ckeditor5-vue": "^7.3.1",
+    "@fortawesome/fontawesome-svg-core": "^7.0.1",
+    "@fortawesome/free-brands-svg-icons": "^7.0.1",
+    "@fortawesome/free-solid-svg-icons": "^7.0.1",
+    "@fortawesome/vue-fontawesome": "^3.1.2",
+    "@vueuse/core": "^14.0.0",
+    "axios": "^1.12.2",
+    "bootstrap": "^5.3.8",
+    "dompurify": "^3.3.0",
+    "easymde": "^2.20.0",
+    "marked": "^17.0.0",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^5.4.149",
+    "pinia": "^3.0.3",
+    "pinia-plugin-persistedstate": "^4.7.1",
+    "sass": "^1.93.0",
+    "vue": "^3.5.18",
+    "vue-router": "^4.5.1"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.2",
-    "autoprefixer": "^10.4.27",
-    "postcss": "^8.5.8",
-    "tailwindcss": "^3.4.19",
-    "vite": "^7.3.1"
+    "@tsconfig/node22": "^22.0.2",
+    "@types/marked": "^5.0.2",
+    "@types/node": "^22.16.5",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/eslint-config-prettier": "^10.2.0",
+    "@vue/eslint-config-typescript": "^14.6.0",
+    "@vue/tsconfig": "^0.7.0",
+    "eslint": "^9.36.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-vue": "~10.3.0",
+    "jiti": "^2.4.2",
+    "npm-run-all": "^4.1.5",
+    "npm-run-all2": "^8.0.4",
+    "prettier": "^3.6.2",
+    "typescript": "~5.8.0",
+    "vite": "^7.2.2",
+    "vite-plugin-eslint": "^1.8.1",
+    "vite-plugin-vue-devtools": "^8.0.0",
+    "vue-tsc": "^3.0.4"
   }
 }

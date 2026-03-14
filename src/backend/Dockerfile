@@ -1,22 +1,17 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-WORKDIR /app
-EXPOSE 8080
-
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 WORKDIR /src
-COPY ["WordsNote.API/WordsNote.API.csproj", "WordsNote.API/"]
-COPY ["WordsNote.Application/WordsNote.Application.csproj", "WordsNote.Application/"]
-COPY ["WordsNote.Domain/WordsNote.Domain.csproj", "WordsNote.Domain/"]
-COPY ["WordsNote.Infrastructure/WordsNote.Infrastructure.csproj", "WordsNote.Infrastructure/"]
-RUN dotnet restore "WordsNote.API/WordsNote.API.csproj"
+COPY Domain/Domain.csproj Domain/
+COPY Application/Application.csproj Application/
+COPY Infrastructure/Infrastructure.csproj Infrastructure/
+COPY FeatureFusion/FeatureFusion.csproj FeatureFusion/
+RUN dotnet restore FeatureFusion/FeatureFusion.csproj
 COPY . .
-WORKDIR "/src/WordsNote.API"
-RUN dotnet build "WordsNote.API.csproj" -c Release -o /app/build
+RUN dotnet publish FeatureFusion/FeatureFusion.csproj -c Release -o /app/publish /p:UseAppHost=false /p:SelfContained=false
 
-FROM build AS publish
-RUN dotnet publish "WordsNote.API.csproj" -c Release -o /app/publish /p:UseAppHost=false
-
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "WordsNote.API.dll"]
+RUN apk add --no-cache icu-libs curl
+COPY --from=build /app/publish .
+EXPOSE 8080
+EXPOSE 8081
+ENTRYPOINT ["dotnet", "FeatureFusion.dll"]

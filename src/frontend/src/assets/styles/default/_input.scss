@@ -1,0 +1,13 @@
+.app-base-input {
+  &[type='text'],
+  &[type='password'] {
+    border-radius: $APP_RADIUS_NORMAL;
+    border: 1px solid gray;
+  }
+}
+.app-base-input-error {
+  font-size: 0.875rem;
+}
+.app-base-input-label {
+  font-weight: 600;
+}

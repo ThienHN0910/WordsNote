@@ -1,0 +1,205 @@
+// .app-base-input {}
+
+// .app-base-input-label {}
+
+.app-user-avatar {
+  height: 36px;
+  width: 36px;
+}
+
+.infinite-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 20px 0 120px;
+  box-sizing: border-box;
+}
+
+.load-trigger {
+  height: 50px;
+  margin-top: -50px;
+}
+
+.du-wrapper {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.du-dropzone {
+  position: relative;
+  border: 2px dashed #c8cbd0;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  color: #444;
+  background: #fafbfc;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+
+.du-dropzone.du-dragging {
+  border-color: #4a90e2;
+  background: #eef6ff;
+}
+
+.du-instructions {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.du-button {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: #4a90e2;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.du-button:hover {
+  background: #3b7ac1;
+}
+
+.du-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.du-list {
+  background: #f5f7fa;
+  border: 1px solid #e6e8eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.du-list-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.du-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.du-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.du-item:hover {
+  background: #f0f3f7;
+}
+
+.du-file-name {
+  flex: 1 1 auto;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+  color: #444;
+}
+
+.du-file-size {
+  color: #777;
+}
+
+.du-remove {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: #ffeded;
+  color: #b00020;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.du-remove:hover {
+  background: #ffd6d6;
+}
+
+.du-errors {
+  color: #b00020;
+  background: #fff5f5;
+  border: 1px solid #ffd6d6;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+
+.post-editor-container {
+  margin-bottom: 2rem;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.document-editor {
+  border: 1px solid var(--editor-border, #e5e7eb);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--editor-bg-outer, #f9fafb);
+  display: flex;
+  flex-direction: column;
+}
+
+.document-editor__toolbar {
+  border-bottom: 1px solid var(--editor-border, #e5e7eb);
+  background: var(--editor-toolbar-bg, #ffffff);
+  padding: 8px;
+}
+
+/* Container */
+.document-editor__editable-container {
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  overflow-y: auto;
+  max-height: 700px;
+}
+
+/* The actual editable area */
+.document-editor__editable-container .ck-editor__editable {
+  width: 90%;
+  max-width: 100%;
+  min-height: 50vh;
+  padding: 40px;
+  border: 1px solid var(--editor-border, #d1d5db);
+  border-radius: 8px;
+  background: var(--editor-bg-inner, #ffffff);
+  color: var(--editor-text, #111827);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+/* Focus */
+.document-editor__editable-container .ck-editor__editable.ck-focused {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* Inserted images */
+.document-editor__editable-container img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}

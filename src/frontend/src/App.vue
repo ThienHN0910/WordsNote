@@ -1,17 +1,16 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <NavBar v-if="showNav" />
-    <main :class="showNav ? 'pt-0' : ''">
-      <RouterView />
-    </main>
+  <div>
+    <Navbar></Navbar>      
+  </div>
+  <div class="container-fluid">
+      <RouterView></RouterView>
   </div>
 </template>
 
-<script setup>
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-import NavBar from './components/NavBar.vue'
+<script setup lang="ts">
+import Navbar from './components/Navbar.vue';
+import { RouterView } from 'vue-router';
 
-const route = useRoute()
-const showNav = computed(() => route.name !== 'Login')
 </script>
+
+<style scoped></style>

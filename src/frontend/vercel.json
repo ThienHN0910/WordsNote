@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api-backend/:path*",
-      "destination": "http://feature-fusion.runasp.net/:path*"
+      "destination": "http://words-note.runasp.net/:path*"
     },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }

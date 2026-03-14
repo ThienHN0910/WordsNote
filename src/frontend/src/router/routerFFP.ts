@@ -12,11 +12,17 @@ const baseChildren: RouteRecordRaw[] = [
     path: 'study',
     name: 'studyHub',
     component: () => import('@/pages/WordsNote/StudyHubPage.vue'),
+    meta: {
+      requiresAuth: true,
+    },
   },
   {
     path: 'study/:deckId/session',
     name: 'studySession',
     component: () => import('@/pages/WordsNote/StudySessionPage.vue'),
+    meta: {
+      requiresAuth: true,
+    },
   },
   {
     path: 'dashboard',

@@ -30,10 +30,27 @@
             <hr class="my-4" />
 
             <h2 class="h5 mb-3">Danh sach Collection</h2>
-            <div v-if="!deckList.length" class="text-muted small">Chua co collection nao.</div>
+            <div class="row g-2 mb-3">
+              <div class="col-12">
+                <input
+                  v-model="deckQuery"
+                  class="form-control"
+                  type="search"
+                  placeholder="Tim collection theo ten hoac mo ta"
+                />
+              </div>
+              <div class="col-12">
+                <select v-model="deckSort" class="form-select">
+                  <option value="recent">Moi cap nhat</option>
+                  <option value="title">Ten A-Z</option>
+                  <option value="cards">Nhieu cards nhat</option>
+                </select>
+              </div>
+            </div>
+            <div v-if="!filteredDeckList.length" class="text-muted small">Khong co collection phu hop.</div>
             <div v-else class="vstack gap-2">
               <button
-                v-for="deck in deckList"
+                v-for="deck in filteredDeckList"
                 :key="deck.id"
                 class="btn btn-light text-start p-3 border"
                 :class="{ 'active-deck': selectedDeckId === deck.id }"
@@ -146,9 +163,35 @@
             </div>
 
             <h3 class="h5 mb-2">Cards</h3>
-            <div v-if="!deckCards.length" class="text-muted">Collection nay chua co card.</div>
+            <div class="row g-2 mb-3">
+              <div class="col-12 col-md-5">
+                <input
+                  v-model="cardQuery"
+                  class="form-control"
+                  type="search"
+                  placeholder="Tim card theo front, back, hint, tag"
+                />
+              </div>
+              <div class="col-6 col-md-3">
+                <select v-model="cardFilter" class="form-select">
+                  <option value="all">Tat ca</option>
+                  <option value="due">Den han</option>
+                  <option value="mastered">Da nho vung</option>
+                  <option value="new">Moi hoc</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-4">
+                <select v-model="cardSort" class="form-select">
+                  <option value="dueSoon">Han on som nhat</option>
+                  <option value="frontAZ">Front A-Z</option>
+                  <option value="recentReview">On gan day</option>
+                  <option value="streakDesc">Muc do nho cao nhat</option>
+                </select>
+              </div>
+            </div>
+            <div v-if="!filteredDeckCards.length" class="text-muted">Khong co card phu hop bo loc hien tai.</div>
             <div v-else class="vstack gap-2">
-              <div v-for="card in deckCards" :key="card.id" class="card-item p-3">
+              <div v-for="card in filteredDeckCards" :key="card.id" class="card-item p-3">
                 <div class="d-flex justify-content-between gap-2">
                   <div>
                     <div class="fw-semibold">{{ card.front }}</div>
@@ -203,12 +246,84 @@ const cardForm = reactive({
 
 const importText = ref('')
 const importResult = ref('')
+const deckQuery = ref('')
+const deckSort = ref<'recent' | 'title' | 'cards'>('recent')
+const cardQuery = ref('')
+const cardFilter = ref<'all' | 'due' | 'mastered' | 'new'>('all')
+const cardSort = ref<'dueSoon' | 'frontAZ' | 'recentReview' | 'streakDesc'>('dueSoon')
 
 const deckList = computed(() => studyStore.deckList)
+const filteredDeckList = computed(() => {
+  const query = deckQuery.value.trim().toLowerCase()
+  const filtered = deckList.value.filter((deck) => {
+    if (!query) return true
+    return [deck.title, deck.description]
+      .join(' ')
+      .toLowerCase()
+      .includes(query)
+  })
+
+  return [...filtered].sort((left, right) => {
+    if (deckSort.value === 'title') {
+      return left.title.localeCompare(right.title)
+    }
+
+    if (deckSort.value === 'cards') {
+      return getDeckStats(right.id).totalCards - getDeckStats(left.id).totalCards
+    }
+
+    return right.updatedAt.localeCompare(left.updatedAt)
+  })
+})
 const selectedDeck = computed(() => studyStore.getDeckById(selectedDeckId.value))
 const deckCards = computed(() => {
   if (!selectedDeckId.value) return []
   return studyStore.getDeckCards(selectedDeckId.value)
+})
+const filteredDeckCards = computed(() => {
+  const query = cardQuery.value.trim().toLowerCase()
+  const now = Date.now()
+
+  const filtered = deckCards.value.filter((card) => {
+    const matchesQuery = !query || [card.front, card.back, card.hint ?? '', card.tags.join(' ')]
+      .join(' ')
+      .toLowerCase()
+      .includes(query)
+
+    if (!matchesQuery) {
+      return false
+    }
+
+    if (cardFilter.value === 'due') {
+      return new Date(card.dueAt).getTime() <= now
+    }
+
+    if (cardFilter.value === 'mastered') {
+      return card.streak >= 5
+    }
+
+    if (cardFilter.value === 'new') {
+      return card.streak === 0
+    }
+
+    return true
+  })
+
+  return [...filtered].sort((left, right) => {
+    if (cardSort.value === 'frontAZ') {
+      return left.front.localeCompare(right.front)
+    }
+
+    if (cardSort.value === 'recentReview') {
+      return (right.lastReviewedAt ?? '').localeCompare(left.lastReviewedAt ?? '')
+    }
+
+    if (cardSort.value === 'streakDesc') {
+      return right.streak - left.streak
+    }
+
+    return new Date(left.dueAt).getTime() - new Date(right.dueAt).getTime()
+  })
 })
 const deckStats = computed(() => {
   if (!selectedDeckId.value) {
@@ -326,6 +441,20 @@ onMounted(async () => {
 
 watch(selectedDeckId, () => {
   resetCardForm()
+  cardQuery.value = ''
+  cardFilter.value = 'all'
+  cardSort.value = 'dueSoon'
+})
+
+watch(filteredDeckList, (nextDecks) => {
+  if (!nextDecks.length) {
+    selectedDeckId.value = ''
+    return
+  }
+
+  if (!nextDecks.some((deck) => deck.id === selectedDeckId.value)) {
+    selectedDeckId.value = nextDecks[0].id
+  }
 })
 </script>
 
@@ -366,5 +495,10 @@ watch(selectedDeckId, () => {
 .active-deck {
   border: 1px solid #0d6efd !important;
   background: #f4f8ff !important;
+}
+
+.form-select,
+.form-control {
+  box-shadow: none;
 }
 </style>

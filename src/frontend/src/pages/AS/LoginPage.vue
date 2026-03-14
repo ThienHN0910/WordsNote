@@ -43,7 +43,7 @@ import { onMounted, ref } from 'vue'
 import { MSG_EMAIL_EN, MSG_PASSWORD_EN } from '@/constants/Auth.constant'
 import { AuthService } from '@/services/AS/AuthService'
 import { useAuthStore } from '@/stores/AS/AuthStore'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import BaseInput from '@/components/bases/BaseInput.vue'
 import BaseButton from '@/components/bases/BaseButton.vue'
 
@@ -52,6 +52,7 @@ const password = ref('')
 const submitted = ref(false)
 const isLoading = ref(false)
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const validPassword = (password: string) => {
   return password.length >= 8
@@ -61,12 +62,17 @@ const isValidUserNameOrEmail = (email: string) => {
   return email.length > 0
 }
 
+const resolveRedirectRoute = () => {
+  const redirect = route.query.redirect
+  return typeof redirect === 'string' && redirect.length > 0 ? redirect : { name: 'home' }
+}
+
 onMounted(async () => {
   try {
     const token = await AuthService.getSupabaseAccessToken()
     if (token) {
       authStore.setAuthToken(token)
-      router.push({ name: 'home' })
+      router.push(resolveRedirectRoute())
     }
   } catch {
     // Ignore session bootstrap errors and keep login page interactive.
@@ -83,7 +89,7 @@ const submit = () => {
       if (response.status === 200) {
         const token = response.data
         authStore.setAuthToken(token)
-        router.push({ name: 'home' })
+        router.push(resolveRedirectRoute())
       } else {
         alert('Login failed. Please check your credentials and try again.')
         submitted.value = false

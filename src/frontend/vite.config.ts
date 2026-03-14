@@ -1,13 +1,9 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig(({ mode }) => ({
-  plugins: [
-    vue(),
-    mode === 'development' && vueDevTools(),
-  ].filter(Boolean),
+  plugins: [vue()],
   
   resolve: {
     alias: {
@@ -21,5 +17,26 @@ export default defineConfig(({ mode }) => ({
 
   build: {
     sourcemap: mode === 'development',
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return
+
+          if (id.includes('ckeditor5') || id.includes('@ckeditor')) {
+            return 'vendor-ckeditor'
+          }
+
+          if (id.includes('pdfjs-dist') || id.includes('pdf-lib')) {
+            return 'vendor-pdf'
+          }
+
+          if (id.includes('vue') || id.includes('pinia') || id.includes('vue-router')) {
+            return 'vendor-vue'
+          }
+
+          return 'vendor-misc'
+        },
+      },
+    },
   },
 }))

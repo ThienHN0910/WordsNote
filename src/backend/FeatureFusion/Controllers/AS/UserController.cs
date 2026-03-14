@@ -6,7 +6,7 @@ using Application.Facades;
 namespace FeatureFusion.Controllers.AS;
 
 [ApiController]
-[Authorize(Roles = "User,Admin")]
+[Authorize]
 [Route("api/[controller]")]
 public class UserController : ControllerBase
 {

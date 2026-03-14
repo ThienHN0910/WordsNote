@@ -21,12 +21,14 @@
 </template>
 <script lang="ts" setup>
 import { useAuthStore } from '@/stores/AS/AuthStore'
+import { AuthService } from '@/services/AS/AuthService'
 import { useRouter } from 'vue-router'
 
 const authStore = useAuthStore()
 const router = useRouter()
 
-function logout() {
+async function logout() {
+  await AuthService.logoutSupabase()
   authStore.clearAuthToken()
   router.push({ name: 'login' })
 }

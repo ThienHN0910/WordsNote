@@ -1,23 +1,21 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { StudyLocalService } from '@/services/WordsNote/StudyLocalService'
+import { StudyAPI } from '@/apis/WordsNote/StudyAPI'
 import type { CardDifficulty, StudyCard, StudyDeck } from '@/types/WordsNote'
+
+interface ImportCardsResult {
+  imported: number
+  skipped: number
+}
 
 export const useStudyStore = defineStore('study', () => {
   const decks = ref<StudyDeck[]>([])
   const cards = ref<StudyCard[]>([])
 
-  function persist() {
-    StudyLocalService.save({
-      decks: decks.value,
-      cards: cards.value,
-    })
-  }
-
-  function load() {
-    const snapshot = StudyLocalService.load()
-    decks.value = snapshot.decks
-    cards.value = snapshot.cards
+  async function load() {
+    const [decksResponse, cardsResponse] = await Promise.all([StudyAPI.getDecks(), StudyAPI.getCards()])
+    decks.value = decksResponse.data
+    cards.value = cardsResponse.data
   }
 
   const deckList = computed(() => [...decks.value].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)))
@@ -36,77 +34,103 @@ export const useStudyStore = defineStore('study', () => {
   }
 
   function getDeckStats(deckId: string) {
-    return StudyLocalService.getDeckStats(deckId, cards.value)
+    const now = new Date()
+    const deckCards = cards.value.filter((card) => card.deckId === deckId)
+    const dueCards = deckCards.filter((card) => new Date(card.dueAt) <= now).length
+    const masteredCards = deckCards.filter((card) => card.streak >= 5).length
+
+    return {
+      totalCards: deckCards.length,
+      dueCards,
+      masteredCards,
+    }
   }
 
-  function createDeck(title: string, description: string) {
-    const deck = StudyLocalService.createDeck({ title, description })
-    decks.value.push(deck)
-    persist()
+  async function createDeck(title: string, description: string) {
+    const response = await StudyAPI.createDeck(title, description)
+    const deck = response.data
+    decks.value = [deck, ...decks.value]
     return deck
   }
 
-  function updateDeck(deckId: string, title: string, description: string) {
-    const deck = getDeckById(deckId)
-    if (!deck) return false
+  async function updateDeck(deckId: string, title: string, description: string) {
+    const response = await StudyAPI.updateDeck(deckId, title, description)
+    const updatedDeck = response.data
+    const index = decks.value.findIndex((deck) => deck.id === deckId)
+    if (index === -1) return false
 
-    deck.title = title.trim()
-    deck.description = description.trim()
-    deck.updatedAt = new Date().toISOString()
-    persist()
+    decks.value[index] = updatedDeck
     return true
   }
 
-  function removeDeck(deckId: string) {
+  async function removeDeck(deckId: string) {
+    await StudyAPI.deleteDeck(deckId)
     decks.value = decks.value.filter((deck) => deck.id !== deckId)
     cards.value = cards.value.filter((card) => card.deckId !== deckId)
-    persist()
   }
 
-  function createCard(deckId: string, front: string, back: string, hint: string, tags: string[]) {
-    const card = StudyLocalService.createCard({
-      deckId,
+  async function createCard(deckId: string, front: string, back: string, hint: string, tags: string[]) {
+    const response = await StudyAPI.createCard({
+      deskId: deckId,
       front,
       back,
       hint,
       tags,
     })
+    const card = response.data
     cards.value.push(card)
-
-    const deck = getDeckById(deckId)
-    if (deck) {
-      deck.updatedAt = new Date().toISOString()
-    }
-
-    persist()
+    await syncDecks()
     return card
   }
 
-  function updateCard(cardId: string, front: string, back: string, hint: string, tags: string[]) {
+  async function updateCard(cardId: string, front: string, back: string, hint: string, tags: string[]) {
     const card = cards.value.find((item) => item.id === cardId)
     if (!card) return false
 
-    card.front = front.trim()
-    card.back = back.trim()
-    card.hint = hint.trim() || undefined
-    card.tags = tags
-    persist()
-    return true
-  }
+    const response = await StudyAPI.updateCard(cardId, {
+      deskId: card.deckId,
+      front,
+      back,
+      hint,
+      tags,
+    })
 
-  function removeCard(cardId: string) {
-    cards.value = cards.value.filter((item) => item.id !== cardId)
-    persist()
-  }
-
-  function reviewCard(cardId: string, difficulty: CardDifficulty) {
     const index = cards.value.findIndex((item) => item.id === cardId)
     if (index === -1) return false
 
-    const updated = StudyLocalService.reviewCard(cards.value[index], difficulty)
-    cards.value[index] = updated
-    persist()
+    cards.value[index] = response.data
+    await syncDecks()
     return true
+  }
+
+  async function removeCard(cardId: string) {
+    await StudyAPI.deleteCard(cardId)
+    cards.value = cards.value.filter((item) => item.id !== cardId)
+    await syncDecks()
+  }
+
+  async function reviewCard(cardId: string, difficulty: CardDifficulty) {
+    const index = cards.value.findIndex((item) => item.id === cardId)
+    if (index === -1) return false
+
+    const response = await StudyAPI.reviewCard(cardId, difficulty)
+    cards.value[index] = response.data
+    await syncDecks()
+    return true
+  }
+
+  async function importCardsFromText(deckId: string, rawText: string): Promise<ImportCardsResult> {
+    const response = await StudyAPI.importCards(deckId, rawText)
+    const cardsResponse = await StudyAPI.getCards(deckId)
+    const otherCards = cards.value.filter((card) => card.deckId !== deckId)
+    cards.value = [...otherCards, ...cardsResponse.data]
+    await syncDecks()
+    return response.data
+  }
+
+  async function syncDecks() {
+    const response = await StudyAPI.getDecks()
+    decks.value = response.data
   }
 
   return {
@@ -125,5 +149,6 @@ export const useStudyStore = defineStore('study', () => {
     updateCard,
     removeCard,
     reviewCard,
+    importCardsFromText,
   }
 })

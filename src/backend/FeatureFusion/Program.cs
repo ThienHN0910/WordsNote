@@ -1,5 +1,6 @@
 using FeatureFusion.Extensions;
 using Infrastructure.Configuration;
+using Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +12,7 @@ builder.Services.AddCorsPolicy(builder.Configuration);
 
 builder.Services.AddPersistenceServices(builder.Configuration);
 builder.Services.AddMongoPersistenceServices(builder.Configuration);
-builder.Services.AddSupabaseS3Options(builder.Configuration);
+builder.Services.Configure<SupabaseS3Options>(builder.Configuration.GetSection("Supabase:S3"));
 
 builder.Services.AddJwtAuthentication(builder.Configuration);
 

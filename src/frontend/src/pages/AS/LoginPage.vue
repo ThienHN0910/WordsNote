@@ -28,13 +28,18 @@
               {{ isLoading ? 'Loading...' : 'Login' }}
             </BaseButton>
           </div>
+          <div class="forms-inputs mb-4">
+            <BaseButton @click="submitGoogleLogin" :disabled="isLoading" class="justify-content-end">
+              {{ isLoading ? 'Loading...' : 'Login with Google (Supabase)' }}
+            </BaseButton>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </template>
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { MSG_EMAIL_EN, MSG_PASSWORD_EN } from '@/constants/Auth.constant'
 import { AuthService } from '@/services/AS/AuthService'
 import { useAuthStore } from '@/stores/AS/AuthStore'
@@ -55,6 +60,18 @@ const validPassword = (password: string) => {
 const isValidUserNameOrEmail = (email: string) => {
   return email.length > 0
 }
+
+onMounted(async () => {
+  try {
+    const token = await AuthService.getSupabaseAccessToken()
+    if (token) {
+      authStore.setAuthToken(token)
+      router.push({ name: 'home' })
+    }
+  } catch {
+    // Ignore session bootstrap errors and keep login page interactive.
+  }
+})
 
 const submit = () => {
   isLoading.value = true
@@ -80,5 +97,16 @@ const submit = () => {
     .finally(() => {
       isLoading.value = false
     })
+}
+
+const submitGoogleLogin = async () => {
+  try {
+    isLoading.value = true
+    await AuthService.loginWithGoogle()
+  } catch (error) {
+    alert(`Google login failed. ${error}`)
+  } finally {
+    isLoading.value = false
+  }
 }
 </script>

@@ -123,14 +123,14 @@ function nextCard() {
   currentIndex.value = (currentIndex.value + 1) % studyCards.value.length
 }
 
-function gradeAndNext(difficulty: CardDifficulty) {
+async function gradeAndNext(difficulty: CardDifficulty) {
   if (!currentCard.value) return
 
-  studyStore.reviewCard(currentCard.value.id, difficulty)
+  await studyStore.reviewCard(currentCard.value.id, difficulty)
   nextCard()
 }
 
-function submitQuiz() {
+async function submitQuiz() {
   if (!currentCard.value) return
 
   const expected = normalizeText(currentCard.value.back)
@@ -140,23 +140,25 @@ function submitQuiz() {
   quizCorrect.value = correct
   quizFeedback.value = correct ? 'Dung roi! Card da duoc day lich on xa hon.' : 'Chua chinh xac. Ban nen gap lai card nay som hon.'
 
-  gradeAndNext(correct ? 'easy' : 'hard')
+  await gradeAndNext(correct ? 'easy' : 'hard')
 }
 
-function skipQuiz() {
+async function skipQuiz() {
   if (!currentCard.value) return
 
   quizCorrect.value = false
   quizFeedback.value = 'Da bo qua card nay.'
-  gradeAndNext('hard')
+  await gradeAndNext('hard')
 }
 
 function goBack() {
   router.push({ name: 'studyHub' })
 }
 
-onMounted(() => {
-  studyStore.load()
+onMounted(async () => {
+  if (studyStore.deckList.length === 0) {
+    await studyStore.load()
+  }
 })
 
 watch(mode, () => {

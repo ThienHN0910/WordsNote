@@ -16,7 +16,9 @@ public class CurrentUserService : ICurrentUserService
     {
         get
         {
-            var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = _httpContextAccessor.HttpContext?.User;
+            var userIdClaim = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? user?.FindFirst("sub")?.Value;
             if (string.IsNullOrEmpty(userIdClaim))
             {
                 throw new InvalidOperationException("User ID claim not found.");
@@ -31,4 +33,3 @@ public class CurrentUserService : ICurrentUserService
         }
     }
 }
-

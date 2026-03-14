@@ -128,6 +128,23 @@
               </div>
             </form>
 
+            <h3 class="h5 mb-2">Import Cards Nhanh</h3>
+            <div class="mb-4">
+              <textarea
+                v-model="importText"
+                class="form-control mb-2"
+                rows="5"
+                placeholder="Vi du:\nhello:xin chao\nconcise:ngan gon"
+              />
+              <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-primary" @click="handleImportCards">Import theo dong</button>
+                <span v-if="importResult" class="small text-muted">{{ importResult }}</span>
+              </div>
+              <div class="small text-muted mt-1">
+                Dinh dang: moi dong la 1 card. Mat truoc va mat sau tach bang dau hai cham.
+              </div>
+            </div>
+
             <h3 class="h5 mb-2">Cards</h3>
             <div v-if="!deckCards.length" class="text-muted">Collection nay chua co card.</div>
             <div v-else class="vstack gap-2">
@@ -184,6 +201,9 @@ const cardForm = reactive({
   tagsText: '',
 })
 
+const importText = ref('')
+const importResult = ref('')
+
 const deckList = computed(() => studyStore.deckList)
 const selectedDeck = computed(() => studyStore.getDeckById(selectedDeckId.value))
 const deckCards = computed(() => {
@@ -201,11 +221,11 @@ function getDeckStats(deckId: string) {
   return studyStore.getDeckStats(deckId)
 }
 
-function handleCreateDeck() {
+async function handleCreateDeck() {
   const title = newDeck.title.trim()
   if (!title) return
 
-  const deck = studyStore.createDeck(title, newDeck.description)
+  const deck = await studyStore.createDeck(title, newDeck.description)
   selectedDeckId.value = deck.id
   newDeck.title = ''
   newDeck.description = ''
@@ -218,7 +238,7 @@ function parseTags(tagsText: string) {
     .filter(Boolean)
 }
 
-function handleSubmitCard() {
+async function handleSubmitCard() {
   if (!selectedDeckId.value) return
 
   const front = cardForm.front.trim()
@@ -228,12 +248,24 @@ function handleSubmitCard() {
   const tags = parseTags(cardForm.tagsText)
 
   if (cardForm.editingCardId) {
-    studyStore.updateCard(cardForm.editingCardId, front, back, cardForm.hint, tags)
+    await studyStore.updateCard(cardForm.editingCardId, front, back, cardForm.hint, tags)
   } else {
-    studyStore.createCard(selectedDeckId.value, front, back, cardForm.hint, tags)
+    await studyStore.createCard(selectedDeckId.value, front, back, cardForm.hint, tags)
   }
 
   resetCardForm()
+}
+
+async function handleImportCards() {
+  if (!selectedDeckId.value) return
+  if (!importText.value.trim()) return
+
+  const result = await studyStore.importCardsFromText(selectedDeckId.value, importText.value)
+  importResult.value = `Imported ${result.imported} card(s), skipped ${result.skipped} invalid line(s).`
+
+  if (result.imported > 0) {
+    importText.value = ''
+  }
 }
 
 function resetCardForm() {
@@ -255,18 +287,18 @@ function startEditCard(cardId: string) {
   cardForm.tagsText = card.tags.join(', ')
 }
 
-function removeCard(cardId: string) {
-  studyStore.removeCard(cardId)
+async function removeCard(cardId: string) {
+  await studyStore.removeCard(cardId)
   if (cardForm.editingCardId === cardId) {
     resetCardForm()
   }
 }
 
-function handleDeleteDeck() {
+async function handleDeleteDeck() {
   if (!selectedDeckId.value) return
 
   const deletingDeckId = selectedDeckId.value
-  studyStore.removeDeck(deletingDeckId)
+  await studyStore.removeDeck(deletingDeckId)
 
   const nextDeck = studyStore.deckList[0]
   selectedDeckId.value = nextDeck?.id ?? ''
@@ -284,8 +316,8 @@ function goToSession() {
   })
 }
 
-onMounted(() => {
-  studyStore.load()
+onMounted(async () => {
+  await studyStore.load()
 
   if (studyStore.deckList.length > 0) {
     selectedDeckId.value = studyStore.deckList[0].id

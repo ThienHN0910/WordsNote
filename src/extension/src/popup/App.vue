@@ -5,32 +5,13 @@
       <h1 class="title">WordsNote</h1>
     </div>
     <div class="content">
-      <LoginForm v-if="!isLoggedIn" @logged-in="handleLogin" />
-      <DailyCards v-else @logged-out="handleLogout" />
+      <DailyCards />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import LoginForm from './components/LoginForm.vue';
 import DailyCards from './components/DailyCards.vue';
-import { getToken } from '../services/storage.js';
-
-const isLoggedIn = ref(false);
-
-onMounted(async () => {
-  const token = await getToken();
-  isLoggedIn.value = !!token;
-});
-
-function handleLogin() {
-  isLoggedIn.value = true;
-}
-
-function handleLogout() {
-  isLoggedIn.value = false;
-}
 </script>
 
 <style>

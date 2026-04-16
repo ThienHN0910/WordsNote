@@ -1,5 +1,7 @@
 ﻿using Application.Helpers;
+using Application.IRepositories.AS;
 using Application.IServices.AS;
+using Application.Facades;
 using Application.Services.AS;
 using Infrastructure.Repositories.AS;
 
@@ -9,6 +11,9 @@ namespace FeatureFusion.Extensions
     {
         public static object AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddScoped<IAuthRepository, AuthRepository>();
+            services.AddScoped<IUserRepo, UserRepository>();
+
             // Auth
             services.AddScoped<IAuthService, AuthService>();
 
@@ -18,6 +23,7 @@ namespace FeatureFusion.Extensions
 
             // User
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<UserFacade>();
 
 
             // Storage

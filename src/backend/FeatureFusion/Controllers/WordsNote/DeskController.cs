@@ -9,7 +9,8 @@ namespace FeatureFusion.Controllers.WordsNote
 {
     [ApiController]
     [Authorize]
-    [Route("api/[controller]")]
+    [Route("api/desk")]
+    [Route("api/collections")]
     public class DeskController : ControllerBase
     {
         private const string DeskCollectionName = "wordsnote_desks";
@@ -29,6 +30,8 @@ namespace FeatureFusion.Controllers.WordsNote
         [HttpGet]
         public async Task<ActionResult<IEnumerable<StudyDeskDTO>>> GetAllAsync()
         {
+            AddLegacyRouteHeader();
+
             var userId = _currentUserService.UserId;
             if (userId is null)
             {
@@ -45,6 +48,8 @@ namespace FeatureFusion.Controllers.WordsNote
         [HttpPost]
         public async Task<ActionResult<StudyDeskDTO>> CreateAsync([FromBody] DeskUpsertRequestDTO request)
         {
+            AddLegacyRouteHeader();
+
             var userId = _currentUserService.UserId;
             if (userId is null)
             {
@@ -54,7 +59,7 @@ namespace FeatureFusion.Controllers.WordsNote
             var title = request.Title.Trim();
             if (string.IsNullOrWhiteSpace(title))
             {
-                return BadRequest(new { Error = "Desk title is required." });
+                return BadRequest(new { Error = "Collection title is required." });
             }
 
             var now = DateTime.UtcNow;
@@ -69,12 +74,14 @@ namespace FeatureFusion.Controllers.WordsNote
             };
 
             await _desks.InsertOneAsync(desk);
-            return CreatedAtAction(nameof(GetAllAsync), new { id = desk.Id }, MapDesk(desk));
+            return Created($"/api/collections/{desk.Id}", MapDesk(desk));
         }
 
         [HttpPut("{id}")]
         public async Task<ActionResult<StudyDeskDTO>> UpdateAsync(string id, [FromBody] DeskUpsertRequestDTO request)
         {
+            AddLegacyRouteHeader();
+
             var userId = _currentUserService.UserId;
             if (userId is null)
             {
@@ -84,7 +91,7 @@ namespace FeatureFusion.Controllers.WordsNote
             var title = request.Title.Trim();
             if (string.IsNullOrWhiteSpace(title))
             {
-                return BadRequest(new { Error = "Desk title is required." });
+                return BadRequest(new { Error = "Collection title is required." });
             }
 
             var update = Builders<DeskDocument>.Update
@@ -113,6 +120,8 @@ namespace FeatureFusion.Controllers.WordsNote
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAsync(string id)
         {
+            AddLegacyRouteHeader();
+
             var userId = _currentUserService.UserId;
             if (userId is null)
             {
@@ -128,6 +137,14 @@ namespace FeatureFusion.Controllers.WordsNote
 
             await _cards.DeleteManyAsync(card => card.DeskId == id && card.UserId == userId.Value);
             return NoContent();
+        }
+
+        private void AddLegacyRouteHeader()
+        {
+            if (Request.Path.StartsWithSegments("/api/desk"))
+            {
+                Response.Headers["X-Deprecated-Route"] = "Route /api/desk is deprecated. Use /api/collections.";
+            }
         }
 
         private static string CreateId(string prefix)

@@ -7,6 +7,8 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.ApplyFlatEnvironmentOverrides();
+
 // Register services
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddEndpointsApiExplorer();

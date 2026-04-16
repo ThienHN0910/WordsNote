@@ -2,7 +2,8 @@ export type CardDifficulty = 'easy' | 'medium' | 'hard'
 
 export interface StudyCard {
   id: string
-  deckId: string
+  collectionId: string
+  deckId?: string
   front: string
   back: string
   hint?: string
@@ -29,4 +30,12 @@ export interface StudyDeckStats {
 export interface StudySnapshot {
   decks: StudyDeck[]
   cards: StudyCard[]
+}
+
+export interface DeepStudyAnswerResult {
+  cardId: string
+  isCorrect: boolean
+  expectedAnswer: string
+  submittedAnswer: string
+  recommendedDifficulty: CardDifficulty
 }

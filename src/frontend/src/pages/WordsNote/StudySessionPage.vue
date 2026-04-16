@@ -106,10 +106,6 @@ const studyCards = computed(() => {
 })
 const currentCard = computed(() => studyCards.value[currentIndex.value])
 
-function normalizeText(text: string) {
-  return text.trim().toLowerCase()
-}
-
 function nextCard() {
   showAnswer.value = false
   quizAnswer.value = ''
@@ -133,14 +129,18 @@ async function gradeAndNext(difficulty: CardDifficulty) {
 async function submitQuiz() {
   if (!currentCard.value) return
 
-  const expected = normalizeText(currentCard.value.back)
-  const submitted = normalizeText(quizAnswer.value)
-  const correct = submitted.length > 0 && (submitted.includes(expected) || expected.includes(submitted))
+  const result = await studyStore.checkDeepAnswer(currentCard.value.id, quizAnswer.value)
+  const correct = result.isCorrect
+  const difficulty = result.recommendedDifficulty === 'medium'
+    ? 'medium'
+    : result.recommendedDifficulty === 'easy'
+      ? 'easy'
+      : 'hard'
 
   quizCorrect.value = correct
   quizFeedback.value = correct ? 'Dung roi! Card da duoc day lich on xa hon.' : 'Chua chinh xac. Ban nen gap lai card nay som hon.'
 
-  await gradeAndNext(correct ? 'easy' : 'hard')
+  await gradeAndNext(difficulty)
 }
 
 async function skipQuiz() {

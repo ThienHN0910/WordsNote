@@ -1,8 +1,8 @@
 import apiClient from '@/apis/apiClient'
-import type { StudyCard, StudyDeck } from '@/types/WordsNote'
+import type { DeepStudyAnswerResult, StudyCard, StudyDeck } from '@/types/WordsNote'
 
 interface CardUpsertPayload {
-  deskId: string
+  collectionId: string
   front: string
   back: string
   hint: string
@@ -16,44 +16,48 @@ interface ImportCardsResult {
 
 export const StudyAPI = {
   getDecks() {
-    return apiClient.get<StudyDeck[]>('/api/desk')
+    return apiClient.get<StudyDeck[]>('/api/collections')
   },
 
   createDeck(title: string, description: string) {
-    return apiClient.post<StudyDeck>('/api/desk', { title, description })
+    return apiClient.post<StudyDeck>('/api/collections', { title, description })
   },
 
   updateDeck(deckId: string, title: string, description: string) {
-    return apiClient.put<StudyDeck>(`/api/desk/${deckId}`, { title, description })
+    return apiClient.put<StudyDeck>(`/api/collections/${deckId}`, { title, description })
   },
 
   deleteDeck(deckId: string) {
-    return apiClient.delete(`/api/desk/${deckId}`)
+    return apiClient.delete(`/api/collections/${deckId}`)
   },
 
-  getCards(deckId?: string) {
-    return apiClient.get<StudyCard[]>('/api/card', {
-      params: deckId ? { deckId } : undefined,
+  getCards(collectionId?: string) {
+    return apiClient.get<StudyCard[]>('/api/cards', {
+      params: collectionId ? { collectionId } : undefined,
     })
   },
 
   createCard(payload: CardUpsertPayload) {
-    return apiClient.post<StudyCard>('/api/card', payload)
+    return apiClient.post<StudyCard>('/api/cards', payload)
   },
 
   updateCard(cardId: string, payload: CardUpsertPayload) {
-    return apiClient.put<StudyCard>(`/api/card/${cardId}`, payload)
+    return apiClient.put<StudyCard>(`/api/cards/${cardId}`, payload)
   },
 
   deleteCard(cardId: string) {
-    return apiClient.delete(`/api/card/${cardId}`)
+    return apiClient.delete(`/api/cards/${cardId}`)
   },
 
-  importCards(deckId: string, rawText: string) {
-    return apiClient.post<ImportCardsResult>('/api/card/import', { deskId: deckId, rawText })
+  importCards(collectionId: string, rawText: string) {
+    return apiClient.post<ImportCardsResult>('/api/cards/import', { collectionId, rawText })
   },
 
   reviewCard(cardId: string, difficulty: 'easy' | 'medium' | 'hard') {
-    return apiClient.post<StudyCard>(`/api/card/${cardId}/review`, { difficulty })
+    return apiClient.post<StudyCard>('/api/study/review', { cardId, difficulty })
+  },
+
+  checkDeepAnswer(cardId: string, answer: string) {
+    return apiClient.post<DeepStudyAnswerResult>('/api/study/deep/answer', { cardId, answer })
   },
 }

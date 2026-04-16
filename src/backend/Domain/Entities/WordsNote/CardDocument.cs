@@ -1,4 +1,5 @@
 using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
 
 namespace Domain.Entities.WordsNote;
 
@@ -9,6 +10,7 @@ public class CardDocument
 
     public string DeskId { get; set; } = default!;
 
+    [BsonGuidRepresentation(GuidRepresentation.Standard)]
     public Guid UserId { get; set; }
 
     public string Front { get; set; } = default!;

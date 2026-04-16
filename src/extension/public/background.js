@@ -1,71 +1,52 @@
-const API_URL = 'http://localhost:5000';
+const LOCAL_CARDS_KEY = 'wordsnote_local_cards';
+
+function getLocalCards() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get([LOCAL_CARDS_KEY], (result) => {
+      const cards = Array.isArray(result[LOCAL_CARDS_KEY]) ? result[LOCAL_CARDS_KEY] : [];
+      resolve(cards);
+    });
+  });
+}
+
+function saveLocalCards(cards) {
+  return new Promise((resolve) => {
+    chrome.storage.local.set({ [LOCAL_CARDS_KEY]: cards }, () => resolve());
+  });
+}
 
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
-  if (message.action === 'saveToInbox') {
-    chrome.storage.local.get(['token'], async function(result) {
-      const token = result.token;
-      if (!token) {
-        sendResponse({ success: false, error: 'Not authenticated' });
+  if (message.action !== 'saveToInbox') {
+    return false;
+  }
+
+  (async () => {
+    try {
+      const front = String(message.text || '').trim();
+      if (!front) {
+        sendResponse({ success: false, error: 'No text to save' });
         return;
       }
 
-      try {
-        // Find or create Inbox deck
-        const decksResp = await fetch(`${API_URL}/api/decks`, {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
+      const cards = await getLocalCards();
+      const now = new Date().toISOString();
 
-        let inboxDeckId = null;
+      cards.unshift({
+        id: `local-${Math.random().toString(36).slice(2, 10)}-${Date.now()}`,
+        front,
+        back: '',
+        hint: 'Saved from web',
+        createdAt: now,
+        dueAt: now,
+        streak: 0,
+      });
 
-        if (decksResp.ok) {
-          const decks = await decksResp.json();
-          const inboxDeck = decks.find(function(d) {
-            return d.name === 'Inbox';
-          });
-          if (inboxDeck) {
-            inboxDeckId = inboxDeck.id;
-          }
-        }
+      await saveLocalCards(cards);
+      sendResponse({ success: true });
+    } catch (err) {
+      sendResponse({ success: false, error: err?.message || 'Unknown error' });
+    }
+  })();
 
-        if (!inboxDeckId) {
-          const createResp = await fetch(`${API_URL}/api/decks`, {
-            method: 'POST',
-            headers: {
-              'Authorization': 'Bearer ' + token,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name: 'Inbox', description: 'Words saved from the web' })
-          });
-          if (createResp.ok) {
-            const newDeck = await createResp.json();
-            inboxDeckId = newDeck.id;
-          }
-        }
-
-        const cardResp = await fetch(`${API_URL}/api/cards`, {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Bearer ' + token,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            front: message.text,
-            back: '',
-            notes: 'Saved from web',
-            deckId: inboxDeckId
-          })
-        });
-
-        if (cardResp.ok) {
-          sendResponse({ success: true });
-        } else {
-          sendResponse({ success: false, error: 'API error' });
-        }
-      } catch (err) {
-        sendResponse({ success: false, error: err.message });
-      }
-    });
-
-    return true; // Keep message channel open for async response
-  }
+  return true;
 });

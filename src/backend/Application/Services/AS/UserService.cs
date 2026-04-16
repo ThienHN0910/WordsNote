@@ -10,12 +10,12 @@ namespace Application.Services.AS
         public UserService(IUserRepo userRepo) {
            _userRepo = userRepo;
         }
-        public Task<User> GetUserByIdAsync(Guid userId)
+        public Task<User?> GetUserByIdAsync(Guid userId)
         {
             return _userRepo.GetUserByIdAsync(userId);
         }
 
-        public Task<User> UpdateUserProfileAsync(Guid userId, User userUpdated)
+        public Task<User?> UpdateUserProfileAsync(Guid userId, User userUpdated)
         {
             return _userRepo.UpdateUserProfileAsync(userId, userUpdated);
         }

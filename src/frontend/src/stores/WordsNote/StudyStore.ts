@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { StudyAPI } from '@/apis/WordsNote/StudyAPI'
-import type { CardDifficulty, StudyCard, StudyDeck } from '@/types/WordsNote'
+import type { CardDifficulty, DeepStudyAnswerResult, StudyCard, StudyDeck } from '@/types/WordsNote'
 
 interface ImportCardsResult {
   imported: number
@@ -11,6 +11,10 @@ interface ImportCardsResult {
 export const useStudyStore = defineStore('study', () => {
   const decks = ref<StudyDeck[]>([])
   const cards = ref<StudyCard[]>([])
+
+  function resolveCollectionId(card: StudyCard) {
+    return card.collectionId || card.deckId || ''
+  }
 
   async function load() {
     const [decksResponse, cardsResponse] = await Promise.all([StudyAPI.getDecks(), StudyAPI.getCards()])
@@ -25,7 +29,7 @@ export const useStudyStore = defineStore('study', () => {
   }
 
   function getDeckCards(deckId: string) {
-    return cards.value.filter((card) => card.deckId === deckId)
+    return cards.value.filter((card) => resolveCollectionId(card) === deckId)
   }
 
   function getDueCards(deckId: string) {
@@ -35,7 +39,7 @@ export const useStudyStore = defineStore('study', () => {
 
   function getDeckStats(deckId: string) {
     const now = new Date()
-    const deckCards = cards.value.filter((card) => card.deckId === deckId)
+    const deckCards = cards.value.filter((card) => resolveCollectionId(card) === deckId)
     const dueCards = deckCards.filter((card) => new Date(card.dueAt) <= now).length
     const masteredCards = deckCards.filter((card) => card.streak >= 5).length
 
@@ -66,12 +70,12 @@ export const useStudyStore = defineStore('study', () => {
   async function removeDeck(deckId: string) {
     await StudyAPI.deleteDeck(deckId)
     decks.value = decks.value.filter((deck) => deck.id !== deckId)
-    cards.value = cards.value.filter((card) => card.deckId !== deckId)
+    cards.value = cards.value.filter((card) => resolveCollectionId(card) !== deckId)
   }
 
   async function createCard(deckId: string, front: string, back: string, hint: string, tags: string[]) {
     const response = await StudyAPI.createCard({
-      deskId: deckId,
+      collectionId: deckId,
       front,
       back,
       hint,
@@ -88,7 +92,7 @@ export const useStudyStore = defineStore('study', () => {
     if (!card) return false
 
     const response = await StudyAPI.updateCard(cardId, {
-      deskId: card.deckId,
+      collectionId: resolveCollectionId(card),
       front,
       back,
       hint,
@@ -122,9 +126,14 @@ export const useStudyStore = defineStore('study', () => {
   async function importCardsFromText(deckId: string, rawText: string): Promise<ImportCardsResult> {
     const response = await StudyAPI.importCards(deckId, rawText)
     const cardsResponse = await StudyAPI.getCards(deckId)
-    const otherCards = cards.value.filter((card) => card.deckId !== deckId)
+    const otherCards = cards.value.filter((card) => resolveCollectionId(card) !== deckId)
     cards.value = [...otherCards, ...cardsResponse.data]
     await syncDecks()
+    return response.data
+  }
+
+  async function checkDeepAnswer(cardId: string, answer: string): Promise<DeepStudyAnswerResult> {
+    const response = await StudyAPI.checkDeepAnswer(cardId, answer)
     return response.data
   }
 
@@ -149,6 +158,7 @@ export const useStudyStore = defineStore('study', () => {
     updateCard,
     removeCard,
     reviewCard,
+    checkDeepAnswer,
     importCardsFromText,
   }
 })

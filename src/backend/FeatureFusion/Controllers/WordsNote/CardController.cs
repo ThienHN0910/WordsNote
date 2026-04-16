@@ -9,7 +9,8 @@ namespace FeatureFusion.Controllers.WordsNote
 {
     [ApiController]
     [Authorize]
-    [Route("api/[controller]")]
+    [Route("api/card")]
+    [Route("api/cards")]
     public class CardController : ControllerBase
     {
         private const string DeskCollectionName = "wordsnote_desks";
@@ -27,8 +28,13 @@ namespace FeatureFusion.Controllers.WordsNote
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<StudyCardDTO>>> GetAllAsync([FromQuery] string? deckId = null)
+        public async Task<ActionResult<IEnumerable<StudyCardDTO>>> GetAllAsync(
+            [FromQuery] string? collectionId = null,
+            [FromQuery(Name = "deckId")] string? deckId = null,
+            [FromQuery(Name = "deskId")] string? deskId = null)
         {
+            AddLegacyRouteHeader();
+
             var userId = _currentUserService.UserId;
             if (userId is null)
             {
@@ -36,11 +42,44 @@ namespace FeatureFusion.Controllers.WordsNote
             }
 
             var filter = Builders<CardDocument>.Filter.Eq(card => card.UserId, userId.Value);
+            var resolvedCollectionId = ResolveCollectionId(collectionId, deckId, deskId);
 
-            if (!string.IsNullOrWhiteSpace(deckId))
+            if (!string.IsNullOrWhiteSpace(resolvedCollectionId))
             {
-                filter &= Builders<CardDocument>.Filter.Eq(card => card.DeskId, deckId);
+                filter &= Builders<CardDocument>.Filter.Eq(card => card.DeskId, resolvedCollectionId);
             }
+
+            var cards = await _cards.Find(filter)
+                .SortBy(card => card.DueAt)
+                .ThenBy(card => card.Front)
+                .ToListAsync();
+
+            return Ok(cards.Select(MapCard));
+        }
+
+        [HttpGet("due")]
+        public async Task<ActionResult<IEnumerable<StudyCardDTO>>> GetDueAsync(
+            [FromQuery] string? collectionId = null,
+            [FromQuery(Name = "deckId")] string? deckId = null,
+            [FromQuery(Name = "deskId")] string? deskId = null)
+        {
+            AddLegacyRouteHeader();
+
+            var userId = _currentUserService.UserId;
+            if (userId is null)
+            {
+                return Unauthorized(new { Error = "Invalid or unsupported token subject." });
+            }
+
+            var filter = Builders<CardDocument>.Filter.Eq(card => card.UserId, userId.Value);
+            var resolvedCollectionId = ResolveCollectionId(collectionId, deckId, deskId);
+            if (!string.IsNullOrWhiteSpace(resolvedCollectionId))
+            {
+                filter &= Builders<CardDocument>.Filter.Eq(card => card.DeskId, resolvedCollectionId);
+            }
+
+            var now = DateTime.UtcNow;
+            filter &= Builders<CardDocument>.Filter.Lte(card => card.DueAt, now);
 
             var cards = await _cards.Find(filter)
                 .SortBy(card => card.DueAt)
@@ -53,16 +92,19 @@ namespace FeatureFusion.Controllers.WordsNote
         [HttpPost]
         public async Task<ActionResult<StudyCardDTO>> CreateAsync([FromBody] CardUpsertRequestDTO request)
         {
+            AddLegacyRouteHeader();
+
             var userId = _currentUserService.UserId;
             if (userId is null)
             {
                 return Unauthorized(new { Error = "Invalid or unsupported token subject." });
             }
 
-            var desk = await RequireDeskAsync(request.DeskId);
+            var collectionId = request.ResolveCollectionId();
+            var desk = await RequireDeskAsync(collectionId);
             if (desk is null)
             {
-                return NotFound(new { Error = "Desk not found." });
+                return NotFound(new { Error = "Collection not found." });
             }
 
             var front = request.Front.Trim();
@@ -88,12 +130,14 @@ namespace FeatureFusion.Controllers.WordsNote
 
             await _cards.InsertOneAsync(card);
             await TouchDeskAsync(desk.Id);
-            return CreatedAtAction(nameof(GetAllAsync), new { id = card.Id }, MapCard(card));
+            return Created($"/api/cards/{card.Id}", MapCard(card));
         }
 
         [HttpPut("{id}")]
         public async Task<ActionResult<StudyCardDTO>> UpdateAsync(string id, [FromBody] CardUpsertRequestDTO request)
         {
+            AddLegacyRouteHeader();
+
             var userId = _currentUserService.UserId;
             if (userId is null)
             {
@@ -126,6 +170,8 @@ namespace FeatureFusion.Controllers.WordsNote
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAsync(string id)
         {
+            AddLegacyRouteHeader();
+
             var userId = _currentUserService.UserId;
             if (userId is null)
             {
@@ -146,16 +192,19 @@ namespace FeatureFusion.Controllers.WordsNote
         [HttpPost("import")]
         public async Task<ActionResult<ImportCardsResultDTO>> ImportAsync([FromBody] CardImportRequestDTO request)
         {
+            AddLegacyRouteHeader();
+
             var userId = _currentUserService.UserId;
             if (userId is null)
             {
                 return Unauthorized(new { Error = "Invalid or unsupported token subject." });
             }
 
-            var desk = await RequireDeskAsync(request.DeskId);
+            var collectionId = request.ResolveCollectionId();
+            var desk = await RequireDeskAsync(collectionId);
             if (desk is null)
             {
-                return NotFound(new { Error = "Desk not found." });
+                return NotFound(new { Error = "Collection not found." });
             }
 
             var lines = request.RawText.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
@@ -215,6 +264,8 @@ namespace FeatureFusion.Controllers.WordsNote
         [HttpPost("{id}/review")]
         public async Task<ActionResult<StudyCardDTO>> ReviewAsync(string id, [FromBody] CardReviewRequestDTO request)
         {
+            AddLegacyRouteHeader();
+
             var userId = _currentUserService.UserId;
             if (userId is null)
             {
@@ -312,6 +363,7 @@ namespace FeatureFusion.Controllers.WordsNote
             return new StudyCardDTO
             {
                 Id = card.Id,
+                CollectionId = card.DeskId,
                 DeckId = card.DeskId,
                 Front = card.Front,
                 Back = card.Back,
@@ -321,6 +373,34 @@ namespace FeatureFusion.Controllers.WordsNote
                 LastReviewedAt = card.LastReviewedAt?.ToString("O"),
                 Streak = card.Streak,
             };
+        }
+
+        private static string? ResolveCollectionId(string? collectionId, string? deckId, string? deskId)
+        {
+            if (!string.IsNullOrWhiteSpace(collectionId))
+            {
+                return collectionId;
+            }
+
+            if (!string.IsNullOrWhiteSpace(deckId))
+            {
+                return deckId;
+            }
+
+            if (!string.IsNullOrWhiteSpace(deskId))
+            {
+                return deskId;
+            }
+
+            return null;
+        }
+
+        private void AddLegacyRouteHeader()
+        {
+            if (Request.Path.StartsWithSegments("/api/card"))
+            {
+                Response.Headers["X-Deprecated-Route"] = "Route /api/card is deprecated. Use /api/cards.";
+            }
         }
     }
 }

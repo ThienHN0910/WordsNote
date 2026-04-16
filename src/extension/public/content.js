@@ -40,7 +40,7 @@
               tooltip.textContent = '✅ Saved!';
               tooltip.style.background = '#16a34a';
             } else {
-              tooltip.textContent = '❌ Failed - Login first';
+              tooltip.textContent = '❌ Save failed';
               tooltip.style.background = '#dc2626';
             }
             setTimeout(removeTooltip, 1500);

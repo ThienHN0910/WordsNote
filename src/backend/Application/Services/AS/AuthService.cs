@@ -24,14 +24,24 @@ public class AuthService : IAuthService
         {
             throw new ArgumentException("Either UserName or Email must be provided.");
         }
-        if (await _authRepository.CheckUserExistsAsync(request.UserName, request.Email) != null)
+
+        var userName = request.UserName?.Trim() ?? string.Empty;
+        var email = request.Email?.Trim() ?? string.Empty;
+
+        if (await _authRepository.CheckUserExistsAsync(userName, email) != null)
         {
             throw new ArgumentException("User already exists.");
         }
+
+        if (string.IsNullOrWhiteSpace(request.Password))
+        {
+            throw new ArgumentException("Password is required.");
+        }
+
         var user = new User
         {
-            UserName = request.UserName,
-            Email = request.Email,
+            UserName = userName,
+            Email = string.IsNullOrWhiteSpace(email) ? null : email,
             PasswordHash = HashPassSHA256.HashPass(request.Password)
         };
 
@@ -40,14 +50,24 @@ public class AuthService : IAuthService
     }
     public async Task<string> LoginAsync(LoginRequestDTO request)
     {
-        if (string.IsNullOrWhiteSpace(request.UserName))
+        if (string.IsNullOrWhiteSpace(request.Password))
         {
-           return await LoginByEmailAsync(request.Email, request.Password);
+            throw new ArgumentException("Password is required.");
         }
-        if (string.IsNullOrWhiteSpace(request.Email))
+
+        var userName = request.UserName?.Trim();
+        var email = request.Email?.Trim();
+
+        if (!string.IsNullOrWhiteSpace(userName) && string.IsNullOrWhiteSpace(email))
         {
-            return await LoginByUsernameAsync(request.UserName, request.Password);
+            return await LoginByUsernameAsync(userName, request.Password);
         }
+
+        if (!string.IsNullOrWhiteSpace(email) && string.IsNullOrWhiteSpace(userName))
+        {
+            return await LoginByEmailAsync(email, request.Password);
+        }
+
         throw new ArgumentException("Either UserName or Email must be provided.");     
     }
 

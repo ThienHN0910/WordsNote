@@ -4,6 +4,8 @@ public class StudyCardDTO
 {
     public string Id { get; set; } = string.Empty;
 
+    public string CollectionId { get; set; } = string.Empty;
+
     public string DeckId { get; set; } = string.Empty;
 
     public string Front { get; set; } = string.Empty;

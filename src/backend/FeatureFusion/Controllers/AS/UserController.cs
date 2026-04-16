@@ -44,6 +44,10 @@ public class UserController : ControllerBase
             return Unauthorized();
         }
         var updatedUser = await _userFacade.UpdateUserProfileAsync(userId.Value, userUpdated);
+        if (updatedUser == null)
+        {
+            return NotFound();
+        }
         return Ok(updatedUser);
     }
 }

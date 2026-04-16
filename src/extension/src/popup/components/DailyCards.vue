@@ -1,14 +1,14 @@
 <template>
   <div>
-    <!-- Header row -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
       <div>
         <p style="font-size: 15px; font-weight: 600; color: #1e293b;">
-          {{ loading ? 'Loading...' : `${cards.length} card${cards.length !== 1 ? 's' : ''} due today` }}
+          {{ loading ? 'Loading...' : `${cards.length} local card${cards.length !== 1 ? 's' : ''} due` }}
         </p>
+        <p style="font-size: 12px; color: #64748b; margin-top: 2px;">No login required</p>
       </div>
       <button
-        @click="handleLogout"
+        @click="refresh"
         style="
           padding: 5px 10px;
           font-size: 12px;
@@ -21,11 +21,10 @@
         @mouseover="e => e.target.style.background = '#f1f5f9'"
         @mouseout="e => e.target.style.background = 'transparent'"
       >
-        Logout
+        Refresh
       </button>
     </div>
 
-    <!-- Error state -->
     <div
       v-if="errorMsg"
       style="
@@ -41,7 +40,6 @@
       {{ errorMsg }}
     </div>
 
-    <!-- Loading skeleton -->
     <div v-if="loading">
       <div
         v-for="i in 3"
@@ -56,7 +54,6 @@
       />
     </div>
 
-    <!-- Empty state -->
     <div
       v-else-if="!errorMsg && cards.length === 0"
       style="
@@ -70,7 +67,6 @@
       <p style="font-size: 13px; margin-top: 4px;">No cards due today.</p>
     </div>
 
-    <!-- Cards list -->
     <div v-else-if="!loading">
       <div
         v-for="card in cards"
@@ -86,29 +82,31 @@
           margin-bottom: 8px;
         "
       >
-        <span style="font-size: 14px; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px;">
-          {{ card.front }}
-        </span>
-        <span
-          style="
-            font-size: 11px;
-            padding: 2px 8px;
-            background: #ede9fe;
-            color: #6d28d9;
-            border-radius: 999px;
-            font-weight: 500;
-            flex-shrink: 0;
-            margin-left: 8px;
-          "
-        >
-          due
-        </span>
+        <div style="max-width: 200px; overflow: hidden;">
+          <div style="font-size: 14px; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            {{ card.front }}
+          </div>
+          <div style="font-size: 11px; color: #64748b; margin-top: 2px;">streak: {{ card.streak || 0 }}</div>
+        </div>
+        <div style="display: flex; gap: 6px;">
+          <button
+            style="padding: 4px 8px; border: 1px solid #fecaca; background: #fff1f2; color: #b91c1c; border-radius: 6px; font-size: 11px; cursor: pointer;"
+            @click="review(card.id, 'hard')"
+          >
+            Hard
+          </button>
+          <button
+            style="padding: 4px 8px; border: 1px solid #bbf7d0; background: #f0fdf4; color: #166534; border-radius: 6px; font-size: 11px; cursor: pointer;"
+            @click="review(card.id, 'easy')"
+          >
+            Easy
+          </button>
+        </div>
       </div>
 
-      <!-- Open web app link -->
       <div style="margin-top: 16px; text-align: center;">
         <p style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">
-          Open the WordsNote web app to study
+          Highlights on webpages are saved to local cards automatically.
         </p>
         <button
           @click="openWebApp"
@@ -125,7 +123,7 @@
           @mouseover="e => e.target.style.background = '#4338ca'"
           @mouseout="e => e.target.style.background = '#4f46e5'"
         >
-          📖 Study Now
+          Open Web App
         </button>
       </div>
     </div>
@@ -134,36 +132,35 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { apiGet } from '../../services/api.js';
-import { clearToken } from '../../services/storage.js';
-
-const emit = defineEmits(['logged-out']);
+import { getDueLocalCards, reviewLocalCard } from '../../services/storage.js';
 
 const cards = ref([]);
 const loading = ref(true);
 const errorMsg = ref('');
 
-onMounted(async () => {
+async function refresh() {
+  loading.value = true;
   try {
-    const data = await apiGet('/api/cards/due');
-    cards.value = Array.isArray(data) ? data : (data.cards || []);
+    cards.value = await getDueLocalCards();
   } catch (err) {
-    errorMsg.value = 'Failed to load cards. Please check your connection.';
+    errorMsg.value = 'Failed to load local cards.';
   } finally {
     loading.value = false;
   }
-});
-
-function handleLogout() {
-  clearToken();
-  emit('logged-out');
 }
+
+async function review(cardId, difficulty) {
+  await reviewLocalCard(cardId, difficulty);
+  await refresh();
+}
+
+onMounted(refresh);
 
 function openWebApp() {
   if (typeof chrome !== 'undefined' && chrome.tabs) {
-    chrome.tabs.create({ url: 'http://localhost:5000' });
+    chrome.tabs.create({ url: 'http://localhost:5173' });
   } else {
-    window.open('http://localhost:5000', '_blank');
+    window.open('http://localhost:5173', '_blank');
   }
 }
 </script>

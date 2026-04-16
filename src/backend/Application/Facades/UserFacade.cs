@@ -11,7 +11,7 @@ public class UserFacade
         _userService = userService;
     }
 
-    public Task<User> UpdateUserProfileAsync(Guid userId, User userUpdated)
+    public Task<User?> UpdateUserProfileAsync(Guid userId, User userUpdated)
     {
         return _userService.UpdateUserProfileAsync(userId, userUpdated);
     }

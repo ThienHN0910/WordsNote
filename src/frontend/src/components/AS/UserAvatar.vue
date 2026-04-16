@@ -28,7 +28,6 @@ const authStore = useAuthStore()
 const router = useRouter()
 
 async function logout() {
-  await AuthService.logoutSupabase()
   authStore.clearAuthToken()
   router.push({ name: 'login' })
 }

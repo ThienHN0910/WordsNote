@@ -9,10 +9,10 @@ namespace FeatureFusion.Extensions
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowVue", policy =>
-                    policy.WithOrigins(allowedOrigins)
+                    policy.AllowAnyOrigin() // WithOrigins(allowedOrigins)
                           .AllowAnyHeader()
-                          .AllowAnyMethod()
-                          .AllowCredentials());
+                          .AllowAnyMethod());
+                          //.AllowCredentials());
             });
 
             return services;

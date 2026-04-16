@@ -1,5 +1,7 @@
+@use '../variables' as v;
+
 body[data-theme='light'] {
   .app-base-button {
-    background-color: $LIGHT_THEME_BUTTON_COLOR;
+    background-color: v.$LIGHT_THEME_BUTTON_COLOR;
   }
 }

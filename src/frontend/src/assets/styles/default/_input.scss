@@ -1,7 +1,9 @@
+@use '../variables' as v;
+
 .app-base-input {
   &[type='text'],
   &[type='password'] {
-    border-radius: $APP_RADIUS_NORMAL;
+    border-radius: v.$APP_RADIUS_NORMAL;
     border: 1px solid gray;
   }
 }

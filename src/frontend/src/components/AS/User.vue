@@ -5,7 +5,7 @@
 
   <template v-else>
     <li class="nav-item">
-      <RouterLink to="/login" class="nav-link">Login</RouterLink>
+      <RouterLink to="/login" class="nav-link">Sign in</RouterLink>
     </li>
   </template>
 </template>

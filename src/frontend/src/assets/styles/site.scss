@@ -1,17 +1,16 @@
-@import 'variables';
-@import 'default/component';
-@import 'default/input';
-@import 'default/button';
-@import 'default/dropdown';
-@import 'default/customs';
-@import 'theme';
-@import 'overridebs5';
+@use 'default/component' as defaultComponent;
+@use 'default/input' as defaultInput;
+@use 'default/button' as defaultButton;
+@use 'default/dropdown' as defaultDropdown;
+@use 'default/customs' as defaultCustoms;
+@use 'theme' as appTheme;
+@use 'overridebs5' as overrideBs5;
 
-@import 'darkmode/input';
-@import 'darkmode/button';
-@import 'darkmode/link';
-@import 'darkmode/editor';
+@use 'darkmode/input' as darkInput;
+@use 'darkmode/button' as darkButton;
+@use 'darkmode/link' as darkLink;
+@use 'darkmode/editor' as darkEditor;
 
-@import 'lightmode/input';
-@import 'lightmode/button';
-@import 'lightmode/link';
+@use 'lightmode/input' as lightInput;
+@use 'lightmode/button' as lightButton;
+@use 'lightmode/link' as lightLink;

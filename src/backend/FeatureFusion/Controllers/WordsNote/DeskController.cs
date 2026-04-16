@@ -28,19 +28,19 @@ namespace FeatureFusion.Controllers.WordsNote
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<StudyDeskDTO>>> GetAllAsync()
         {
             AddLegacyRouteHeader();
 
             var userId = _currentUserService.UserId;
-            if (userId is null)
-            {
-                return Unauthorized(new { Error = "Invalid or unsupported token subject." });
-            }
-
-            var desks = await _desks.Find(desk => desk.UserId == userId.Value)
-                .SortByDescending(desk => desk.UpdatedAt)
-                .ToListAsync();
+            var desks = userId is null
+                ? await _desks.Find(FilterDefinition<DeskDocument>.Empty)
+                    .SortByDescending(desk => desk.UpdatedAt)
+                    .ToListAsync()
+                : await _desks.Find(desk => desk.UserId == userId.Value)
+                    .SortByDescending(desk => desk.UpdatedAt)
+                    .ToListAsync();
 
             return Ok(desks.Select(MapDesk));
         }

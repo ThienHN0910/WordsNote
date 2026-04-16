@@ -16,7 +16,7 @@ const routesAS: Array<RouteRecordRaw> = [
   },
   {
     path: '/:pathMatch(.*)*',
-    redirect: { name: 'home' },
+    redirect: { name: 'landing' },
   },
 ]
 

@@ -1,6 +1,8 @@
+@use '../variables' as v;
+
 body[data-theme='light'] {
   RouterLink,
   a {
-    color: $LIGHT_THEME_LINK_COLOR;
+    color: v.$LIGHT_THEME_LINK_COLOR;
   }
 }

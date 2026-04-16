@@ -11,22 +11,3 @@ a {
   overflow: hidden !important;
   text-overflow: ellipsis !important;
 }
-
-nav {
-  border-bottom: 2px solid black;
-  margin-bottom: 5px;
-}
-
-.app-leftbar {
-  border: 1px solid gray;
-  border-radius: 7px;
-}
-
-.app-logo {
-  height: 30px;
-  width: 30px;
-  border-radius: 50%;
-  &:hover {
-    cursor: pointer;
-  }
-}

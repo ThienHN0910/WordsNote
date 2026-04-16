@@ -7,7 +7,18 @@
 - Completed: Phase 3 partial frontend rollout (new API contracts for study hub/session)
 - Completed: Phase 4 core extension rollout (no-auth local storage workflow)
 - Completed: Phase 5 hardening and validation (unit tests, multi-app builds, backend runtime smoke test)
-- In progress: Phase 6 cleanup of unused modules/files
+- Completed: Phase 6 cleanup and UX redesign finalization
+
+Latest finalization scope:
+
+- New route architecture:
+  - `/` landing page
+  - `/learn` public learning lab (flashcards, learn, practice without auth)
+  - `/manage` authenticated collection/card workspace
+- Google-only login for management workspace
+- Register flow disabled
+- Removal of unused frontend legacy pages/components/modules
+- Documentation synced with final product behavior
 
 ## 1. Target Product Scope
 

@@ -28,6 +28,7 @@ namespace FeatureFusion.Controllers.WordsNote
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<StudyCardDTO>>> GetAllAsync(
             [FromQuery] string? collectionId = null,
             [FromQuery(Name = "deckId")] string? deckId = null,
@@ -36,12 +37,9 @@ namespace FeatureFusion.Controllers.WordsNote
             AddLegacyRouteHeader();
 
             var userId = _currentUserService.UserId;
-            if (userId is null)
-            {
-                return Unauthorized(new { Error = "Invalid or unsupported token subject." });
-            }
-
-            var filter = Builders<CardDocument>.Filter.Eq(card => card.UserId, userId.Value);
+            var filter = userId is null
+                ? Builders<CardDocument>.Filter.Empty
+                : Builders<CardDocument>.Filter.Eq(card => card.UserId, userId.Value);
             var resolvedCollectionId = ResolveCollectionId(collectionId, deckId, deskId);
 
             if (!string.IsNullOrWhiteSpace(resolvedCollectionId))
@@ -58,6 +56,7 @@ namespace FeatureFusion.Controllers.WordsNote
         }
 
         [HttpGet("due")]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<StudyCardDTO>>> GetDueAsync(
             [FromQuery] string? collectionId = null,
             [FromQuery(Name = "deckId")] string? deckId = null,
@@ -66,12 +65,9 @@ namespace FeatureFusion.Controllers.WordsNote
             AddLegacyRouteHeader();
 
             var userId = _currentUserService.UserId;
-            if (userId is null)
-            {
-                return Unauthorized(new { Error = "Invalid or unsupported token subject." });
-            }
-
-            var filter = Builders<CardDocument>.Filter.Eq(card => card.UserId, userId.Value);
+            var filter = userId is null
+                ? Builders<CardDocument>.Filter.Empty
+                : Builders<CardDocument>.Filter.Eq(card => card.UserId, userId.Value);
             var resolvedCollectionId = ResolveCollectionId(collectionId, deckId, deskId);
             if (!string.IsNullOrWhiteSpace(resolvedCollectionId))
             {

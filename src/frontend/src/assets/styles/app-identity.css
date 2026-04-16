@@ -1,0 +1,52 @@
+:root {
+  --wn-bg: #f7f3ec;
+  --wn-ink: #1f2333;
+  --wn-muted: #5b6275;
+  --wn-surface: #ffffff;
+  --wn-border: #e6dfd3;
+  --wn-primary: #1f4ed8;
+  --wn-primary-soft: #edf2ff;
+  --wn-accent: #f08d49;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--wn-ink);
+  background: var(--wn-bg);
+  font-family: 'Space Grotesk', 'Segoe UI', Tahoma, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Fraunces', 'Georgia', serif;
+  letter-spacing: 0.01em;
+}
+
+a {
+  color: var(--wn-primary);
+}
+
+input,
+textarea,
+select,
+button {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+}

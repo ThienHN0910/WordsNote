@@ -1,54 +1,32 @@
 import type { RouteRecordRaw } from 'vue-router'
 
-const routesFFP: Array<RouteRecordRaw> = []
-
-const baseChildren: RouteRecordRaw[] = [
+const routesFFP: Array<RouteRecordRaw> = [
   {
-    path: '',
-    name: 'home',
-    component: () => import('@/pages/HomePage.vue'),
+    path: '/',
+    name: 'landing',
+    component: () => import('@/pages/LandingPage.vue'),
   },
   {
-    path: 'study',
-    name: 'studyHub',
+    path: '/learn',
+    name: 'learnLab',
+    component: () => import('@/pages/WordsNote/LearnLabPage.vue'),
+  },
+  {
+    path: '/manage',
+    name: 'manageCollections',
     component: () => import('@/pages/WordsNote/StudyHubPage.vue'),
     meta: {
       requiresAuth: true,
     },
   },
   {
-    path: 'study/:deckId/session',
-    name: 'studySession',
+    path: '/manage/:deckId/session',
+    name: 'manageSession',
     component: () => import('@/pages/WordsNote/StudySessionPage.vue'),
     meta: {
       requiresAuth: true,
     },
   },
-  {
-    path: 'dashboard',
-    name: 'dashboard',
-    component: () => import('@/pages/Dashboard.vue'),
-  },
-  {
-    path: 'about',
-    name: 'about',
-    component: () => import('@/pages/About.vue'),
-  },
 ]
-
-if (import.meta.env.DEV) {
-  baseChildren.push({
-    path: 'examples',
-    name: 'examples',
-    component: () => import('@/pages/Examples.vue'),
-  })
-}
-
-routesFFP.push({
-  path: '/',
-  name: 'FFPlayout',
-  component: () => import('@/pages/MainLayout.vue'),
-  children: baseChildren,
-})
 
 export default routesFFP

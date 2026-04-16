@@ -6,6 +6,7 @@ import { pinia } from '@/stores/pinia'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap'
 import '@/assets/styles/site.scss'
+import '@/assets/styles/app-identity.css'
 
 const app = createApp(App)
 

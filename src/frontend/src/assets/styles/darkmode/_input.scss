@@ -1,12 +1,8 @@
+@use '../variables' as v;
+
 body[data-theme='dark'] {
   .app-base-input {
-    background-color: $DARK_THEME_INPUT_COLOR;
-    color: $DARK_THEME_TEXT_COLOR;
-  }
-
-  .app-base-input-error {
-  }
-
-  .app-base-input-label {
+    background-color: v.$DARK_THEME_INPUT_COLOR;
+    color: v.$DARK_THEME_TEXT_COLOR;
   }
 }

@@ -5,15 +5,9 @@ import routesFFP from './routerFFP'
 import { useAuthStore } from '@/stores/AS/AuthStore'
 import { pinia } from '@/stores/pinia'
 
-const routes: Array<RouteRecordRaw> = [
-  ...routesFFP,
-  ...routesAS,
-]
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    ...routes
-  ],
+  routes: [...routesFFP, ...routesAS],
 })
 
 router.beforeEach((to) => {

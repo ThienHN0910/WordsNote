@@ -2,24 +2,37 @@
 
 This guide explains the functional workflow for the WordsNote product:
 
-- Web app (authenticated)
+- Web app with split access:
+  - Public learning space (no sign-in)
+  - Authenticated management workspace
 - Chrome extension (no authentication)
 
 ## 1. Main User Flow (Web)
 
-1. Register or login.
-2. Create a collection.
-3. Add cards manually or import in bulk.
-4. Start learning:
-   - Flashcard mode
-   - Quick study mode
-   - Deep study mode
-5. Run a test session:
-   - Multiple-choice
-   - Written
-6. Review results and continue spaced repetition.
+1. Open `/learn` and use learning modes immediately (no auth).
+2. For personal collection management, sign in with Google at `/login`.
+3. In `/manage`, create collections and cards.
+4. Start focused session from manage workspace.
+5. Review progress and continue spaced repetition.
 
-## 2. Collection Management
+## 2. Authentication Policy
+
+- Register route is disabled.
+- Login uses Google ID token verification.
+- Only one configured email (`AuthProviders:Google:AdminEmail`) is allowed.
+- Management APIs require JWT returned by Google login endpoint.
+
+## 3. Public Learning Modes (No Auth)
+
+The public page `/learn` provides:
+
+- Flashcards mode
+- Learn mode (typed answer checking)
+- Practice mode (quick multiple-choice)
+
+These modes read dynamic collections/cards through public read APIs and do not require sign-in.
+
+## 4. Collection Management (Auth Required)
 
 Main actions:
 
@@ -32,7 +45,7 @@ Expected behavior:
 - Deleting a collection also removes its cards.
 - Collection list is sorted by most recently updated.
 
-## 3. Card Management
+## 5. Card Management (Auth Required)
 
 Main actions:
 
@@ -54,11 +67,13 @@ Import rules:
 - Empty or invalid lines are skipped
 - API returns `imported` and `skipped` counts
 
-## 4. Learning Modes
+## 6. Manage Workspace Study Modes
 
 ### Flashcard
 
 - Show front first, reveal back on demand
+- Display card order indicator (`Card X / Y`)
+- Allow previous/next card navigation in learn lab flashcards
 - User grades difficulty: hard/medium/easy
 - Due date and streak are updated
 
@@ -73,7 +88,7 @@ Import rules:
 - Includes answer check endpoint for typed responses
 - Uses normalized answer comparison
 
-## 5. Test Modes
+## 7. Test Modes
 
 ### Multiple-Choice
 
@@ -90,7 +105,7 @@ Import rules:
   - case-insensitive
   - whitespace-normalized
 
-## 6. Chrome Extension Workflow (No Auth)
+## 8. Chrome Extension Workflow (No Auth)
 
 Extension goals:
 
@@ -103,18 +118,18 @@ Important:
 - Extension should work without login.
 - Extension should not depend on web JWT token.
 
-## 7. Operational Notes
+## 9. Operational Notes
 
 - Keep API naming consistent: `collections` and `cards`.
 - Maintain temporary compatibility with legacy `desk/card` routes during migration.
 - Remove compatibility routes only after web + extension clients are migrated.
 
-## 8. Troubleshooting
+## 10. Troubleshooting
 
-### 401 responses on web app
+### 401 responses on management routes
 
-- Verify login token is present.
-- Verify backend `JwtSettings` is valid.
+- Verify Google login completed and JWT is stored.
+- Verify request includes `Authorization: Bearer <token>`.
 
 ### Import result shows many skipped lines
 

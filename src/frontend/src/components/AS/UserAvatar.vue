@@ -10,7 +10,7 @@
       </button>
       <ul class="dropdown-menu dropdown-menu-end shadow-sm">
         <li>
-          <RouterLink to="/profile" class="dropdown-item">Profile</RouterLink>
+          <RouterLink to="/manage" class="dropdown-item">Manage collections</RouterLink>
         </li>
         <li>
           <button type="button" @click="logout" class="dropdown-item">Logout</button>

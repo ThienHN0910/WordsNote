@@ -39,7 +39,7 @@ const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
 const resolveRedirectRoute = () => {
   const redirect = route.query.redirect
-  return typeof redirect === 'string' && redirect.length > 0 ? redirect : { name: 'home' }
+  return typeof redirect === 'string' && redirect.length > 0 ? redirect : { name: 'manageCollections' }
 }
 
 const onGoogleCredential = async (credential: string) => {

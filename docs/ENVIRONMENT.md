@@ -97,12 +97,21 @@ The backend maps these flat variables to .NET config keys:
 Frontend uses `.env` files in `src/frontend`.
 
 - `VITE_APP_API_URL`: backend base URL, for example `http://localhost:3000`
+- `VITE_GOOGLE_CLIENT_ID`: Google OAuth client ID for rendering Google Identity button
+- `VITE_GOOGLE_ALLOWED_EMAIL`: allowed Google account shown in login UI
 
 Example:
 
 ```env
 VITE_APP_API_URL=http://localhost:3000
+VITE_GOOGLE_CLIENT_ID=<your_google_client_id>
+VITE_GOOGLE_ALLOWED_EMAIL=hnt.vn.vn@gmail.com
 ```
+
+Notes:
+
+- Frontend displays the allowed email as guidance in login page.
+- Backend enforces the real allowlist via `AuthProviders:Google:AdminEmail`.
 
 ## Chrome Extension Configuration
 

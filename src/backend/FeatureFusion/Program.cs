@@ -7,6 +7,12 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var envFilePath = Path.Combine(builder.Environment.ContentRootPath, ".env");
+if (File.Exists(envFilePath))
+{
+    DotNetEnv.Env.Load(envFilePath);
+}
+
 builder.Configuration.ApplyFlatEnvironmentOverrides();
 
 // Register services

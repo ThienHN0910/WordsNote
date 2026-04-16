@@ -1,32 +1,21 @@
 <template>
   <div class="container mt-5">
     <div class="row d-flex justify-content-center">
-      <div class="col-md-6">
+      <div class="col-md-6 col-lg-5">
         <div class="px-5 py-5" id="form1">
-          <div class="forms-inputs mb-4">
-            <BaseInput
-              v-model="email"
-              label="Email or User Name"
-              :error-message="!isValidUserNameOrEmail(email) ? MSG_EMAIL_EN.REQUIRED : ''"
-            />
+          <h3 class="mb-3">Login with Google</h3>
+          <p class="text-muted mb-4">
+            Only <strong>{{ allowedEmail }}</strong> is allowed to sign in.
+          </p>
+
+          <div class="forms-inputs mb-3 d-flex justify-content-center">
+            <div ref="googleButtonRef"></div>
           </div>
-          <div class="forms-inputs mb-4">
-            <BaseInput
-              v-model="password"
-              :class="{ 'is-invalid': !validPassword(password) }"
-              label="Password"
-              type="password"
-              :errorMessage="!validPassword(password) ? MSG_PASSWORD_EN.MIN_LENGTH : ''"
-            />
-          </div>
-          <div class="forms-inputs mb-4">
-            <BaseButton
-              @click="submit"
-              :disabled="isLoading || !validPassword(password) || !isValidUserNameOrEmail(email)"
-              class="justify-content-end"
-            >
-              {{ isLoading ? 'Loading...' : 'Login' }}
-            </BaseButton>
+
+          <div v-if="isLoading" class="text-center text-muted mb-3">Signing in...</div>
+
+          <div v-if="errorMessage" class="alert alert-danger mb-0" role="alert">
+            {{ errorMessage }}
           </div>
         </div>
       </div>
@@ -34,57 +23,109 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { ref } from 'vue'
-import { MSG_EMAIL_EN, MSG_PASSWORD_EN } from '@/constants/Auth.constant'
+import { onMounted, ref } from 'vue'
 import { AuthService } from '@/services/AS/AuthService'
 import { useAuthStore } from '@/stores/AS/AuthStore'
 import { useRoute, useRouter } from 'vue-router'
-import BaseInput from '@/components/bases/BaseInput.vue'
-import BaseButton from '@/components/bases/BaseButton.vue'
 
-const email = ref('')
-const password = ref('')
-const submitted = ref(false)
+const googleButtonRef = ref<HTMLElement | null>(null)
 const isLoading = ref(false)
+const errorMessage = ref('')
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
-const validPassword = (password: string) => {
-  return password.length >= 8
-}
-
-const isValidUserNameOrEmail = (email: string) => {
-  return email.length > 0
-}
+const allowedEmail = import.meta.env.VITE_GOOGLE_ALLOWED_EMAIL || 'hnt.vn.vn@gmail.com'
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
 const resolveRedirectRoute = () => {
   const redirect = route.query.redirect
   return typeof redirect === 'string' && redirect.length > 0 ? redirect : { name: 'home' }
 }
 
-const submit = () => {
+const onGoogleCredential = async (credential: string) => {
+  errorMessage.value = ''
   isLoading.value = true
-  if (validPassword(password.value) && isValidUserNameOrEmail(email.value)) {
-    submitted.value = true
+  try {
+    const response = await AuthService.loginWithGoogle(credential)
+    if (response.status !== 200 || !response.data) {
+      throw new Error('Unable to sign in with Google.')
+    }
+
+    authStore.setAuthToken(response.data)
+    router.push(resolveRedirectRoute())
+  } catch (error) {
+    errorMessage.value = `Login failed. ${error}`
+  } finally {
+    isLoading.value = false
   }
-  AuthService.login(email.value, password.value)
-    .then((response) => {
-      if (response.status === 200) {
-        const token = response.data
-        authStore.setAuthToken(token)
-        router.push(resolveRedirectRoute())
-      } else {
-        alert('Login failed. Please check your credentials and try again.')
-        submitted.value = false
-      }
-    })
-    .catch((error) => {
-      alert(`Login failed. Please check your credentials and try again. ${error}`)
-      submitted.value = false
-      isLoading.value = false
-    })
-    .finally(() => {
-      isLoading.value = false
-    })
 }
+
+const loadGoogleScript = () => {
+  return new Promise<void>((resolve, reject) => {
+    if (window.google?.accounts?.id) {
+      resolve()
+      return
+    }
+
+    const existing = document.querySelector<HTMLScriptElement>('script[data-google-identity="true"]')
+    if (existing) {
+      existing.addEventListener('load', () => resolve(), { once: true })
+      existing.addEventListener('error', () => reject(new Error('Failed to load Google script.')), { once: true })
+      return
+    }
+
+    const script = document.createElement('script')
+    script.src = 'https://accounts.google.com/gsi/client'
+    script.async = true
+    script.defer = true
+    script.dataset.googleIdentity = 'true'
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error('Failed to load Google script.'))
+    document.head.appendChild(script)
+  })
+}
+
+const initializeGoogleButton = async () => {
+  if (!googleClientId) {
+    errorMessage.value = 'Missing VITE_GOOGLE_CLIENT_ID in frontend .env.'
+    return
+  }
+
+  if (!googleButtonRef.value) {
+    errorMessage.value = 'Google button container is not available.'
+    return
+  }
+
+  await loadGoogleScript()
+
+  if (!window.google?.accounts?.id) {
+    errorMessage.value = 'Google Identity API is unavailable.'
+    return
+  }
+
+  window.google.accounts.id.initialize({
+    client_id: googleClientId,
+    callback: (response: { credential?: string }) => {
+      if (!response.credential) {
+        errorMessage.value = 'Google did not return a credential.'
+        return
+      }
+
+      void onGoogleCredential(response.credential)
+    },
+  })
+
+  googleButtonRef.value.innerHTML = ''
+  window.google.accounts.id.renderButton(googleButtonRef.value, {
+    theme: 'outline',
+    size: 'large',
+    shape: 'rectangular',
+    text: 'signin_with',
+    width: 320,
+  })
+}
+
+onMounted(() => {
+  void initializeGoogleButton()
+})
 </script>

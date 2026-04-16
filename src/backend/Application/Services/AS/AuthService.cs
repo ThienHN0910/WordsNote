@@ -92,5 +92,52 @@ public class AuthService : IAuthService
         return token;
     }
 
+    public async Task<string> LoginWithGoogleAsync(string email, string? displayName = null)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new ArgumentException("Email is required.");
+        }
+
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        var existingUser = await _authRepository.CheckUserExistsAsync(string.Empty, normalizedEmail);
+
+        if (existingUser == null)
+        {
+            var baseUserName = normalizedEmail.Split('@')[0];
+            var resolvedUserName = await GenerateAvailableUserNameAsync(baseUserName);
+
+            existingUser = new User
+            {
+                UserName = resolvedUserName,
+                Email = normalizedEmail,
+                Name = string.IsNullOrWhiteSpace(displayName) ? resolvedUserName : displayName.Trim(),
+                PasswordHash = HashPassSHA256.HashPass($"google:{Guid.NewGuid():N}"),
+            };
+
+            await _authRepository.AddUserAsync(existingUser);
+        }
+
+        return _jwtTokenGenerator.GenerateToken(existingUser);
+    }
+
+    private async Task<string> GenerateAvailableUserNameAsync(string requestedUserName)
+    {
+        var sanitizedBase = string.IsNullOrWhiteSpace(requestedUserName)
+            ? "user"
+            : requestedUserName.Trim().ToLowerInvariant();
+
+        var candidate = sanitizedBase;
+        var suffix = 1;
+
+        while (await _authRepository.CheckUserExistsAsync(candidate, string.Empty) != null)
+        {
+            candidate = $"{sanitizedBase}{suffix}";
+            suffix += 1;
+        }
+
+        return candidate;
+    }
+
 
 }

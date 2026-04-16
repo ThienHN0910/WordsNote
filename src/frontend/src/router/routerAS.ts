@@ -8,8 +8,7 @@ const routesAS: Array<RouteRecordRaw> = [
   },
   {
     path: '/register',
-    name: 'register',
-    component: () => import('@/pages/AS/RegisterPage.vue'),
+    redirect: { name: 'login' },
   },
   {
     path: '/logout',

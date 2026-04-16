@@ -7,7 +7,7 @@ export const AuthAPI = {
   async LoginByUsername(username: string, password: string) {
     return await apiClient.post('/api/Auth/login', { username, password });
   },
-  async Register(email: string, username: string, password: string) {
-    return await apiClient.post('/api/Auth/register', { email, username, password });
+  async LoginWithGoogle(idToken: string) {
+    return await apiClient.post('/api/Auth/google', { idToken });
   }
 };

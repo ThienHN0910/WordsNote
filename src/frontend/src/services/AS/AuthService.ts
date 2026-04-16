@@ -8,8 +8,8 @@ export const AuthService = {
         return await AuthAPI.LoginByUsername(email, password)
     }
   },
-  async register(email: string, userName: string, password: string) {
-    if (!email || !password) throw new Error('Email and password are required')
-    return await AuthAPI.Register(email, userName, password)
+  async loginWithGoogle(idToken: string) {
+    if (!idToken) throw new Error('Google ID token is required')
+    return await AuthAPI.LoginWithGoogle(idToken)
   },
 }

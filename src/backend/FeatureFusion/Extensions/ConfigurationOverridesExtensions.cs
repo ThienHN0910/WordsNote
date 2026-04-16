@@ -58,6 +58,13 @@ public static class ConfigurationOverridesExtensions
         var raw = env[key]?.ToString();
         if (!string.IsNullOrWhiteSpace(raw))
         {
+            var normalized = raw.Trim();
+            if (normalized.StartsWith("__SET_", StringComparison.OrdinalIgnoreCase))
+            {
+                value = string.Empty;
+                return false;
+            }
+
             value = raw;
             return true;
         }

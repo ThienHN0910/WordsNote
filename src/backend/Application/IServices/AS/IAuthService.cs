@@ -12,5 +12,7 @@ namespace Application.IServices.AS
         Task<string> LoginByUsernameAsync(string username, string password);
 
         Task<string> LoginByEmailAsync(string email, string password);
+
+        Task<string> LoginWithGoogleAsync(string email, string? displayName = null);
     }
 }

@@ -143,3 +143,14 @@ Written submit payload:
 - `/api/desk` maps to collections behavior
 - `/api/card` maps to cards behavior
 - Legacy payload fields (`deskId`, `deckId`) are accepted during migration
+
+## Error Semantics
+
+- `401 Unauthorized`: missing/invalid token on protected write/management endpoints.
+- `503 Service Unavailable`: backend dependent data service unavailable (commonly MongoDB connectivity/runtime configuration issue).
+
+When troubleshooting `503` in deployment:
+
+1. Verify backend host itself returns non-503 for `GET /api/collections`.
+2. Verify backend runtime secrets are real values (not placeholders).
+3. Verify backend can connect to MongoDB from that hosting environment.

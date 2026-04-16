@@ -128,3 +128,38 @@ Recommended:
 - Rotate JWT secret if leaked.
 - Keep production origins strict in `AllowedOrigins`.
 - Use HTTPS for production frontend and backend endpoints.
+
+## Deployment Notes (Vercel + External Backend)
+
+If frontend is deployed on Vercel and backend is hosted separately:
+
+- Set frontend API base URL to Vercel proxy path:
+  - `VITE_APP_API_URL=/api-backend`
+- Configure Vercel rewrite from `/api-backend/:path*` to backend HTTPS origin.
+- Prefer HTTPS backend destination (not HTTP) to avoid upstream instability.
+
+Recommended Vercel header for Google popup auth:
+
+- `Cross-Origin-Opener-Policy: same-origin-allow-popups`
+
+This reduces browser warnings like:
+
+- `Cross-Origin-Opener-Policy policy would block the window.postMessage call.`
+
+### 503 on deployed API (`/api-backend/api/*`)
+
+This usually means backend dependency/configuration failure, not frontend routing.
+
+Common checks:
+
+1. Backend secrets are real values (not placeholders):
+   - `MONGODB_URI`
+   - `JWT_SECRET`
+   - `GOOGLE_CLIENT_SECRET`
+2. Backend can connect to MongoDB from hosting environment.
+3. Backend `CORS_ORIGIN` includes deployed frontend origin.
+4. Backend `API_BASE_URL` and `FRONTEND_URL` are valid production URLs.
+
+Important:
+
+- Values like `__SET_LOCALLY__` or `__SET_IN_USER_SECRETS_OR_ENV__` are placeholders and will break runtime if used in production.

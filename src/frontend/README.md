@@ -32,6 +32,20 @@ npm run dev
 npm run build
 ```
 
+## Deploy Notes (Vercel)
+
+Required environment variables in Vercel project:
+
+```env
+VITE_APP_API_URL=/api-backend
+VITE_GOOGLE_CLIENT_ID=<your_google_client_id>
+VITE_GOOGLE_ALLOWED_EMAIL=<allowed_admin_email>
+```
+
+`vercel.json` should rewrite `/api-backend/:path*` to your backend HTTPS origin.
+
+If deployed app shows `503` on `/api-backend/api/*`, verify backend host has real runtime secrets (MongoDB/JWT/Google), not placeholder values.
+
 ### Lint with [ESLint](https://eslint.org/)
 
 ```sh

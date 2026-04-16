@@ -473,7 +473,7 @@ watch(filteredDeckList, (nextDecks) => {
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-size: 0.72rem;
-  color: #705f4d;
+  color: var(--wn-muted);
 }
 
 .manage-header h1 {
@@ -481,7 +481,7 @@ watch(filteredDeckList, (nextDecks) => {
 }
 
 .manage-header p {
-  color: #4d5568;
+  color: var(--wn-muted);
 }
 
 .manage-grid {
@@ -491,10 +491,11 @@ watch(filteredDeckList, (nextDecks) => {
 }
 
 .panel {
-  background: #fff;
-  border: 1px solid #e8e1d7;
+  background: var(--wn-surface);
+  border: 1px solid var(--wn-border);
   border-radius: 20px;
   padding: 1rem;
+  box-shadow: var(--wn-shadow-soft);
 }
 
 .panel h2,
@@ -508,22 +509,22 @@ watch(filteredDeckList, (nextDecks) => {
 }
 
 .deck-tile {
-  border: 1px solid #e3e8f3;
+  border: 1px solid var(--wn-border);
   border-radius: 12px;
   text-align: left;
-  background: #f8fbff;
+  background: var(--wn-surface-soft);
   padding: 0.6rem 0.7rem;
   display: flex;
   flex-direction: column;
 }
 
 .deck-tile.active {
-  border-color: #1f4ed8;
-  background: #edf3ff;
+  border-color: var(--wn-primary);
+  background: var(--wn-primary-soft);
 }
 
 .deck-tile small {
-  color: #6d7586;
+  color: var(--wn-muted);
 }
 
 .panel-head {
@@ -554,16 +555,16 @@ watch(filteredDeckList, (nextDecks) => {
 }
 
 .metrics article {
-  border: 1px solid #ece7df;
+  border: 1px solid var(--wn-border);
   border-radius: 12px;
   padding: 0.6rem;
-  background: #fffaf2;
+  background: var(--wn-surface-soft);
   display: flex;
   flex-direction: column;
 }
 
 .metrics span {
-  color: #6f7583;
+  color: var(--wn-muted);
   font-size: 0.82rem;
 }
 
@@ -590,10 +591,10 @@ watch(filteredDeckList, (nextDecks) => {
 }
 
 .card-row {
-  border: 1px solid #e7e1d8;
+  border: 1px solid var(--wn-border);
   border-radius: 12px;
   padding: 0.75rem;
-  background: #fff;
+  background: var(--wn-surface);
   display: flex;
   justify-content: space-between;
   gap: 0.6rem;
@@ -601,7 +602,7 @@ watch(filteredDeckList, (nextDecks) => {
 
 .card-row p {
   margin: 0.25rem 0;
-  color: #4d566b;
+  color: var(--wn-muted);
 }
 
 .tags {
@@ -612,11 +613,11 @@ watch(filteredDeckList, (nextDecks) => {
 }
 
 .tags span {
-  border: 1px solid #dfe5f2;
+  border: 1px solid var(--wn-border);
   border-radius: 999px;
   padding: 0.1rem 0.42rem;
   font-size: 0.76rem;
-  color: #47516a;
+  color: var(--wn-muted);
 }
 
 .actions-col {
@@ -626,7 +627,7 @@ watch(filteredDeckList, (nextDecks) => {
 }
 
 .empty-text {
-  color: #727b8e;
+  color: var(--wn-muted);
   margin-top: 0.75rem;
 }
 
@@ -634,7 +635,7 @@ watch(filteredDeckList, (nextDecks) => {
   min-height: 220px;
   display: grid;
   place-items: center;
-  color: #758095;
+  color: var(--wn-muted);
 }
 
 @media (max-width: 980px) {

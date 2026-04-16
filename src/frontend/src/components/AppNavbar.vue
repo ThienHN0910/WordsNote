@@ -13,6 +13,17 @@
       </nav>
 
       <ul class="auth-slot">
+        <li>
+          <button
+            type="button"
+            class="theme-toggle"
+            :aria-label="`Switch to ${themeLabel} mode`"
+            @click="toggleTheme"
+          >
+            <i :class="themeIcon"></i>
+            <span>{{ themeLabel }}</span>
+          </button>
+        </li>
         <User />
       </ul>
     </div>
@@ -20,8 +31,21 @@
 </template>
 
 <script lang="ts" setup>
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import { RouterLink } from 'vue-router'
 import User from '@/components/AS/User.vue'
+import { useThemeStore } from '@/stores/CFS/ThemeSettingStore'
+
+const themeStore = useThemeStore()
+const { isDark } = storeToRefs(themeStore)
+
+const themeLabel = computed(() => (isDark.value ? 'Light' : 'Dark'))
+const themeIcon = computed(() => (isDark.value ? 'fa-solid fa-sun' : 'fa-solid fa-moon'))
+
+function toggleTheme() {
+  isDark.value = !isDark.value
+}
 </script>
 
 <style scoped>
@@ -35,9 +59,9 @@ import User from '@/components/AS/User.vue'
 .topbar {
   max-width: 1120px;
   margin: 0 auto;
-  border: 1px solid #e6e0d8;
+  border: 1px solid var(--wn-topbar-border);
   border-radius: 16px;
-  background: rgba(255, 252, 246, 0.88);
+  background: var(--wn-topbar-bg);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -51,7 +75,7 @@ import User from '@/components/AS/User.vue'
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: #21263a;
+  color: var(--wn-ink);
   font-weight: 700;
 }
 
@@ -68,24 +92,43 @@ import User from '@/components/AS/User.vue'
 
 .pill {
   text-decoration: none;
-  border: 1px solid #d7deec;
-  color: #2a3757;
+  border: 1px solid var(--wn-border);
+  color: var(--wn-ink);
   padding: 0.32rem 0.75rem;
   border-radius: 999px;
   font-size: 0.93rem;
-  background: #fbfdff;
+  background: var(--wn-surface);
 }
 
 .pill.router-link-active {
-  background: #214ed9;
-  border-color: #214ed9;
-  color: #fff;
+  background: var(--wn-primary);
+  border-color: var(--wn-primary);
+  color: var(--wn-on-primary);
 }
 
 .auth-slot {
   list-style: none;
   margin: 0;
   padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.theme-toggle {
+  border: 1px solid var(--wn-border);
+  background: var(--wn-surface);
+  color: var(--wn-ink);
+  border-radius: 999px;
+  padding: 0.34rem 0.72rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  font-size: 0.86rem;
+}
+
+.theme-toggle:hover {
+  background: var(--wn-primary-soft);
 }
 
 @media (max-width: 760px) {

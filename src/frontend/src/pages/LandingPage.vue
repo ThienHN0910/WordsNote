@@ -46,12 +46,13 @@ import { RouterLink } from 'vue-router'
 .hero-card {
   border-radius: 28px;
   padding: 2.2rem;
-  color: #1f2133;
-  border: 1px solid #e8e1d7;
+  color: var(--wn-ink);
+  border: 1px solid var(--wn-border);
   background:
     radial-gradient(140% 120% at 0% 0%, rgba(255, 188, 119, 0.3), transparent 45%),
     radial-gradient(90% 120% at 100% 100%, rgba(100, 173, 255, 0.22), transparent 50%),
-    #fffaf2;
+    var(--wn-surface-soft);
+  box-shadow: var(--wn-shadow-soft);
 }
 
 .eyebrow {
@@ -59,7 +60,7 @@ import { RouterLink } from 'vue-router'
   text-transform: uppercase;
   font-size: 0.74rem;
   letter-spacing: 0.18em;
-  color: #7c5f3e;
+  color: var(--wn-muted);
 }
 
 h1 {
@@ -71,7 +72,7 @@ h1 {
 .lead {
   max-width: 70ch;
   margin-top: 0.95rem;
-  color: #3b4357;
+  color: var(--wn-muted);
 }
 
 .hero-actions {
@@ -90,14 +91,14 @@ h1 {
 }
 
 .cta.primary {
-  background: #1f4ed8;
-  color: #fff;
+  background: var(--wn-primary);
+  color: var(--wn-on-primary);
 }
 
 .cta.ghost {
-  background: rgba(255, 255, 255, 0.55);
-  border-color: #cad3e6;
-  color: #1d315f;
+  background: var(--wn-surface);
+  border-color: var(--wn-border);
+  color: var(--wn-ink);
 }
 
 .feature-grid {
@@ -109,8 +110,9 @@ h1 {
 .feature-grid article {
   padding: 1.1rem;
   border-radius: 18px;
-  border: 1px solid #ebe8e1;
-  background: #fff;
+  border: 1px solid var(--wn-border);
+  background: var(--wn-surface);
+  box-shadow: var(--wn-shadow-soft);
 }
 
 .feature-grid h2 {
@@ -120,6 +122,6 @@ h1 {
 
 .feature-grid p {
   margin: 0;
-  color: #4f5566;
+  color: var(--wn-muted);
 }
 </style>

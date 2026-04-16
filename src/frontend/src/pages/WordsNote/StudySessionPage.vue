@@ -192,7 +192,7 @@ watch(mode, () => {
   text-transform: uppercase;
   font-size: 0.72rem;
   letter-spacing: 0.16em;
-  color: #6f5f4c;
+  color: var(--wn-muted);
 }
 
 .session-head h1 {
@@ -201,7 +201,7 @@ watch(mode, () => {
 
 .session-head p {
   margin: 0;
-  color: #5a6276;
+  color: var(--wn-muted);
 }
 
 .mode-switch {
@@ -211,9 +211,10 @@ watch(mode, () => {
 }
 
 .study-card {
-  border: 1px solid #e6e2db;
+  border: 1px solid var(--wn-border);
   border-radius: 18px;
-  background: linear-gradient(145deg, #fffdf8, #f7fbff);
+  background: linear-gradient(145deg, var(--wn-surface-soft), var(--wn-surface));
   padding: 1.2rem;
+  box-shadow: var(--wn-shadow-soft);
 }
 </style>

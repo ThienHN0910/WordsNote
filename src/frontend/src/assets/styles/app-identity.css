@@ -3,10 +3,35 @@
   --wn-ink: #1f2333;
   --wn-muted: #5b6275;
   --wn-surface: #ffffff;
+  --wn-surface-soft: #fff8ef;
   --wn-border: #e6dfd3;
   --wn-primary: #1f4ed8;
+  --wn-on-primary: #ffffff;
   --wn-primary-soft: #edf2ff;
   --wn-accent: #f08d49;
+  --wn-shell-glow-a: rgba(255, 208, 143, 0.3);
+  --wn-shell-glow-b: rgba(165, 214, 255, 0.24);
+  --wn-topbar-bg: rgba(255, 252, 246, 0.88);
+  --wn-topbar-border: #e6e0d8;
+  --wn-shadow-soft: 0 10px 28px rgba(31, 35, 51, 0.08);
+}
+
+body[data-theme='dark'] {
+  --wn-bg: #101826;
+  --wn-ink: #e6ebff;
+  --wn-muted: #a4b0cc;
+  --wn-surface: #172236;
+  --wn-surface-soft: #1a2940;
+  --wn-border: #2a3a58;
+  --wn-primary: #7da5ff;
+  --wn-on-primary: #0f1c34;
+  --wn-primary-soft: #223454;
+  --wn-accent: #ffb36b;
+  --wn-shell-glow-a: rgba(62, 92, 145, 0.22);
+  --wn-shell-glow-b: rgba(242, 144, 77, 0.16);
+  --wn-topbar-bg: rgba(19, 31, 50, 0.9);
+  --wn-topbar-border: #2a3c5f;
+  --wn-shadow-soft: 0 12px 34px rgba(0, 0, 0, 0.35);
 }
 
 * {
@@ -24,6 +49,7 @@ body {
   color: var(--wn-ink);
   background: var(--wn-bg);
   font-family: 'Space Grotesk', 'Segoe UI', Tahoma, sans-serif;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 h1,
@@ -49,4 +75,33 @@ button {
 
 button {
   cursor: pointer;
+}
+
+.form-control,
+.form-select,
+textarea,
+input {
+  background: var(--wn-surface);
+  color: var(--wn-ink);
+  border-color: var(--wn-border);
+}
+
+.form-control::placeholder,
+textarea::placeholder,
+input::placeholder {
+  color: var(--wn-muted);
+}
+
+.dropdown-menu {
+  background: var(--wn-surface);
+  border-color: var(--wn-border);
+}
+
+.dropdown-item {
+  color: var(--wn-ink);
+}
+
+.dropdown-item:hover {
+  background: var(--wn-primary-soft);
+  color: var(--wn-ink);
 }

@@ -400,7 +400,7 @@ watch(
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-size: 0.72rem;
-  color: #6f5f4d;
+  color: var(--wn-muted);
   margin: 0 0 0.35rem;
 }
 
@@ -410,7 +410,7 @@ watch(
 }
 
 .learn-header p {
-  color: #4f5566;
+  color: var(--wn-muted);
 }
 
 .source-note {
@@ -426,10 +426,11 @@ watch(
 
 .deck-panel,
 .lab-panel {
-  background: #fff;
-  border: 1px solid #e7e2d8;
+  background: var(--wn-surface);
+  border: 1px solid var(--wn-border);
   border-radius: 20px;
   padding: 1rem;
+  box-shadow: var(--wn-shadow-soft);
 }
 
 .deck-panel h2 {
@@ -441,20 +442,20 @@ watch(
   margin-top: 0.5rem;
   text-align: left;
   border-radius: 12px;
-  border: 1px solid #ebe7dc;
-  background: #fbfaf7;
+  border: 1px solid var(--wn-border);
+  background: var(--wn-surface-soft);
   padding: 0.65rem 0.7rem;
   display: flex;
   flex-direction: column;
 }
 
 .deck-button small {
-  color: #6c7488;
+  color: var(--wn-muted);
 }
 
 .deck-button.active {
-  border-color: #1f4ed8;
-  background: #eef4ff;
+  border-color: var(--wn-primary);
+  background: var(--wn-primary-soft);
 }
 
 .mode-switch {
@@ -464,28 +465,29 @@ watch(
 }
 
 .mode-switch button {
-  border: 1px solid #d5ddec;
-  background: #f8fbff;
+  border: 1px solid var(--wn-border);
+  background: var(--wn-surface);
   border-radius: 999px;
   padding: 0.42rem 0.85rem;
+  color: var(--wn-ink);
 }
 
 .mode-switch button.active {
-  background: #1f4ed8;
-  color: white;
-  border-color: #1f4ed8;
+  background: var(--wn-primary);
+  color: var(--wn-on-primary);
+  border-color: var(--wn-primary);
 }
 
 .deck-title {
   margin: 0.8rem 0 0.4rem;
-  color: #5c6476;
+  color: var(--wn-muted);
 }
 
 .card-stage {
   border-radius: 16px;
-  border: 1px dashed #d8d5ce;
+  border: 1px dashed var(--wn-border);
   padding: 1rem;
-  background: #fffcf6;
+  background: var(--wn-surface-soft);
   min-height: 270px;
 }
 
@@ -511,42 +513,42 @@ watch(
   position: absolute;
   width: 100%;
   min-height: 190px;
-  border: 1px solid #e8e2d9;
+  border: 1px solid var(--wn-border);
   border-radius: 14px;
   padding: 1rem;
   display: grid;
   align-content: center;
   gap: 0.45rem;
   backface-visibility: hidden;
-  background: #fff;
+  background: var(--wn-surface);
 }
 
 .flip-front {
-  background: linear-gradient(180deg, #ffffff, #fff8ea);
+  background: linear-gradient(180deg, var(--wn-surface), var(--wn-surface-soft));
 }
 
 .flip-back {
   transform: rotateY(180deg);
-  background: linear-gradient(180deg, #ffffff, #eef4ff);
+  background: linear-gradient(180deg, var(--wn-surface), var(--wn-primary-soft));
 }
 
 .face-label {
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: #7b6b58;
+  color: var(--wn-muted);
   font-size: 0.72rem;
 }
 
 .flash-progress {
   margin: 0 0 0.55rem;
   font-size: 0.86rem;
-  color: #6f7482;
+  color: var(--wn-muted);
   font-weight: 600;
 }
 
 .empty-state {
-  color: #72798b;
+  color: var(--wn-muted);
 }
 
 .empty-state p {
@@ -559,11 +561,11 @@ watch(
 }
 
 .muted {
-  color: #72798b;
+  color: var(--wn-muted);
 }
 
 .manage-link {
-  color: #1f4ed8;
+  color: var(--wn-primary);
   font-weight: 600;
 }
 
@@ -576,22 +578,23 @@ watch(
 
 .actions button,
 .option {
-  border: 1px solid #cad2e0;
-  background: #ffffff;
+  border: 1px solid var(--wn-border);
+  background: var(--wn-surface);
   border-radius: 10px;
   padding: 0.48rem 0.8rem;
+  color: var(--wn-ink);
 }
 
 .actions button:not(.soft):not(.ghost) {
-  background: #1f4ed8;
-  color: #fff;
-  border-color: #1f4ed8;
+  background: var(--wn-primary);
+  color: var(--wn-on-primary);
+  border-color: var(--wn-primary);
 }
 
 .actions .ghost {
-  background: #fff8ec;
-  border-color: #e5d4b4;
-  color: #7a5a2b;
+  background: color-mix(in srgb, var(--wn-accent) 18%, var(--wn-surface));
+  border-color: color-mix(in srgb, var(--wn-accent) 50%, var(--wn-border));
+  color: var(--wn-ink);
 }
 
 .option-grid {
@@ -602,8 +605,8 @@ watch(
 }
 
 .option.selected {
-  border-color: #9fb2e1;
-  background: #f2f6ff;
+  border-color: var(--wn-primary);
+  background: var(--wn-primary-soft);
 }
 
 .option.correct {

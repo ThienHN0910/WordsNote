@@ -16,9 +16,10 @@ import { RouterView } from 'vue-router'
 .app-shell {
   min-height: 100vh;
   background:
-    radial-gradient(60% 50% at 10% 10%, rgba(255, 208, 143, 0.3), transparent 60%),
-    radial-gradient(45% 35% at 92% 18%, rgba(165, 214, 255, 0.24), transparent 65%),
-    #f7f3ec;
+    radial-gradient(60% 50% at 10% 10%, var(--wn-shell-glow-a), transparent 60%),
+    radial-gradient(45% 35% at 92% 18%, var(--wn-shell-glow-b), transparent 65%),
+    var(--wn-bg);
+  transition: background 0.25s ease;
 }
 
 .app-main {

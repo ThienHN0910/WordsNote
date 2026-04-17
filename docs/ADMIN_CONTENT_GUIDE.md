@@ -10,10 +10,12 @@ This guide explains the functional workflow for the WordsNote product:
 ## 1. Main User Flow (Web)
 
 1. Open `/learn` and use learning modes immediately (no auth).
-2. For personal collection management, sign in with Google at `/login`.
-3. In `/manage`, create collections and cards.
-4. Start focused session from manage workspace.
-5. Review progress and continue spaced repetition.
+2. Open `/privacy-policy` to review legal/privacy content.
+3. Switch policy language by query parameter (`?lang=vi` or `?lang=en`) for shareable links.
+4. For personal collection management, sign in with Google at `/login`.
+5. In `/manage`, create collections and cards.
+6. Start focused session from manage workspace.
+7. Review progress and continue spaced repetition.
 
 ## 2. Authentication Policy
 
@@ -116,6 +118,8 @@ Extension goals:
   - Learn (typed answer)
   - Practice (multiple choice)
 - Optional cloud sync: read public collections/cards for Learn-only practice (read-only)
+- Collection-level filtering is available in both Local and Cloud modes.
+- `Sync To Local` in Cloud mode fetches cards and stores them into local extension storage for Local Due study.
 
 Important:
 
@@ -125,13 +129,25 @@ Important:
 - Scope rule: web app owns `/` and `/manage`; extension owns local Learn-only flow.
 - Cloud sync mode only calls public read endpoints (`GET /api/collections`, `GET /api/cards`) and must not call management/study write APIs.
 
-## 9. Operational Notes
+## 9. Privacy Policy Page
+
+Public route:
+
+- `/privacy-policy`
+
+Language behavior:
+
+- `?lang=vi` renders Vietnamese policy copy.
+- `?lang=en` renders English policy copy.
+- Query parameter is kept in URL so policy links can be shared with a fixed language.
+
+## 10. Operational Notes
 
 - Keep API naming consistent: `collections` and `cards`.
 - Maintain temporary compatibility with legacy `desk/card` routes during migration.
 - Remove compatibility routes only after web + extension clients are migrated.
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
 ### 401 responses on management routes
 
@@ -146,3 +162,9 @@ Important:
 
 - Confirm expected answer exists in card back content.
 - Check punctuation and extra text handling in current normalization rules.
+
+### Cloud sync in extension does not return cards
+
+- Verify extension cloud endpoint is reachable and returns `GET /api/collections` and `GET /api/cards`.
+- Verify selected collection has cards when using collection filter.
+- Retry `Refresh` in Cloud mode, then `Sync To Local`.

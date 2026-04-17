@@ -7,6 +7,8 @@ Base path: `/api`
 - Public learning experience (`/learn` in frontend) does not require authentication.
 - Learn reads collections/cards via public read endpoints.
 - Collection and card write operations for management require JWT authentication.
+- Public legal page is available at frontend route `/privacy-policy` with language query `?lang=vi|en`.
+- Extension Cloud mode uses only public read endpoints (`GET /api/collections`, `GET /api/cards`) and syncs results to local storage client-side.
 
 Protected requests must include:
 

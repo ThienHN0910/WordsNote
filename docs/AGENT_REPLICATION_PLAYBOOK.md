@@ -14,7 +14,7 @@ Replicate a monorepo that contains:
 
 1. ASP.NET Core backend (`net8.0`) with MongoDB and JWT
 2. Vue 3 + Vite + Pinia frontend web app
-3. Chrome extension popup flow with no-auth local mode
+3. Chrome extension popup flow with no-auth local mode and optional cloud read-only sync
 
 Core product domain:
 
@@ -79,6 +79,7 @@ Read in order:
 4. `src/frontend/src/apis/WordsNote/*.ts`
 5. `src/frontend/src/stores/WordsNote/*.ts`
 6. `src/frontend/src/pages/WordsNote/*.vue`
+7. `src/frontend/src/pages/PrivacyPolicyPage.vue`
 
 Extract:
 
@@ -102,6 +103,8 @@ Extract:
 - no-auth local behavior
 - highlight capture workflow
 - local storage model
+- cloud read-only sync and sync-to-local flow
+- collection-level filtering in popup
 
 ## 3) Implementation Blueprint
 
@@ -111,7 +114,7 @@ Extract:
 4. Implement test APIs.
 5. Add written-answer normalization.
 6. Build frontend management + study + test pages.
-7. Build extension local inbox flow.
+7. Build extension local inbox flow with optional cloud read-only sync.
 8. Add compatibility layer (`desk/card`) if migrating from old clients.
 9. Add tests and smoke checks.
 10. Remove obsolete modules.
@@ -149,6 +152,8 @@ Extension:
 1. `cd src/extension`
 2. `npm run build`
 3. load unpacked extension and verify no-auth popup flow
+4. verify Cloud mode can read `GET /api/collections` and `GET /api/cards`
+5. verify `Sync To Local` writes cloud cards into local mode dataset
 
 ## 7) Definition Of Done
 
@@ -158,6 +163,6 @@ Replication is complete when:
 2. Flash/quick/deep study modes are functional.
 3. MCQ and written tests run end-to-end.
 4. Written grading is diacritics-insensitive and case-insensitive.
-5. Extension works without login and stores local data.
+5. Extension works without login, stores local data, and supports cloud read-only sync to local storage.
 6. Compatibility aliases are documented and scheduled for cleanup.
 7. Backend, frontend, and extension builds pass.

@@ -14,12 +14,14 @@ Latest finalization scope:
 - New route architecture:
   - `/` landing page
   - `/learn` public learning lab (flashcards, learn, practice without auth)
+  - `/privacy-policy` public bilingual policy page (`?lang=vi|en`)
   - `/manage` authenticated collection/card workspace
 - Google-only login for management workspace
 - Register flow disabled
 - Removal of unused frontend legacy pages/components/modules
 - Documentation synced with final product behavior
 - Extension popup aligned with Learn-only scope (flashcards, learn, practice); no homepage/manage flow in extension
+- Extension supports Cloud read-only sync, collection filtering, and `Sync To Local` workflow
 
 ## 1. Target Product Scope
 
@@ -47,8 +49,8 @@ Main mismatch:
 
 Confirmed implementation status:
 - Backend already has Desk and Card controllers with JWT auth.
-- Frontend already has Study Hub and Study Session pages.
-- Extension runs local no-auth flow with popup Learn modes and highlighted-text capture.
+- Frontend has Landing/Learn/Manage flows and public Privacy Policy page with language query mode.
+- Extension runs local no-auth flow with popup Learn modes, highlighted-text capture, cloud read-only fetch, and sync-to-local.
 
 Naming and contract inconsistencies:
 - Backend route names use singular `desk` and `card`.
@@ -76,7 +78,8 @@ Naming decision (important):
 Extension decision (no auth):
 - Extension runs in anonymous/local mode by default.
 - Data persists in chrome.storage.local.
-- Optional import/export with web app can be added later (not required in first delivery).
+- Optional cloud read-only sync can fetch public collections/cards.
+- Cloud cards can be synchronized into local storage for local study mode.
 
 ## 4. Execution Phases
 

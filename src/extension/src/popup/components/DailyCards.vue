@@ -507,19 +507,19 @@ onMounted(async () => {
 <style scoped>
 .learn-lab {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .top-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .source-config {
   display: grid;
-  gap: 8px;
+  gap: 7px;
 }
 
 .collection-filter {
@@ -530,17 +530,17 @@ onMounted(async () => {
 .collection-label {
   font-size: 12px;
   font-weight: 600;
-  color: #1e2f46;
+  color: var(--wn-muted);
 }
 
 .collection-select {
   width: 100%;
-  border: 1px solid #cdd7e4;
-  background: #ffffff;
+  border: 1px solid var(--wn-border);
+  background: var(--wn-surface);
   border-radius: 10px;
-  padding: 7px 9px;
+  padding: 8px 10px;
   font-size: 12px;
-  color: #10253f;
+  color: var(--wn-ink);
 }
 
 .source-switch {
@@ -550,33 +550,37 @@ onMounted(async () => {
 
 .source-switch button {
   flex: 1;
-  border: 1px solid #cdd7e4;
-  background: #ffffff;
+  border: 1px solid var(--wn-border);
+  background: var(--wn-surface);
   border-radius: 10px;
   padding: 6px 8px;
   font-size: 12px;
-  color: #10253f;
+  color: var(--wn-ink);
   cursor: pointer;
 }
 
 .source-switch button.active {
-  border-color: #0b4f8a;
-  background: #0b4f8a;
-  color: #f8fbff;
+  border-color: var(--wn-primary);
+  background: var(--wn-primary-soft);
+  color: var(--wn-primary);
+  font-weight: 600;
 }
 
 .cloud-controls {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
 .cloud-input {
   flex: 1;
-  border: 1px solid #cdd7e4;
+  min-width: 180px;
+  border: 1px solid var(--wn-border);
   border-radius: 10px;
-  padding: 7px 9px;
+  padding: 8px 10px;
   font-size: 12px;
-  color: #10253f;
+  color: var(--wn-ink);
+  background: var(--wn-surface);
 }
 
 .cloud-note {
@@ -585,24 +589,24 @@ onMounted(async () => {
 
 .sync-summary {
   font-size: 12px;
-  color: #0b4f8a;
+  color: var(--wn-primary);
   font-weight: 600;
 }
 
 .due-count {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--wn-ink);
 }
 
 .muted {
   margin-top: 2px;
   font-size: 12px;
-  color: #5b677a;
+  color: var(--wn-muted);
 }
 
 .error {
-  border: 1px solid #fecaca;
+  border: 1px solid #f1b3b3;
   background: #fff3f3;
   color: #b42318;
   border-radius: 10px;
@@ -616,17 +620,29 @@ onMounted(async () => {
 .actions button,
 .option,
 .difficulty {
-  border: 1px solid #cdd7e4;
-  background: #ffffff;
+  border: 1px solid var(--wn-border);
+  background: var(--wn-surface);
   border-radius: 10px;
   padding: 6px 10px;
   font-size: 12px;
   cursor: pointer;
-  color: #10253f;
+  color: var(--wn-ink);
+  transition: all 0.2s ease;
 }
 
 .ghost {
-  background: #f8fbff;
+  background: color-mix(in srgb, var(--wn-accent) 16%, var(--wn-surface));
+  border-color: color-mix(in srgb, var(--wn-accent) 44%, var(--wn-border));
+}
+
+.ghost:hover,
+.soft:hover,
+.option:hover,
+.difficulty:hover,
+.mode-switch button:hover,
+.actions button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(31, 35, 51, 0.1);
 }
 
 .mode-shell {
@@ -641,21 +657,21 @@ onMounted(async () => {
 }
 
 .mode-switch button.active {
-  border-color: #1d77c3;
-  background: #1d77c3;
-  color: #f8fbff;
+  border-color: var(--wn-primary);
+  background: var(--wn-primary);
+  color: var(--wn-on-primary);
 }
 
 .progress {
   font-size: 12px;
-  color: #405067;
+  color: var(--wn-muted);
   font-weight: 600;
 }
 
 .card-stage {
-  border: 1px solid #d8e2f0;
+  border: 1px dashed var(--wn-border);
   border-radius: 14px;
-  background: linear-gradient(180deg, #f9fbff 0%, #f2f7ff 100%);
+  background: var(--wn-surface-soft);
   padding: 12px;
   min-height: 186px;
 }
@@ -679,9 +695,9 @@ onMounted(async () => {
 .flash-face {
   position: absolute;
   inset: 0;
-  border: 1px solid #d1deed;
+  border: 1px solid var(--wn-border);
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--wn-surface);
   padding: 11px;
   display: grid;
   align-content: center;
@@ -691,41 +707,44 @@ onMounted(async () => {
 
 .flash-back {
   transform: rotateY(180deg);
-  background: #edf5ff;
+  background: linear-gradient(180deg, var(--wn-surface), var(--wn-primary-soft));
 }
 
 .face-label {
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #617289;
+  color: var(--wn-muted);
 }
 
 .card-meta {
   display: block;
-  color: #617289;
+  color: var(--wn-muted);
   font-size: 11px;
 }
 
 .flash-face h3,
 .prompt {
   font-size: 16px;
-  color: #10253f;
+  color: var(--wn-ink);
+  font-family: 'Fraunces', 'Georgia', serif;
 }
 
 .answer-input {
   width: 100%;
   margin-top: 8px;
-  border: 1px solid #cdd7e4;
+  border: 1px solid var(--wn-border);
   border-radius: 10px;
   padding: 9px 10px;
   font-size: 13px;
   outline: none;
+  color: var(--wn-ink);
+  background: var(--wn-surface);
 }
 
 .answer-input:focus {
-  border-color: #1d77c3;
-  box-shadow: 0 0 0 3px rgba(29, 119, 195, 0.18);
+  border-color: var(--wn-primary);
+  box-shadow: 0 0 0 3px rgba(31, 78, 216, 0.2);
 }
 
 .actions {
@@ -736,9 +755,9 @@ onMounted(async () => {
 }
 
 .actions button:not(.soft):not(.ghost) {
-  border-color: #1d77c3;
-  background: #1d77c3;
-  color: #f8fbff;
+  border-color: var(--wn-primary);
+  background: var(--wn-primary);
+  color: var(--wn-on-primary);
 }
 
 .option-grid {
@@ -749,8 +768,8 @@ onMounted(async () => {
 }
 
 .option.selected {
-  border-color: #1d77c3;
-  background: #e5f2ff;
+  border-color: var(--wn-primary);
+  background: var(--wn-primary-soft);
 }
 
 .option.correct {
@@ -764,7 +783,7 @@ onMounted(async () => {
 }
 
 .review-footer {
-  border-top: 1px dashed #d1deed;
+  border-top: 1px dashed var(--wn-border);
   padding-top: 8px;
 }
 
@@ -779,13 +798,13 @@ onMounted(async () => {
 }
 
 .difficulty.hard {
-  border-color: #f5c2c7;
+  border-color: #f1c5c9;
   background: #fff5f6;
   color: #912018;
 }
 
 .difficulty.medium {
-  border-color: #f2d6a2;
+  border-color: #efd7a9;
   background: #fff8ea;
   color: #8c5a00;
 }
@@ -804,20 +823,22 @@ onMounted(async () => {
 .loading-row {
   height: 34px;
   border-radius: 8px;
-  background: #e7eef8;
+  background: color-mix(in srgb, var(--wn-primary) 10%, var(--wn-surface));
   animation: pulse 1.4s infinite;
 }
 
 .empty-state {
-  border: 1px dashed #cfdbea;
+  border: 1px dashed var(--wn-border);
   border-radius: 12px;
   padding: 14px;
   text-align: center;
+  background: var(--wn-surface);
 }
 
 .empty-title {
   font-weight: 600;
-  color: #10253f;
+  color: var(--wn-ink);
+  font-family: 'Fraunces', 'Georgia', serif;
 }
 
 .ok {

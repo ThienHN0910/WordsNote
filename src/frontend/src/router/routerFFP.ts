@@ -12,6 +12,11 @@ const routesFFP: Array<RouteRecordRaw> = [
     component: () => import('@/pages/WordsNote/LearnLabPage.vue'),
   },
   {
+    path: '/privacy-policy',
+    name: 'privacyPolicy',
+    component: () => import('@/pages/PrivacyPolicyPage.vue'),
+  },
+  {
     path: '/manage',
     name: 'manageCollections',
     component: () => import('@/pages/WordsNote/StudyHubPage.vue'),

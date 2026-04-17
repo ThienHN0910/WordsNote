@@ -1,4 +1,3 @@
-const TOKEN_KEY = 'token';
 const LOCAL_CARDS_KEY = 'wordsnote_local_cards';
 
 function readStorage(key, fallbackValue) {
@@ -103,40 +102,4 @@ export async function reviewLocalCard(cardId, difficulty) {
 
   await saveLocalCards(cards);
   return cards[index];
-}
-
-export function saveToken(token) {
-  if (typeof chrome !== 'undefined' && chrome.storage) {
-    chrome.storage.local.set({ [TOKEN_KEY]: token });
-  } else {
-    localStorage.setItem(TOKEN_KEY, JSON.stringify(token));
-  }
-}
-
-export function clearToken() {
-  if (typeof chrome !== 'undefined' && chrome.storage) {
-    chrome.storage.local.remove([TOKEN_KEY]);
-  } else {
-    localStorage.removeItem(TOKEN_KEY);
-  }
-}
-
-export function getToken() {
-  return new Promise((resolve) => {
-    if (typeof chrome !== 'undefined' && chrome.storage) {
-      chrome.storage.local.get([TOKEN_KEY], (result) => resolve(result[TOKEN_KEY] || null));
-    } else {
-      const raw = localStorage.getItem(TOKEN_KEY);
-      if (!raw) {
-        resolve(null);
-        return;
-      }
-
-      try {
-        resolve(JSON.parse(raw));
-      } catch {
-        resolve(raw);
-      }
-    }
-  });
 }

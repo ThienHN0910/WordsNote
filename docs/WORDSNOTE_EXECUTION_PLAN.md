@@ -1,6 +1,6 @@
 # WordsNote Execution Plan (BE + FE + Chrome Extension)
 
-## Execution Status (2026-04-16)
+## Execution Status (2026-04-17)
 
 - Completed: Phase 1 (documentation rewrite)
 - Completed: Phase 2 core backend rollout (collections/cards aliases, study APIs, tests APIs, answer normalization)
@@ -19,6 +19,7 @@ Latest finalization scope:
 - Register flow disabled
 - Removal of unused frontend legacy pages/components/modules
 - Documentation synced with final product behavior
+- Extension popup aligned with Learn-only scope (flashcards, learn, practice); no homepage/manage flow in extension
 
 ## 1. Target Product Scope
 
@@ -47,12 +48,12 @@ Main mismatch:
 Confirmed implementation status:
 - Backend already has Desk and Card controllers with JWT auth.
 - Frontend already has Study Hub and Study Session pages.
-- Extension still contains login flow and token-based API calls.
+- Extension runs local no-auth flow with popup Learn modes and highlighted-text capture.
 
 Naming and contract inconsistencies:
 - Backend route names use singular `desk` and `card`.
 - Some models/DTO use mixed naming (`DeskId` in storage, `DeckId` in API DTO).
-- Extension calls API paths that do not exist in current backend (`/api/decks`, `/api/cards`).
+- Legacy naming aliases remain during migration; preferred naming is `collections` and `cards`.
 
 Legacy or unused artifacts to be cleaned later:
 - Frontend placeholders and old modules (for example FFP/Supabase/template pages).

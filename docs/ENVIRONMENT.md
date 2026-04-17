@@ -119,8 +119,11 @@ Extension currently runs in local mode and does not require authentication.
 
 Recommended:
 
-- Keep API base URL configurable in extension service config if server sync is enabled later.
-- Default behavior should work with local storage only.
+- Keep extension popup scoped to Learn-only experience (flashcards, learn, practice).
+- Do not add web route navigation (no homepage or manage flow in popup).
+- Default behavior must work with local storage only (`wordsnote_local_cards`).
+- Optional cloud read-only sync uses public API endpoint base URL, defaulting to `http://localhost:3000`.
+- Cloud endpoint is persisted in extension storage key `wordsnote_cloud_api_base_url`.
 
 ## Security Notes
 

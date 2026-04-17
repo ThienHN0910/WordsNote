@@ -111,12 +111,19 @@ Extension goals:
 
 - Save highlighted words/phrases quickly
 - Keep local inbox cards in `chrome.storage.local`
-- Review due local cards in popup
+- Review due local cards in popup with Learn-only modes:
+  - Flashcards
+  - Learn (typed answer)
+  - Practice (multiple choice)
+- Optional cloud sync: read public collections/cards for Learn-only practice (read-only)
 
 Important:
 
 - Extension should work without login.
 - Extension should not depend on web JWT token.
+- Extension popup must not include homepage or manage navigation.
+- Scope rule: web app owns `/` and `/manage`; extension owns local Learn-only flow.
+- Cloud sync mode only calls public read endpoints (`GET /api/collections`, `GET /api/cards`) and must not call management/study write APIs.
 
 ## 9. Operational Notes
 

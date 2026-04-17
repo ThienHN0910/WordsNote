@@ -1,4 +1,5 @@
 const LOCAL_CARDS_KEY = 'wordsnote_local_cards';
+const CLOUD_SYNC_SOURCE = 'cloud-sync';
 
 function readStorage(key, fallbackValue) {
   return new Promise((resolve) => {
@@ -102,4 +103,61 @@ export async function reviewLocalCard(cardId, difficulty) {
 
   await saveLocalCards(cards);
   return cards[index];
+}
+
+function normalizeCloudCardForLocal(card, nowIso) {
+  const originalId = String(card.id || '').trim();
+  const cardId = originalId || `missing-${Math.random().toString(36).slice(2, 10)}`;
+  const collectionId = String(card.collectionId || 'cloud-default').trim() || 'cloud-default';
+  const collectionTitle = String(card.collectionTitle || 'Cloud Collection').trim() || 'Cloud Collection';
+
+  return {
+    id: `cloud-${cardId}`,
+    front: String(card.front || '').trim(),
+    back: String(card.back || '').trim(),
+    hint: String(card.hint || '').trim(),
+    createdAt: nowIso,
+    dueAt: nowIso,
+    streak: Number(card.streak || 0),
+    lastReviewedAt: null,
+    source: CLOUD_SYNC_SOURCE,
+    cloudCardId: cardId,
+    collectionId,
+    collectionTitle,
+    syncedAt: nowIso,
+  };
+}
+
+export async function syncCloudCardsToLocal(cloudCards, options = {}) {
+  const replacePreviousSynced = options.replacePreviousSynced !== false;
+  const localCards = await getLocalCards();
+  const nowIso = new Date().toISOString();
+
+  const incomingCards = Array.isArray(cloudCards) ? cloudCards : [];
+  const syncedCards = incomingCards
+    .filter((card) => String(card.front || '').trim().length > 0)
+    .map((card) => normalizeCloudCardForLocal(card, nowIso));
+
+  const dedupedSyncedCards = [];
+  const seenIds = new Set();
+  for (const card of syncedCards) {
+    if (seenIds.has(card.id)) {
+      continue;
+    }
+
+    seenIds.add(card.id);
+    dedupedSyncedCards.push(card);
+  }
+
+  const retainedLocalCards = replacePreviousSynced
+    ? localCards.filter((card) => card.source !== CLOUD_SYNC_SOURCE)
+    : [...localCards];
+
+  const mergedCards = [...dedupedSyncedCards, ...retainedLocalCards];
+  await saveLocalCards(mergedCards);
+
+  return {
+    synced: dedupedSyncedCards.length,
+    totalLocal: mergedCards.length,
+  };
 }

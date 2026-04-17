@@ -21,16 +21,26 @@
           v-model="cloudApiBaseDraft"
           class="cloud-input"
           type="text"
-          placeholder="http://localhost:3000"
+          placeholder="http://words-note.runasp.net"
           @keyup.enter="saveCloudEndpoint"
         />
         <button class="ghost" @click="saveCloudEndpoint">Save Endpoint</button>
+        <button class="ghost" @click="syncCloudToLocal">Sync To Local</button>
       </div>
 
       <p v-if="sourceMode === 'cloud'" class="muted cloud-note">
         Read-only sync from public API. Endpoint: {{ cloudApiBaseUrl }}
       </p>
       <p v-if="syncSummary" class="sync-summary">{{ syncSummary }}</p>
+    </section>
+
+    <section v-if="collectionOptions.length > 1" class="collection-filter">
+      <label class="collection-label" for="collection-select">Collection</label>
+      <select id="collection-select" v-model="selectedCollectionId" class="collection-select">
+        <option v-for="option in collectionOptions" :key="option.id" :value="option.id">
+          {{ option.label }}
+        </option>
+      </select>
     </section>
 
     <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
@@ -140,21 +150,22 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
-import { getDueLocalCards, reviewLocalCard } from '../../services/storage.js';
+import { getDueLocalCards, reviewLocalCard, syncCloudCardsToLocal } from '../../services/storage.js';
 import {
   fetchPublicLearnSnapshot,
   getCloudApiBaseUrl,
   setCloudApiBaseUrl,
 } from '../../services/remoteStudy.js';
 
-const cards = ref([]);
+const allCards = ref([]);
 const loading = ref(true);
 const errorMsg = ref('');
 const syncSummary = ref('');
+const selectedCollectionId = ref('all');
 
 const sourceMode = ref('local');
-const cloudApiBaseUrl = ref('http://localhost:3000');
-const cloudApiBaseDraft = ref('http://localhost:3000');
+const cloudApiBaseUrl = ref('http://words-note.runasp.net');
+const cloudApiBaseDraft = ref('http://words-note.runasp.net');
 
 const mode = ref('flash');
 const currentIndex = ref(0);
@@ -170,6 +181,33 @@ const selectedPracticeOption = ref('');
 const practiceFeedback = ref('');
 const practiceFeedbackType = ref('');
 const practiceAwaitingNext = ref(false);
+
+const cards = computed(() => {
+  if (selectedCollectionId.value === 'all') {
+    return allCards.value;
+  }
+
+  return allCards.value.filter((card) => card.collectionId === selectedCollectionId.value);
+});
+
+const collectionOptions = computed(() => {
+  const optionMap = new Map();
+
+  for (const card of allCards.value) {
+    const collectionId = String(card.collectionId || 'local-inbox').trim() || 'local-inbox';
+    const collectionTitle = String(card.collectionTitle || 'Local Inbox').trim() || 'Local Inbox';
+
+    if (!optionMap.has(collectionId)) {
+      optionMap.set(collectionId, collectionTitle);
+    }
+  }
+
+  const sortedOptions = [...optionMap.entries()]
+    .sort((a, b) => a[1].localeCompare(b[1]))
+    .map(([id, title]) => ({ id, label: title }));
+
+  return [{ id: 'all', label: 'All collections' }, ...sortedOptions];
+});
 
 const loadingLabel = computed(() =>
   sourceMode.value === 'local' ? 'Loading due cards...' : 'Syncing from public API...',
@@ -240,6 +278,17 @@ function shuffle(values) {
   return output;
 }
 
+function normalizeCard(card, fallbackCollectionId = 'local-inbox', fallbackCollectionTitle = 'Local Inbox') {
+  const collectionId = String(card.collectionId || fallbackCollectionId).trim() || fallbackCollectionId;
+  const collectionTitle = String(card.collectionTitle || fallbackCollectionTitle).trim() || fallbackCollectionTitle;
+
+  return {
+    ...card,
+    collectionId,
+    collectionTitle,
+  };
+}
+
 function normalize(value) {
   return String(value || '')
     .normalize('NFD')
@@ -302,15 +351,24 @@ function previousCard() {
 async function refresh() {
   loading.value = true;
   errorMsg.value = '';
-  syncSummary.value = '';
 
   try {
     if (sourceMode.value === 'local') {
-      cards.value = await getDueLocalCards();
+      const localDueCards = await getDueLocalCards();
+      allCards.value = localDueCards.map((card) => normalizeCard(card, 'local-inbox', 'Local Inbox'));
     } else {
       const snapshot = await fetchPublicLearnSnapshot(cloudApiBaseUrl.value);
-      cards.value = snapshot.cards;
+      allCards.value = snapshot.cards.map((card) =>
+        normalizeCard(card, 'cloud-unknown', 'Cloud Collection'),
+      );
       syncSummary.value = `${snapshot.collections} collection${snapshot.collections === 1 ? '' : 's'} synced.`;
+    }
+
+    if (
+      selectedCollectionId.value !== 'all' &&
+      !allCards.value.some((card) => card.collectionId === selectedCollectionId.value)
+    ) {
+      selectedCollectionId.value = 'all';
     }
 
     if (currentIndex.value >= cards.value.length) {
@@ -388,13 +446,46 @@ async function saveCloudEndpoint() {
   }
 }
 
+async function syncCloudToLocal() {
+  loading.value = true;
+  errorMsg.value = '';
+
+  try {
+    const snapshot = await fetchPublicLearnSnapshot(cloudApiBaseUrl.value);
+    const normalizedCloudCards = snapshot.cards.map((card) =>
+      normalizeCard(card, 'cloud-unknown', 'Cloud Collection'),
+    );
+    const cardsToSync = selectedCollectionId.value === 'all'
+      ? normalizedCloudCards
+      : normalizedCloudCards.filter((card) => card.collectionId === selectedCollectionId.value);
+
+    const syncResult = await syncCloudCardsToLocal(cardsToSync);
+
+    sourceMode.value = 'local';
+    selectedCollectionId.value = 'all';
+    await refresh();
+    syncSummary.value = `Synced ${syncResult.synced} card${syncResult.synced === 1 ? '' : 's'} from cloud to local.`;
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : '';
+    errorMsg.value = `Cloud sync to local failed.${detail ? ` ${detail}` : ''}`;
+  } finally {
+    loading.value = false;
+  }
+}
+
 watch(mode, () => {
   resetModeState();
 });
 
 watch(sourceMode, async () => {
   currentIndex.value = 0;
+  selectedCollectionId.value = 'all';
   await refresh();
+});
+
+watch(selectedCollectionId, () => {
+  currentIndex.value = 0;
+  resetModeState();
 });
 
 watch(
@@ -429,6 +520,27 @@ onMounted(async () => {
 .source-config {
   display: grid;
   gap: 8px;
+}
+
+.collection-filter {
+  display: grid;
+  gap: 6px;
+}
+
+.collection-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e2f46;
+}
+
+.collection-select {
+  width: 100%;
+  border: 1px solid #cdd7e4;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 7px 9px;
+  font-size: 12px;
+  color: #10253f;
 }
 
 .source-switch {

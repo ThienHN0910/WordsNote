@@ -1,5 +1,5 @@
 const CLOUD_API_BASE_KEY = 'wordsnote_cloud_api_base_url';
-const DEFAULT_CLOUD_API_BASE_URL = 'http://localhost:3000';
+const DEFAULT_CLOUD_API_BASE_URL = 'http://words-note.runasp.net';
 
 function normalizeBaseUrl(value) {
   const normalized = String(value || '').trim().replace(/\/+$/, '');

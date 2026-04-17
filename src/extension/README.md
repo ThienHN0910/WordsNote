@@ -11,6 +11,7 @@ Chrome extension for the Learn workflow only.
 - No authentication required.
 - No Manage workspace or Homepage flow inside extension popup.
 - Optional Cloud Sync mode reads public collections/cards in read-only mode.
+- Cards can be filtered by collection in both Local and Cloud modes.
 
 ## Data Model
 
@@ -36,3 +37,4 @@ Load unpacked extension from `src/extension/dist` in Chrome.
 	- `GET /api/collections`
 	- `GET /api/cards`
 - Cloud cards are read-only in popup; spaced repetition review updates remain local-only.
+- Cloud mode provides `Sync To Local` to fetch cards and store them into local storage for Local Due learning.

@@ -1,4 +1,4 @@
-# WordsNote Execution Plan (BE + FE + Chrome Extension)
+# WordsNote Execution Plan (BE + FE + Extension + Desktop)
 
 ## Execution Status (2026-04-17)
 
@@ -8,6 +8,7 @@
 - Completed: Phase 4 core extension rollout (no-auth local storage workflow)
 - Completed: Phase 5 hardening and validation (unit tests, multi-app builds, backend runtime smoke test)
 - Completed: Phase 6 cleanup and UX redesign finalization
+- Completed: Phase 7 desktop WPF rollout (landing, learn, manage, privacy + local/cloud sync)
 
 Latest finalization scope:
 
@@ -22,6 +23,13 @@ Latest finalization scope:
 - Documentation synced with final product behavior
 - Extension popup aligned with Learn-only scope (flashcards, learn, practice); no homepage/manage flow in extension
 - Extension supports Cloud read-only sync, collection filtering, and `Sync To Local` workflow
+- New desktop app under `src/desktop/WordsNote.Desktop` with WPF UI and feature parity with active web frontend flows:
+  - Landing workspace
+  - Learn workspace (Flashcards, Learn, Practice)
+  - Privacy workspace (VI/EN)
+  - Manage workspace (local-first CRUD/import/filter/sort + Google cloud mode)
+  - Browser-based Google login flow plus ID token fallback
+  - Sync Local -> Cloud and Sync Cloud -> Local
 
 ## 1. Target Product Scope
 
@@ -221,6 +229,28 @@ Exit criteria:
 - Repository contains only active product modules.
 - Build/test pipeline remains green.
 
+### Phase 7 - Desktop WPF Parity App
+
+Tasks:
+- Create standalone desktop solution at `src/desktop/WordsNote.Desktop.sln`.
+- Implement shared API client against existing backend contracts.
+- Implement desktop screens equivalent to active web frontend scope:
+  - Landing
+  - Learn Lab (flash, learn typing, practice MCQ)
+  - Manage (auth + collection/card management + import + filters)
+  - Session (flash review and quiz answer check)
+  - Privacy policy (VI/EN)
+- Validate desktop build and fix compile/runtime integration issues.
+- Update docs (`README.md`, `docs/ENVIRONMENT.md`, `docs/API_REFERENCE.md`) for desktop setup and behavior.
+
+Exit criteria:
+- Desktop app builds successfully with `dotnet build src/desktop/WordsNote.Desktop.sln`.
+- Core flows from web frontend are available in desktop client.
+- Documentation includes desktop architecture and run instructions.
+
+Status:
+- Completed on 2026-04-18 in current execution cycle.
+
 ## 5. Suggested Delivery Sprints
 
 Sprint 1:
@@ -238,12 +268,12 @@ Sprint 4:
 Sprint 5:
 - Phase 5 hardening + Phase 6 cleanup
 
+Sprint 6:
+- Phase 7 desktop WPF parity rollout
+
 ## 6. Immediate Next Action (recommended)
 
-Start with Phase 1 now:
-1. Rewrite docs/ENVIRONMENT.md for .NET backend + Vue frontend + extension.
-2. Rewrite docs/API_REFERENCE.md with collections/cards/study/tests endpoints.
-3. Rewrite docs/ADMIN_CONTENT_GUIDE.md into WordsNote workflow guide.
-4. Rewrite docs/AGENT_REPLICATION_PLAYBOOK.md for this .NET architecture.
-
-After docs are approved, execute Phase 2 API refactor in small PR-style batches.
+Current next action recommendation:
+1. Add optional desktop UI coverage for backend Tests APIs (`/api/tests/mcq/*`, `/api/tests/written/*`).
+2. Add desktop integration tests for API client and answer normalization behavior.
+3. Package desktop release profile (self-contained + signing strategy).

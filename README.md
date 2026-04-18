@@ -4,6 +4,7 @@ WordsNote is a learning platform for vocabulary and flashcards, delivered as:
 
 - ASP.NET Core backend API
 - Vue 3 web app
+- WPF desktop app
 - Browser extension popup for quick review
 
 ## Project Layout
@@ -14,6 +15,8 @@ WordsNote is a learning platform for vocabulary and flashcards, delivered as:
   - .NET backend, API, domain, infrastructure
 - src/frontend
   - Vue 3 + Vite web application
+- src/desktop
+  - WPF desktop application (.NET 8)
 - src/extension
   - Extension popup and browser scripts
 
@@ -38,6 +41,20 @@ WordsNote is a learning platform for vocabulary and flashcards, delivered as:
 - Optional Cloud mode (read-only fetch from public API)
 - Sync To Local flow to copy cloud cards into local review dataset
 - Collection-level filtering in popup
+
+### Desktop App (WPF)
+
+- Home/Landing workspace
+- Learn workspace:
+  - Flashcards
+  - Learn (typed answer with normalized compare)
+  - Practice (multiple choice)
+- Privacy policy workspace (VI/EN)
+- Manage workspace:
+  - Local mode without login: CRUD collections/cards, import, filter/sort (no backend calls)
+  - Google login for cloud mode (browser flow with optional ID token fallback)
+  - Sync Local -> Cloud and Sync Cloud -> Local
+  - Input placeholders for faster desktop data entry
 
 ## Technology Stack
 
@@ -82,6 +99,13 @@ Production build:
 
 Load unpacked extension from src/extension/dist.
 
+### 4. Desktop (WPF)
+
+- dotnet build src/desktop/WordsNote.Desktop.sln
+- dotnet run --project src/desktop/WordsNote.Desktop/WordsNote.Desktop.csproj
+
+Desktop default API base URL is `http://words-note.runasp.net` and can be changed in-app.
+
 Note:
 Current extension host permissions are configured for words-note.runasp.net.
 If you need a different API host for Cloud mode, update manifest host permissions accordingly.
@@ -109,6 +133,7 @@ Detailed contracts are documented in docs/API_REFERENCE.md.
 - docs/ADMIN_CONTENT_GUIDE.md
 - docs/AGENT_REPLICATION_PLAYBOOK.md
 - docs/WORDSNOTE_EXECUTION_PLAN.md
+- docs/WPF_DESKTOP_EXECUTION_PLAN.md
 
 ## Build Status (Latest)
 
@@ -116,6 +141,7 @@ Recent builds executed successfully for:
 
 - Frontend
 - Extension
+- Desktop
 
 ## Release and Deployment Notes
 

@@ -6,6 +6,7 @@ This document defines runtime configuration for the WordsNote monorepo.
 
 - Backend: `src/backend/FeatureFusion`
 - Frontend: `src/frontend`
+- Desktop: `src/desktop/WordsNote.Desktop`
 - Chrome extension: `src/extension`
 
 ## Backend (.NET) Configuration
@@ -112,6 +113,36 @@ Notes:
 
 - Frontend displays the allowed email as guidance in login page.
 - Backend enforces the real allowlist via `AuthProviders:Google:AdminEmail`.
+
+## Desktop (WPF) Configuration
+
+Desktop app currently uses runtime API base URL configured in-app from the top bar.
+
+Default value:
+
+- `http://words-note.runasp.net`
+
+Desktop authentication behavior:
+
+- Supports Google browser login flow (system browser + local callback to retrieve ID token)
+- Supports manual Google ID token submission as fallback (`POST /api/auth/google`)
+- Stores JWT token in memory for current runtime session only
+
+Desktop feature/auth scope:
+
+- Manage workspace works in local mode without auth and persists data to local JSON storage:
+  - `%LocalAppData%/WordsNote/desktop/manage-local-data.json`
+- After Google login, desktop enters cloud mode for manage operations and enables both sync directions:
+  - `Sync Local -> Cloud`
+  - `Sync Cloud -> Local`
+- Session and Tests APIs remain available on backend, but current desktop UI scope focuses on Landing/Learn/Manage/Privacy.
+
+Run desktop locally:
+
+```powershell
+dotnet build src/desktop/WordsNote.Desktop.sln
+dotnet run --project src/desktop/WordsNote.Desktop/WordsNote.Desktop.csproj
+```
 
 ## Chrome Extension Configuration
 

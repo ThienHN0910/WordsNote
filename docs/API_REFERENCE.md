@@ -9,6 +9,12 @@ Base path: `/api`
 - Collection and card write operations for management require JWT authentication.
 - Public legal page is available at frontend route `/privacy-policy` with language query `?lang=vi|en`.
 - Extension Cloud mode uses only public read endpoints (`GET /api/collections`, `GET /api/cards`) and syncs results to local storage client-side.
+- WPF desktop app mirrors frontend feature scope:
+	- Learn workspace uses public read endpoints.
+	- Manage workspace supports local offline mode when not logged in.
+	- After Google login, Manage can sync local data to cloud and use protected endpoints.
+	- Manage also supports cloud-to-local sync for offline continuity.
+	- Desktop supports Google browser login (preferred) and manual ID token input (fallback).
 
 Protected requests must include:
 
@@ -118,6 +124,10 @@ Answer grading default:
 - `POST /api/tests/mcq/submit`
 - `POST /api/tests/written/start`
 - `POST /api/tests/written/submit`
+
+Desktop note:
+
+- Backend Tests APIs remain active; current desktop UI does not expose a dedicated Tests tab.
 
 MCQ start payload:
 

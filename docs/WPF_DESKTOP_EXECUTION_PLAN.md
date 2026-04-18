@@ -38,6 +38,7 @@ Build a WPF desktop application with feature parity to active frontend web flows
 - [x] Implemented multi-tab UI for Landing/Learn/Privacy/Manage
 - [x] Implemented Google login/logout flow for protected manage cloud mode
 - [x] Implemented collection/card CRUD + import + filters/sorts
+- [x] Standardized card UX: create-only form in Manage and popup edit from Edit Selected action
 - [x] Implemented local-mode manage without login (local JSON persistence)
 - [x] Implemented sync controls: Local -> Cloud and Cloud -> Local
 - [x] Implemented browser-based Google login flow (Postman/UnityHub style)

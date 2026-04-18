@@ -3,17 +3,26 @@
     <div class="header">
       <div>
         <p class="eyebrow">WordsNote Extension</p>
-        <h1 class="title">Learn Lab</h1>
+        <h1 class="title">{{ activeView === 'learn' ? 'Learn Lab' : 'Manage Lab' }}</h1>
+      </div>
+      <div class="view-switch">
+        <button :class="{ active: activeView === 'learn' }" @click="activeView = 'learn'">Learn</button>
+        <button :class="{ active: activeView === 'manage' }" @click="activeView = 'manage'">Manage</button>
       </div>
     </div>
     <div class="content">
-      <DailyCards />
+      <DailyCards v-if="activeView === 'learn'" />
+      <ManageCards v-else />
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import DailyCards from './components/DailyCards.vue';
+import ManageCards from './components/ManageCards.vue';
+
+const activeView = ref('learn');
 </script>
 
 <style>
@@ -67,6 +76,10 @@ body {
   background: var(--wn-topbar-bg);
   border-bottom: 1px solid var(--wn-topbar-border);
   backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
 }
 
 .title {
@@ -88,5 +101,27 @@ body {
 .content {
   padding: 12px;
   background: linear-gradient(180deg, var(--wn-surface), var(--wn-surface-soft));
+}
+
+.view-switch {
+  display: flex;
+  gap: 6px;
+}
+
+.view-switch button {
+  border: 1px solid var(--wn-border);
+  background: var(--wn-surface);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--wn-ink);
+  cursor: pointer;
+}
+
+.view-switch button.active {
+  border-color: var(--wn-primary);
+  background: var(--wn-primary-soft);
+  color: var(--wn-primary);
+  font-weight: 600;
 }
 </style>

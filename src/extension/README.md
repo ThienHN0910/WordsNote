@@ -1,15 +1,20 @@
 # WordsNote Chrome Extension
 
-Chrome extension for the Learn workflow only.
+Chrome extension for local-first Learn and Manage workflows.
 
 ## Scope
 
-- Learn-only popup experience with 3 modes:
+Popup workspaces:
+
+- Learn Lab with 3 modes:
 	- Flashcards
 	- Learn (typed answer)
 	- Practice (multiple choice)
+- Manage Lab:
+	- Local collection CRUD
+	- Local card CRUD
+	- Quick text import (`front|back|hint` per line)
 - No authentication required.
-- No Manage workspace or Homepage flow inside extension popup.
 - Optional Cloud Sync mode reads public collections/cards in read-only mode.
 - Cards can be filtered by collection in both Local and Cloud modes.
 
@@ -17,6 +22,8 @@ Chrome extension for the Learn workflow only.
 
 - Cards are stored locally in `chrome.storage.local`.
 - Storage key: `wordsnote_local_cards`.
+- Collections are stored locally in `chrome.storage.local`.
+- Storage key: `wordsnote_local_collections`.
 - Highlighted text from webpages is saved as local cards by content script + background worker.
 - Cloud Sync endpoint key in storage: `wordsnote_cloud_api_base_url`.
 
@@ -32,7 +39,7 @@ Load unpacked extension from `src/extension/dist` in Chrome.
 ## Notes
 
 - The extension is intentionally independent from web app auth state.
-- The popup does not navigate to web routes such as `/` or `/manage`.
+- The popup does not depend on web routes or web login state.
 - In Cloud Sync mode, extension reads from public endpoints only:
 	- `GET /api/collections`
 	- `GET /api/cards`

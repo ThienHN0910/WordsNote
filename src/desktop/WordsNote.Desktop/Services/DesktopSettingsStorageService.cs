@@ -8,6 +8,8 @@ public sealed class DesktopAppSettings
     public string ApiBaseUrl { get; set; } = "http://words-note.runasp.net";
 
     public string GoogleClientId { get; set; } = string.Empty;
+
+    public string ThemeMode { get; set; } = "light";
 }
 
 public sealed class DesktopSettingsStorageService
@@ -46,6 +48,7 @@ public sealed class DesktopSettingsStorageService
 
         settings.ApiBaseUrl = settings.ApiBaseUrl.Trim();
         settings.GoogleClientId = settings.GoogleClientId?.Trim() ?? string.Empty;
+        settings.ThemeMode = NormalizeThemeMode(settings.ThemeMode);
         return settings;
     }
 
@@ -57,9 +60,17 @@ public sealed class DesktopSettingsStorageService
                 ? "http://words-note.runasp.net"
                 : settings.ApiBaseUrl.Trim(),
             GoogleClientId = settings.GoogleClientId?.Trim() ?? string.Empty,
+            ThemeMode = NormalizeThemeMode(settings.ThemeMode),
         };
 
         await using var stream = File.Create(_filePath);
         await JsonSerializer.SerializeAsync(stream, payload, JsonOptions, cancellationToken);
+    }
+
+    private static string NormalizeThemeMode(string? value)
+    {
+        return string.Equals(value?.Trim(), "dark", StringComparison.OrdinalIgnoreCase)
+            ? "dark"
+            : "light";
     }
 }

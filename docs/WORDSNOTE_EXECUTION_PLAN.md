@@ -16,18 +16,24 @@ Latest finalization scope:
   - `/` landing page
   - `/learn` public learning lab (flashcards, learn, practice without auth)
   - `/privacy-policy` public bilingual policy page (`?lang=vi|en`)
-  - `/manage` authenticated collection/card workspace
-- Google-only login for management workspace
+  - `/manage` local-first collection/card workspace (no login required)
+    - Card UX is create-only form plus popup edit from card actions
+  - `/manage/:deckId/session` authenticated focused session route
+- Google login is optional and used for cloud-backed session/deep-study actions
 - Register flow disabled
 - Removal of unused frontend legacy pages/components/modules
 - Documentation synced with final product behavior
-- Extension popup aligned with Learn-only scope (flashcards, learn, practice); no homepage/manage flow in extension
+- Extension popup aligned with local-first scope:
+  - Learn Lab (flashcards, learn, practice)
+  - Manage Lab (local collection/card CRUD + local text import)
 - Extension supports Cloud read-only sync, collection filtering, and `Sync To Local` workflow
 - New desktop app under `src/desktop/WordsNote.Desktop` with WPF UI and feature parity with active web frontend flows:
   - Landing workspace
+  - Dedicated Login workspace
   - Learn workspace (Flashcards, Learn, Practice)
-  - Privacy workspace (VI/EN)
+  - Privacy workspace (VI/EN) opened via landing link/button
   - Manage workspace (local-first CRUD/import/filter/sort + Google cloud mode)
+  - Card UX mirrors web manage: create-only form and popup edit via Edit Selected
   - Browser-based Google login flow plus ID token fallback
   - Sync Local -> Cloud and Sync Cloud -> Local
 
@@ -270,6 +276,30 @@ Sprint 5:
 
 Sprint 6:
 - Phase 7 desktop WPF parity rollout
+
+## 5.1 Local-First Alignment Plan (Desktop + Web + Extension)
+
+Objective:
+- Keep manage workflows available without login on every client.
+- Keep cloud-dependent actions explicit and opt-in.
+
+Execution steps:
+1. Desktop UX split
+  - Separate Login workspace from Manage workspace.
+  - Hide Privacy tab from main tabs and open via Landing action.
+2. Frontend local-first manage
+  - Open `/manage` without auth guard.
+  - Persist local collections/cards in browser local storage when not authenticated.
+  - Keep `/manage/:deckId/session` authenticated for cloud-backed session actions.
+3. Extension local-first manage
+  - Add Manage popup workspace with local collections/cards CRUD and local text import.
+  - Keep no-auth behavior and local storage persistence.
+4. Docs and verification
+  - Update product docs to match local-first/manage behavior.
+  - Run frontend, extension, and desktop build validation.
+
+Status:
+- Completed in current execution cycle (2026-04-18).
 
 ## 6. Immediate Next Action (recommended)
 

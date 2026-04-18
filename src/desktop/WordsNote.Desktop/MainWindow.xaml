@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
         xmlns:conv="clr-namespace:WordsNote.Desktop.Converters"
         mc:Ignorable="d"
         Title="WordsNote Desktop (WPF)"
@@ -14,71 +15,252 @@
         WindowStartupLocation="CenterScreen"
         Loaded="Window_Loaded">
     <Window.Resources>
-        <SolidColorBrush x:Key="WnBg" Color="#F7F3EC" />
-        <SolidColorBrush x:Key="WnSurface" Color="#FFFFFF" />
-        <SolidColorBrush x:Key="WnSurfaceSoft" Color="#FFF8EF" />
-        <SolidColorBrush x:Key="WnBorder" Color="#E6DFD3" />
-        <SolidColorBrush x:Key="WnInk" Color="#1F2333" />
-        <SolidColorBrush x:Key="WnMuted" Color="#5B6275" />
-        <SolidColorBrush x:Key="WnPrimary" Color="#1F4ED8" />
-        <SolidColorBrush x:Key="WnPrimarySoft" Color="#EDF2FF" />
+        <SolidColorBrush x:Key="WnBg" po:Freeze="False" Color="#F7F3EC" />
+        <SolidColorBrush x:Key="WnSurface" po:Freeze="False" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="WnSurfaceSoft" po:Freeze="False" Color="#FFF8EF" />
+        <SolidColorBrush x:Key="WnBorder" po:Freeze="False" Color="#E6DFD3" />
+        <SolidColorBrush x:Key="WnPanelBorder" po:Freeze="False" Color="#D1D5DB" />
+        <SolidColorBrush x:Key="WnInk" po:Freeze="False" Color="#1F2333" />
+        <SolidColorBrush x:Key="WnMuted" po:Freeze="False" Color="#5B6275" />
+        <SolidColorBrush x:Key="WnPrimary" po:Freeze="False" Color="#1F4ED8" />
+        <SolidColorBrush x:Key="WnPrimarySoft" po:Freeze="False" Color="#EDF2FF" />
+        <SolidColorBrush x:Key="WnPrimaryHover" po:Freeze="False" Color="#1A43B8" />
+        <SolidColorBrush x:Key="WnPrimaryPressed" po:Freeze="False" Color="#173A9C" />
+        <SolidColorBrush x:Key="WnButtonBorder" po:Freeze="False" Color="#1639A5" />
+        <SolidColorBrush x:Key="WnInfoBg" po:Freeze="False" Color="#EFF6FF" />
+        <SolidColorBrush x:Key="WnInfoBorder" po:Freeze="False" Color="#BFDBFE" />
+        <SolidColorBrush x:Key="WnStatusBusy" po:Freeze="False" Color="#0EA5E9" />
+        <SolidColorBrush x:Key="WnSuccess" po:Freeze="False" Color="#0F766E" />
+        <SolidColorBrush x:Key="WnPlaceholder" po:Freeze="False" Color="#94A3B8" />
 
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <conv:InverseBooleanConverter x:Key="InverseBool" />
         <conv:StringEqualsConverter x:Key="StringEquals" />
 
         <Style TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource WnInk}" />
+            <Setter Property="Foreground" Value="{DynamicResource WnInk}" />
         </Style>
 
         <Style TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource WnPrimary}" />
+            <Setter Property="Background" Value="{DynamicResource WnPrimary}" />
             <Setter Property="Foreground" Value="White" />
-            <Setter Property="BorderBrush" Value="{StaticResource WnPrimary}" />
-            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource WnButtonBorder}" />
+            <Setter Property="BorderThickness" Value="1.2" />
             <Setter Property="Padding" Value="12,6" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Margin" Value="0,0,0,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource WnPrimaryHover}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource WnPrimary}" />
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource WnPrimaryPressed}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource WnPrimaryPressed}" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.55" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="ToggleButton">
+            <Setter Property="Background" Value="{DynamicResource WnPrimarySoft}" />
+            <Setter Property="Foreground" Value="{DynamicResource WnInk}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource WnPanelBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource WnPrimary}" />
+                </Trigger>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource WnPrimary}" />
+                    <Setter Property="Foreground" Value="White" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource WnButtonBorder}" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.55" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <Style TargetType="TextBox">
-            <Setter Property="Background" Value="{StaticResource WnSurface}" />
-            <Setter Property="Foreground" Value="{StaticResource WnInk}" />
-            <Setter Property="BorderBrush" Value="{StaticResource WnBorder}" />
+            <Setter Property="Background" Value="{DynamicResource WnSurface}" />
+            <Setter Property="Foreground" Value="{DynamicResource WnInk}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource WnBorder}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="8,4" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Hidden" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden" />
         </Style>
 
         <Style TargetType="ComboBox">
-            <Setter Property="Background" Value="{StaticResource WnSurface}" />
-            <Setter Property="Foreground" Value="{StaticResource WnInk}" />
-            <Setter Property="BorderBrush" Value="{StaticResource WnBorder}" />
+            <Setter Property="Background" Value="{DynamicResource WnSurface}" />
+            <Setter Property="Foreground" Value="{DynamicResource WnInk}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource WnBorder}" />
             <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Hidden" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden" />
         </Style>
 
         <Style TargetType="ListBox">
-            <Setter Property="Background" Value="{StaticResource WnSurface}" />
-            <Setter Property="Foreground" Value="{StaticResource WnInk}" />
-            <Setter Property="BorderBrush" Value="{StaticResource WnBorder}" />
+            <Setter Property="Background" Value="{DynamicResource WnSurface}" />
+            <Setter Property="Foreground" Value="{DynamicResource WnInk}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource WnBorder}" />
             <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Hidden" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden" />
+        </Style>
+
+        <Style TargetType="ScrollViewer">
+            <Setter Property="VerticalScrollBarVisibility" Value="Hidden" />
+            <Setter Property="HorizontalScrollBarVisibility" Value="Hidden" />
+        </Style>
+
+        <Style TargetType="ScrollBar">
+            <Setter Property="Width" Value="0" />
+            <Setter Property="Height" Value="0" />
+            <Setter Property="Opacity" Value="0" />
+            <Setter Property="IsHitTestVisible" Value="False" />
+        </Style>
+
+        <Style TargetType="TabControl">
+            <Setter Property="Background" Value="{DynamicResource WnSurface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource WnPanelBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="2" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabControl">
+                        <Grid SnapsToDevicePixels="True" KeyboardNavigation.TabNavigation="Local">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <TabPanel Grid.Row="0"
+                                      x:Name="HeaderPanel"
+                                      IsItemsHost="True"
+                                      Background="Transparent"
+                                      Margin="0,0,0,1" />
+
+                            <Border Grid.Row="1"
+                                    Background="{DynamicResource WnSurface}"
+                                    BorderBrush="{DynamicResource WnPanelBorder}"
+                                    BorderThickness="1"
+                                    CornerRadius="0,8,8,8">
+                                <ContentPresenter x:Name="PART_SelectedContentHost"
+                                                  Margin="{TemplateBinding Padding}"
+                                                  ContentSource="SelectedContent" />
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="TabItem">
+            <Setter Property="Background" Value="{DynamicResource WnSurfaceSoft}" />
+            <Setter Property="Foreground" Value="{DynamicResource WnMuted}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource WnPanelBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="TabBorder"
+                                Margin="0,0,3,0"
+                                Padding="{TemplateBinding Padding}"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8,8,0,0"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter x:Name="HeaderContent"
+                                              ContentSource="Header"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="True"
+                                              TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource WnSurfaceSoft}" />
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="{DynamicResource WnPrimary}" />
+                                <Setter Property="Foreground" Value="{DynamicResource WnInk}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource WnSurface}" />
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="{DynamicResource WnPrimary}" />
+                                <Setter Property="Foreground" Value="{DynamicResource WnInk}" />
+                                <Setter Property="Panel.ZIndex" Value="100" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.55" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="ListBoxItem">
+            <Setter Property="Background" Value="{DynamicResource WnSurface}" />
+            <Setter Property="Foreground" Value="{DynamicResource WnInk}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="8,6" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource WnSurfaceSoft}" />
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource WnPrimarySoft}" />
+                    <Setter Property="Foreground" Value="{DynamicResource WnInk}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource WnPanelBorder}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="{DynamicResource WnSurface}" />
+            <Setter Property="Foreground" Value="{DynamicResource WnInk}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="8,5" />
+            <Style.Triggers>
+                <Trigger Property="IsHighlighted" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource WnSurfaceSoft}" />
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource WnPrimarySoft}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource WnPanelBorder}" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="PlaceholderTextStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#94A3B8" />
+            <Setter Property="Foreground" Value="{DynamicResource WnPlaceholder}" />
             <Setter Property="Margin" Value="10,0,0,0" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="IsHitTestVisible" Value="False" />
         </Style>
     </Window.Resources>
 
-    <Grid Background="{StaticResource WnBg}">
+    <Grid Background="{DynamicResource WnBg}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Margin="12" Padding="12" CornerRadius="12" BorderBrush="#D1D5DB" BorderThickness="1" Background="White">
+        <Border Grid.Row="0" Margin="12" Padding="12" CornerRadius="12" BorderBrush="{DynamicResource WnPanelBorder}" BorderThickness="1" Background="{DynamicResource WnSurface}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -88,8 +270,8 @@
                 <Button Grid.Column="0" Margin="0,0,12,0" Padding="16,7" Content="Reload Data" Click="ReloadData_Click" />
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <TextBlock VerticalAlignment="Center" Margin="0,0,8,0" Text="{Binding StatusMessage}" Foreground="#334155" />
-                    <TextBlock VerticalAlignment="Center" FontWeight="Bold" Foreground="#0EA5E9" Text="{Binding IsBusy, StringFormat=Busy: {0}}" />
+                    <TextBlock VerticalAlignment="Center" Margin="0,0,8,0" Text="{Binding StatusMessage}" Foreground="{DynamicResource WnInk}" />
+                    <TextBlock VerticalAlignment="Center" FontWeight="Bold" Foreground="{DynamicResource WnStatusBusy}" Text="{Binding IsBusy, StringFormat=Busy: {0}}" />
                 </StackPanel>
             </Grid>
         </Border>
@@ -98,16 +280,24 @@
             <TabItem Header="Landing">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="20" Orientation="Vertical">
-                        <TextBlock FontSize="13" Foreground="#64748B" Text="WordsNote Studio" />
+                        <TextBlock FontSize="13" Foreground="{DynamicResource WnMuted}" Text="WordsNote Studio" />
                         <TextBlock Margin="0,8,0,8" FontSize="34" FontWeight="Bold" Text="Learn in a way that feels handcrafted." />
-                        <TextBlock FontSize="16" Foreground="#334155" TextWrapping="Wrap" Text="Desktop app mirrors web features: Learn (Flashcards/Learn/Practice), Manage collections and cards in local/cloud mode, and bilingual Privacy policy." />
+                        <TextBlock FontSize="16" Foreground="{DynamicResource WnInk}" TextWrapping="Wrap" Text="Desktop app mirrors web features: Learn (Flashcards/Learn/Practice), Manage collections and cards in local/cloud mode, and bilingual Privacy policy." />
 
-                        <Border Margin="0,20,0,0" Padding="16" CornerRadius="10" Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1">
+                        <Border Margin="0,20,0,0" Padding="16" CornerRadius="10" Background="{DynamicResource WnInfoBg}" BorderBrush="{DynamicResource WnInfoBorder}" BorderThickness="1">
                             <StackPanel>
                                 <TextBlock FontSize="20" FontWeight="SemiBold" Text="Quick Start" />
-                                <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" Text="1. Open Settings tab and save API Base URL + Google Client ID." />
-                                <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Text="2. Use Learn tab for public read-only learning data." />
-                                <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Text="3. Use Manage tab in local mode first, then login Google (browser) to sync with cloud." />
+                                <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" Text="1. Open Settings and save API Base URL + Google Client ID." />
+                                <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Text="2. In Settings, use Cloud/Sync quick actions (Sync Cloud -> Local, Login, Sync Local -> Cloud)." />
+                                <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Text="3. Use Learn for public study modes (Flashcards, Learn, Practice)." />
+                                <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Text="4. Use Manage for collection/card CRUD (local-first, cloud when logged in)." />
+                                <WrapPanel Margin="0,12,0,0" ItemHeight="34" ItemWidth="170">
+                                    <Button Margin="0,0,8,8" Content="Open Settings" Click="OpenSettingsFromLanding_Click" />
+                                    <Button Margin="0,0,8,8" Content="Open Learn" Click="OpenLearnFromLanding_Click" />
+                                    <Button Margin="0,0,8,8" Content="Open Manage" Click="OpenManageFromLanding_Click" />
+                                    <Button Margin="0,0,8,8" Content="Open Login Page" Click="OpenLoginFromLanding_Click" />
+                                    <Button Margin="0,0,8,8" Content="Privacy Policy" Click="OpenPrivacyFromLanding_Click" />
+                                </WrapPanel>
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -122,10 +312,10 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <Border Grid.Column="0" Padding="12" BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="10" Background="White">
+                    <Border Grid.Column="0" Padding="12" BorderBrush="{DynamicResource WnPanelBorder}" BorderThickness="1" CornerRadius="10" Background="{DynamicResource WnSurface}">
                         <StackPanel>
                             <TextBlock FontSize="22" FontWeight="SemiBold" Text="Decks" />
-                            <TextBlock Margin="0,4,0,10" Foreground="#475569" Text="Public dynamic collections from backend" />
+                            <TextBlock Margin="0,4,0,10" Foreground="{DynamicResource WnMuted}" Text="Public dynamic collections from backend" />
                             <ListBox Height="650"
                                      ItemsSource="{Binding Decks}"
                                      SelectedItem="{Binding LearnSelectedDeck}"
@@ -133,10 +323,10 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Grid.Column="2" Padding="14" BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="10" Background="White">
+                    <Border Grid.Column="2" Padding="14" BorderBrush="{DynamicResource WnPanelBorder}" BorderThickness="1" CornerRadius="10" Background="{DynamicResource WnSurface}">
                         <StackPanel>
                             <TextBlock FontSize="26" FontWeight="Bold" Text="Learn Lab" />
-                            <TextBlock Margin="0,4,0,8" Foreground="#475569" Text="Modes: Flashcards, Learn (typed answer), Practice (multiple choice)" />
+                            <TextBlock Margin="0,4,0,8" Foreground="{DynamicResource WnMuted}" Text="Modes: Flashcards, Learn (typed answer), Practice (multiple choice)" />
                             <TextBlock FontSize="15" FontWeight="SemiBold" Text="{Binding LearnSelectedDeck.Title, StringFormat=Collection: {0}}" />
 
                             <StackPanel Margin="0,10,0,12" Orientation="Horizontal">
@@ -145,16 +335,16 @@
                                 <Button Padding="14,6" Content="Practice" Click="LearnPracticeMode_Click" />
                             </StackPanel>
 
-                            <Border Padding="14" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="10" Background="#F8FAFC">
+                            <Border Padding="14" BorderBrush="{DynamicResource WnPanelBorder}" BorderThickness="1" CornerRadius="10" Background="{DynamicResource WnSurfaceSoft}">
                                 <StackPanel>
-                                    <TextBlock FontWeight="SemiBold" Foreground="#334155" Text="{Binding LearnDisplayIndex, StringFormat=Card {0}}" />
-                                    <TextBlock Foreground="#64748B" Text="{Binding LearnCardCount, StringFormat=Total cards in mode: {0}}" />
+                                    <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource WnInk}" Text="{Binding LearnDisplayIndex, StringFormat=Card {0}}" />
+                                    <TextBlock Foreground="{DynamicResource WnMuted}" Text="{Binding LearnCardCount, StringFormat=Total cards in mode: {0}}" />
 
                                     <StackPanel Margin="0,12,0,0" Visibility="{Binding LearnMode, Converter={StaticResource StringEquals}, ConverterParameter=flash}">
                                         <TextBlock FontSize="26" FontWeight="Bold" TextWrapping="Wrap" Text="{Binding LearnCurrentCard.Front}" />
-                                        <TextBlock Margin="0,10,0,0" FontSize="20" TextWrapping="Wrap" Foreground="#0F766E" Text="{Binding LearnCurrentCard.Back}" Visibility="{Binding LearnShowBack, Converter={StaticResource BoolToVis}}" />
-                                        <TextBlock Margin="0,6,0,0" Foreground="#64748B" Text="Click Flip to reveal answer" Visibility="{Binding LearnShowBack, Converter={StaticResource InverseBool}}" />
-                                        <TextBlock Margin="0,6,0,0" Foreground="#475569" Text="{Binding LearnCurrentCard.Hint, StringFormat=Hint: {0}}" />
+                                        <TextBlock Margin="0,10,0,0" FontSize="20" TextWrapping="Wrap" Foreground="{DynamicResource WnSuccess}" Text="{Binding LearnCurrentCard.Back}" Visibility="{Binding LearnShowBack, Converter={StaticResource BoolToVis}}" />
+                                        <TextBlock Margin="0,6,0,0" Foreground="{DynamicResource WnMuted}" Text="Click Flip to reveal answer" Visibility="{Binding LearnShowBack, Converter={StaticResource InverseBool}}" />
+                                        <TextBlock Margin="0,6,0,0" Foreground="{DynamicResource WnMuted}" Text="{Binding LearnCurrentCard.Hint, StringFormat=Hint: {0}}" />
 
                                         <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                                             <Button Padding="12,6" Margin="0,0,8,0" Content="Previous" Click="LearnPrevious_Click" />
@@ -184,7 +374,7 @@
                                             <Button Padding="14,6" Margin="0,0,8,0" Content="Check" Click="LearnCheckTyping_Click" />
                                             <Button Padding="14,6" Content="Skip" Click="LearnNext_Click" />
                                         </StackPanel>
-                                        <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Text="{Binding LearnFeedback}" Foreground="#334155" />
+                                        <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Text="{Binding LearnFeedback}" Foreground="{DynamicResource WnInk}" />
                                     </StackPanel>
 
                                     <StackPanel Margin="0,12,0,0" Visibility="{Binding IsLearnPracticeMode, Converter={StaticResource BoolToVis}}">
@@ -204,11 +394,12 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Privacy">
+            <TabItem Header="Privacy" Visibility="Collapsed">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="20">
+                        <Button Padding="12,6" Width="160" HorizontalAlignment="Left" Margin="0,0,0,12" Content="Back to Landing" Click="BackToLandingFromPrivacy_Click" />
                         <TextBlock FontSize="30" FontWeight="Bold" Text="{Binding PrivacyTitle}" />
-                        <TextBlock Margin="0,6,0,12" FontSize="15" Foreground="#475569" TextWrapping="Wrap" Text="{Binding PrivacySubtitle}" />
+                        <TextBlock Margin="0,6,0,12" FontSize="15" Foreground="{DynamicResource WnMuted}" TextWrapping="Wrap" Text="{Binding PrivacySubtitle}" />
 
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                             <Button Padding="12,6" Margin="0,0,8,0" Content="VI" Click="PrivacyVi_Click" />
@@ -228,98 +419,51 @@
 
             <TabItem Header="Manage">
                 <Grid Margin="14">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-
-                    <Border Grid.Row="0" Padding="12" Margin="0,0,0,10" BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="10" Background="#FFF8EF">
-                        <StackPanel>
-                            <TextBlock FontSize="20" FontWeight="SemiBold" Text="Manage Workspace" />
-                            <TextBlock Margin="0,4,0,8" Foreground="#475569" Text="{Binding ManageModeLabel}" />
-                            <TextBlock Margin="0,0,0,8" Foreground="#334155" TextWrapping="Wrap" Text="Khi chưa login: thao tác chỉ lưu local trên máy. Khi login Google: thao tác đi cloud. Có cả Sync Local -> Cloud và Sync Cloud -> Local như extension." />
-
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <Button Padding="14,6" Margin="0,0,8,0" Content="Sync Cloud -> Local" Click="SyncCloudToLocal_Click" />
-                                <TextBlock VerticalAlignment="Center" Foreground="#475569" Text="Load cloud data and save into local storage" />
-                            </StackPanel>
-
-                            <StackPanel Visibility="{Binding IsNotAuthenticated, Converter={StaticResource BoolToVis}}">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                    <Button Padding="14,6" Content="Login Google (Browser)" Click="LoginWithGoogleBrowser_Click" />
-                                    <TextBlock VerticalAlignment="Center" Margin="8,0,0,0" Foreground="#475569" Text="Use Google Client ID from Settings tab" />
-                                </StackPanel>
-
-                                <StackPanel Orientation="Horizontal">
-                                    <Grid Width="520" Margin="0,0,8,0">
-                                        <TextBox x:Name="GoogleIdTokenTextBox" Height="36" VerticalContentAlignment="Center" Text="{Binding GoogleIdToken, UpdateSourceTrigger=PropertyChanged}" />
-                                        <TextBlock Text="Paste Google ID Token (optional fallback)">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock" BasedOn="{StaticResource PlaceholderTextStyle}">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Text, ElementName=GoogleIdTokenTextBox}" Value="">
-                                                            <Setter Property="Visibility" Value="Visible" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </Grid>
-                                    <Button Padding="14,6" Content="Login Google (ID Token)" Click="LoginWithGoogleToken_Click" />
-                                </StackPanel>
-                            </StackPanel>
-
-                            <StackPanel Orientation="Horizontal" Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVis}}">
-                                <Button Padding="14,6" Margin="0,0,8,0" Content="Sync Local -> Cloud" Click="SyncLocalToCloud_Click" IsEnabled="{Binding CanSyncLocalToCloud}" />
-                                <Button Padding="14,6" Margin="0,0,8,0" Content="Logout Google" Click="Logout_Click" />
-                                <TextBlock VerticalAlignment="Center" Foreground="#475569" Text="{Binding LastSyncMessage}" />
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <Grid Grid.Row="1">
+                    <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="340" />
                             <ColumnDefinition Width="12" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <Border Grid.Column="0" Padding="12" BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="10" Background="White">
+                        <Border Grid.Column="0" Padding="12" BorderBrush="{DynamicResource WnPanelBorder}" BorderThickness="1" CornerRadius="10" Background="{DynamicResource WnSurface}">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <StackPanel>
-                                    <TextBlock FontSize="22" FontWeight="SemiBold" Text="Create Collection" />
-                                    <Grid Margin="0,8,0,8">
-                                        <TextBox x:Name="NewCollectionTitleTextBox" Height="36" Text="{Binding NewCollectionTitle, UpdateSourceTrigger=PropertyChanged}" />
-                                        <TextBlock Text="Collection title">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock" BasedOn="{StaticResource PlaceholderTextStyle}">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Text, ElementName=NewCollectionTitleTextBox}" Value="">
-                                                            <Setter Property="Visibility" Value="Visible" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </Grid>
-                                    <Grid Margin="0,0,0,10">
-                                        <TextBox x:Name="NewCollectionDescriptionTextBox" Height="70" TextWrapping="Wrap" AcceptsReturn="True" Text="{Binding NewCollectionDescription, UpdateSourceTrigger=PropertyChanged}" />
-                                        <TextBlock Text="Collection description" VerticalAlignment="Top" Margin="10,8,0,0">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock" BasedOn="{StaticResource PlaceholderTextStyle}">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Text, ElementName=NewCollectionDescriptionTextBox}" Value="">
-                                                            <Setter Property="Visibility" Value="Visible" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </Grid>
-                                    <Button Padding="12,7" Content="Create" Click="CreateCollection_Click" />
+                                    <Expander Header="Create Collection" IsExpanded="False">
+                                        <StackPanel Margin="0,8,0,0">
+                                            <Grid Margin="0,0,0,8">
+                                                <TextBox x:Name="NewCollectionTitleTextBox" Height="36" Text="{Binding NewCollectionTitle, UpdateSourceTrigger=PropertyChanged}" />
+                                                <TextBlock Text="Collection title">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock" BasedOn="{StaticResource PlaceholderTextStyle}">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Text, ElementName=NewCollectionTitleTextBox}" Value="">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Grid>
+                                            <Grid Margin="0,0,0,10">
+                                                <TextBox x:Name="NewCollectionDescriptionTextBox" Height="70" TextWrapping="Wrap" AcceptsReturn="True" Text="{Binding NewCollectionDescription, UpdateSourceTrigger=PropertyChanged}" />
+                                                <TextBlock Text="Collection description" VerticalAlignment="Top" Margin="10,8,0,0">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock" BasedOn="{StaticResource PlaceholderTextStyle}">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Text, ElementName=NewCollectionDescriptionTextBox}" Value="">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Grid>
+                                            <Button Padding="12,7" Content="Create" Click="CreateCollection_Click" />
+                                        </StackPanel>
+                                    </Expander>
 
                                     <Separator Margin="0,14,0,12" />
 
@@ -350,18 +494,19 @@
                             </ScrollViewer>
                         </Border>
 
-                        <Border Grid.Column="2" Padding="12" BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="10" Background="White">
+                        <Border Grid.Column="2" Padding="12" BorderBrush="{DynamicResource WnPanelBorder}" BorderThickness="1" CornerRadius="10" Background="{DynamicResource WnSurface}">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <StackPanel>
                                     <TextBlock FontSize="26" FontWeight="Bold" Text="{Binding ManageSelectedDeck.Title}" />
-                                    <TextBlock Margin="0,4,0,8" Foreground="#475569" TextWrapping="Wrap" Text="{Binding ManageSelectedDeck.Description}" />
+                                    <TextBlock Margin="0,4,0,8" Foreground="{DynamicResource WnMuted}" TextWrapping="Wrap" Text="{Binding ManageSelectedDeck.Description}" />
 
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                         <Button Padding="12,6" Margin="0,0,8,0" Content="Edit Collection" Click="StartCollectionEdit_Click" />
-                                        <Button Padding="12,6" Content="Delete Collection" Click="DeleteCollection_Click" />
+                                        <Button Padding="12,6" Margin="0,0,8,0" Content="Delete Collection" Click="DeleteCollection_Click" />
+                                        <ToggleButton x:Name="CardToolsToggleButton" Content="Card Tools" IsThreeState="False" IsChecked="{Binding IsExpanded, ElementName=CardToolsExpander, Mode=TwoWay}" />
                                     </StackPanel>
 
-                                    <Border Padding="10" Margin="0,0,0,10" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Visibility="{Binding IsEditingCollection, Converter={StaticResource BoolToVis}}">
+                                    <Border Padding="10" Margin="0,0,0,10" BorderBrush="{DynamicResource WnPanelBorder}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource WnSurfaceSoft}" Visibility="{Binding IsEditingCollection, Converter={StaticResource BoolToVis}}">
                                         <StackPanel>
                                             <TextBlock FontWeight="SemiBold" Text="Edit Collection" />
                                             <Grid Margin="0,8,0,8">
@@ -402,119 +547,123 @@
                                     </Border>
 
                                     <WrapPanel Margin="0,0,0,10">
-                                        <Border Width="170" Margin="0,0,8,0" Padding="8" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Background="#F8FAFC">
+                                        <Border Width="170" Margin="0,0,8,0" Padding="8" BorderBrush="{DynamicResource WnPanelBorder}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource WnSurfaceSoft}">
                                             <StackPanel>
-                                                <TextBlock Foreground="#475569" Text="Total cards" />
+                                                <TextBlock Foreground="{DynamicResource WnMuted}" Text="Total cards" />
                                                 <TextBlock FontSize="24" FontWeight="Bold" Text="{Binding ManageTotalCards}" />
                                             </StackPanel>
                                         </Border>
-                                        <Border Width="170" Margin="0,0,8,0" Padding="8" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Background="#F8FAFC">
+                                        <Border Width="170" Margin="0,0,8,0" Padding="8" BorderBrush="{DynamicResource WnPanelBorder}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource WnSurfaceSoft}">
                                             <StackPanel>
-                                                <TextBlock Foreground="#475569" Text="Due now" />
+                                                <TextBlock Foreground="{DynamicResource WnMuted}" Text="Due now" />
                                                 <TextBlock FontSize="24" FontWeight="Bold" Text="{Binding ManageDueCards}" />
                                             </StackPanel>
                                         </Border>
-                                        <Border Width="170" Padding="8" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Background="#F8FAFC">
+                                        <Border Width="170" Padding="8" BorderBrush="{DynamicResource WnPanelBorder}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource WnSurfaceSoft}">
                                             <StackPanel>
-                                                <TextBlock Foreground="#475569" Text="Mastered" />
+                                                <TextBlock Foreground="{DynamicResource WnMuted}" Text="Mastered" />
                                                 <TextBlock FontSize="24" FontWeight="Bold" Text="{Binding ManageMasteredCards}" />
                                             </StackPanel>
                                         </Border>
                                     </WrapPanel>
 
-                                    <TextBlock FontSize="21" FontWeight="SemiBold" Text="Create or Edit Card" />
-                                    <Grid Margin="0,8,0,0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="8" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Grid Grid.Column="0">
-                                            <TextBox x:Name="CardFrontTextBox" Height="34" Text="{Binding CardFront, UpdateSourceTrigger=PropertyChanged}" />
-                                            <TextBlock Text="Card front">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource PlaceholderTextStyle}">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Text, ElementName=CardFrontTextBox}" Value="">
-                                                                <Setter Property="Visibility" Value="Visible" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </Grid>
-                                        <Grid Grid.Column="2">
-                                            <TextBox x:Name="CardBackTextBox" Height="34" Text="{Binding CardBack, UpdateSourceTrigger=PropertyChanged}" />
-                                            <TextBlock Text="Card back">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource PlaceholderTextStyle}">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Text, ElementName=CardBackTextBox}" Value="">
-                                                                <Setter Property="Visibility" Value="Visible" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </Grid>
-                                    </Grid>
-                                    <Grid Margin="0,8,0,0">
-                                        <TextBox x:Name="CardHintTextBox" Height="34" Text="{Binding CardHint, UpdateSourceTrigger=PropertyChanged}" />
-                                        <TextBlock Text="Hint (optional)">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock" BasedOn="{StaticResource PlaceholderTextStyle}">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Text, ElementName=CardHintTextBox}" Value="">
-                                                            <Setter Property="Visibility" Value="Visible" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </Grid>
-                                    <Grid Margin="0,8,0,0">
-                                        <TextBox x:Name="CardTagsTextBox" Height="34" Text="{Binding CardTagsText, UpdateSourceTrigger=PropertyChanged}" />
-                                        <TextBlock Text="Tags (comma separated)">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock" BasedOn="{StaticResource PlaceholderTextStyle}">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Text, ElementName=CardTagsTextBox}" Value="">
-                                                            <Setter Property="Visibility" Value="Visible" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </Grid>
-                                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                                        <Button Padding="12,6" Margin="0,0,8,0" Content="Save Card" Click="SaveCard_Click" />
-                                        <Button Padding="12,6" Content="Cancel Edit" Click="ClearCardForm_Click" />
-                                    </StackPanel>
+                                    <Expander x:Name="CardToolsExpander" Header="Card Editor + Quick Import" IsExpanded="False" Margin="0,0,0,12">
+                                        <StackPanel Margin="0,8,0,0">
+                                            <TextBlock FontSize="21" FontWeight="SemiBold" Text="Create Card" />
+                                            <Grid Margin="0,8,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="8" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Grid Grid.Column="0">
+                                                    <TextBox x:Name="CardFrontTextBox" Height="34" Text="{Binding CardFront, UpdateSourceTrigger=PropertyChanged}" />
+                                                    <TextBlock Text="Card front">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock" BasedOn="{StaticResource PlaceholderTextStyle}">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Text, ElementName=CardFrontTextBox}" Value="">
+                                                                        <Setter Property="Visibility" Value="Visible" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </Grid>
+                                                <Grid Grid.Column="2">
+                                                    <TextBox x:Name="CardBackTextBox" Height="34" Text="{Binding CardBack, UpdateSourceTrigger=PropertyChanged}" />
+                                                    <TextBlock Text="Card back">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock" BasedOn="{StaticResource PlaceholderTextStyle}">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Text, ElementName=CardBackTextBox}" Value="">
+                                                                        <Setter Property="Visibility" Value="Visible" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </Grid>
+                                            </Grid>
+                                            <Grid Margin="0,8,0,0">
+                                                <TextBox x:Name="CardHintTextBox" Height="34" Text="{Binding CardHint, UpdateSourceTrigger=PropertyChanged}" />
+                                                <TextBlock Text="Hint (optional)">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock" BasedOn="{StaticResource PlaceholderTextStyle}">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Text, ElementName=CardHintTextBox}" Value="">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Grid>
+                                            <Grid Margin="0,8,0,0">
+                                                <TextBox x:Name="CardTagsTextBox" Height="34" Text="{Binding CardTagsText, UpdateSourceTrigger=PropertyChanged}" />
+                                                <TextBlock Text="Tags (comma separated)">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock" BasedOn="{StaticResource PlaceholderTextStyle}">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Text, ElementName=CardTagsTextBox}" Value="">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Grid>
+                                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                                <Button Padding="12,6" Margin="0,0,8,0" Content="Add Card" Click="SaveCard_Click" />
+                                                <Button Padding="12,6" Content="Clear" Click="ClearCardForm_Click" />
+                                            </StackPanel>
 
-                                    <TextBlock Margin="0,16,0,6" FontSize="21" FontWeight="SemiBold" Text="Quick Import" />
-                                    <Grid>
-                                        <TextBox x:Name="ImportRawTextBox" Height="88" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding ImportRawText, UpdateSourceTrigger=PropertyChanged}" />
-                                        <TextBlock Text="One card per line: front|back|hint|tag1,tag2" VerticalAlignment="Top" Margin="10,8,0,0">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock" BasedOn="{StaticResource PlaceholderTextStyle}">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Text, ElementName=ImportRawTextBox}" Value="">
-                                                            <Setter Property="Visibility" Value="Visible" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </Grid>
-                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                        <Button Padding="12,6" Margin="0,0,8,0" Content="Import Lines" Click="ImportCards_Click" />
-                                        <TextBlock VerticalAlignment="Center" Foreground="#475569" Text="{Binding ImportResult}" />
-                                    </StackPanel>
+                                            <TextBlock Margin="0,16,0,6" FontSize="21" FontWeight="SemiBold" Text="Quick Import" />
+                                            <Grid>
+                                                <TextBox x:Name="ImportRawTextBox" Height="88" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding ImportRawText, UpdateSourceTrigger=PropertyChanged}" />
+                                                <TextBlock Text="One card per line: front|back|hint|tag1,tag2" VerticalAlignment="Top" Margin="10,8,0,0">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock" BasedOn="{StaticResource PlaceholderTextStyle}">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Text, ElementName=ImportRawTextBox}" Value="">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Grid>
+                                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                                <Button Padding="12,6" Margin="0,0,8,0" Content="Import Lines" Click="ImportCards_Click" />
+                                                <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource WnMuted}" Text="{Binding ImportResult}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Expander>
 
                                     <TextBlock Margin="0,16,0,6" FontSize="21" FontWeight="SemiBold" Text="Cards" />
                                     <Grid>
@@ -560,7 +709,7 @@
                                                 <StackPanel Margin="0,0,0,6">
                                                     <TextBlock FontWeight="SemiBold" Text="{Binding Front}" TextWrapping="Wrap" />
                                                     <TextBlock Margin="0,2,0,0" Text="{Binding Back}" TextWrapping="Wrap" />
-                                                    <TextBlock Margin="0,2,0,0" Foreground="#64748B" Text="{Binding Hint, StringFormat=Hint: {0}}" TextWrapping="Wrap" />
+                                                    <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource WnMuted}" Text="{Binding Hint, StringFormat=Hint: {0}}" TextWrapping="Wrap" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </ListBox.ItemTemplate>
@@ -581,7 +730,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="20">
                         <TextBlock FontSize="28" FontWeight="Bold" Text="Desktop Settings" />
-                        <TextBlock Margin="0,6,0,14" Foreground="#475569" TextWrapping="Wrap" Text="Save API Base URL and Google Client ID once. The app will load these settings automatically on next run." />
+                        <TextBlock Margin="0,6,0,14" Foreground="{DynamicResource WnMuted}" TextWrapping="Wrap" Text="Save API Base URL and Google Client ID once. The app will load these settings automatically on next run." />
 
                         <TextBlock FontWeight="SemiBold" Text="API Base URL" />
                         <Grid Margin="0,6,0,12">
@@ -617,9 +766,87 @@
                             </TextBlock>
                         </Grid>
 
+                        <TextBlock FontWeight="SemiBold" Text="Theme" />
+                        <StackPanel Margin="0,6,0,12" Orientation="Horizontal" VerticalAlignment="Center">
+                            <ComboBox Width="230" SelectedValuePath="Tag" SelectedValue="{Binding ThemeMode, UpdateSourceTrigger=PropertyChanged}" SelectionChanged="ThemeMode_SelectionChanged">
+                                <ComboBoxItem Tag="light" Content="Light - Warm Paper" />
+                                <ComboBoxItem Tag="dark" Content="Dark - Night Ink" />
+                            </ComboBox>
+                            <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource WnMuted}" Text="Theme màu gần FE, áp dụng ngay khi đổi." />
+                        </StackPanel>
+
                         <StackPanel Orientation="Horizontal">
                             <Button Padding="14,6" Margin="0,0,8,0" Content="Save Settings" Click="SaveSettings_Click" />
                             <Button Padding="14,6" Content="Reload Data" Click="ReloadData_Click" />
+                        </StackPanel>
+
+                        <Border Margin="0,14,0,0" Padding="12" BorderBrush="{DynamicResource WnPanelBorder}" BorderThickness="1" CornerRadius="10" Background="{DynamicResource WnSurfaceSoft}">
+                            <StackPanel>
+                                <TextBlock FontSize="20" FontWeight="SemiBold" Text="Cloud and Sync Quick Actions" />
+                                <TextBlock Margin="0,4,0,8" Foreground="{DynamicResource WnMuted}" Text="{Binding ManageModeLabel}" />
+                                <TextBlock Margin="0,0,0,8" Foreground="{DynamicResource WnInk}" TextWrapping="Wrap" Text="Khi chưa login: thao tác chỉ lưu local trên máy. Khi login Google: thao tác đi cloud. Có cả Sync Local -> Cloud và Sync Cloud -> Local như extension." />
+
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Button Padding="14,6" Margin="0,0,8,0" Content="Sync Cloud -> Local" Click="SyncCloudToLocal_Click" />
+                                    <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource WnMuted}" Text="Load cloud data and save into local storage" />
+                                </StackPanel>
+
+                                <StackPanel Visibility="{Binding IsNotAuthenticated, Converter={StaticResource BoolToVis}}">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                        <Button Padding="14,6" Content="Go to Login Page" Click="OpenLoginFromManage_Click" />
+                                        <TextBlock VerticalAlignment="Center" Margin="8,0,0,0" Foreground="{DynamicResource WnMuted}" Text="Manage local is available without login. Cloud actions require Login page." />
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVis}}">
+                                    <Button Padding="14,6" Margin="0,0,8,0" Content="Sync Local -> Cloud" Click="SyncLocalToCloud_Click" IsEnabled="{Binding CanSyncLocalToCloud}" />
+                                    <Button Padding="14,6" Margin="0,0,8,0" Content="Logout Google" Click="Logout_Click" />
+                                    <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource WnMuted}" Text="{Binding LastSyncMessage}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Login">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="20">
+                        <TextBlock FontSize="28" FontWeight="Bold" Text="Login" />
+                        <TextBlock Margin="0,6,0,14" Foreground="{DynamicResource WnMuted}" TextWrapping="Wrap" Text="Use Google login for cloud mode. Local mode in Manage works without authentication." />
+
+                        <StackPanel Visibility="{Binding IsNotAuthenticated, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Button Padding="14,6" Content="Login Google (Browser)" Click="LoginWithGoogleBrowser_Click" />
+                                <TextBlock VerticalAlignment="Center" Margin="8,0,0,0" Foreground="{DynamicResource WnMuted}" Text="Uses Google Client ID saved in Settings" />
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal">
+                                <Grid Width="520" Margin="0,0,8,0">
+                                    <TextBox x:Name="GoogleIdTokenTextBox" Height="36" VerticalContentAlignment="Center" Text="{Binding GoogleIdToken, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="Paste Google ID Token (optional fallback)">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock" BasedOn="{StaticResource PlaceholderTextStyle}">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Text, ElementName=GoogleIdTokenTextBox}" Value="">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                                <Button Padding="14,6" Content="Login Google (ID Token)" Click="LoginWithGoogleToken_Click" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Foreground="{DynamicResource WnSuccess}" Margin="0,0,0,8" Text="You are logged in. Manage tab is now in cloud mode." />
+                            <StackPanel Orientation="Horizontal">
+                                <Button Padding="14,6" Margin="0,0,8,0" Content="Go to Manage" Click="OpenManageFromLogin_Click" />
+                                <Button Padding="14,6" Content="Logout Google" Click="Logout_Click" />
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
@@ -627,7 +854,7 @@
 
         </TabControl>
 
-        <Border Grid.Row="2" Margin="12,0,12,12" Padding="10" CornerRadius="10" BorderBrush="#D1D5DB" BorderThickness="1" Background="White">
+        <Border Grid.Row="2" Margin="12,0,12,12" Padding="10" CornerRadius="10" BorderBrush="{DynamicResource WnPanelBorder}" BorderThickness="1" Background="{DynamicResource WnSurface}">
             <DockPanel>
                 <Button DockPanel.Dock="Right" Padding="12,6" Content="Logout" Click="Logout_Click" IsEnabled="{Binding IsAuthenticated}" />
                 <TextBlock VerticalAlignment="Center" Text="WordsNote Desktop WPF - parity with frontend flows (Landing, Learn, Manage, Privacy)." />

@@ -1,9 +1,12 @@
 <template>
   <section class="manage-wrap">
     <header class="manage-header">
-      <p class="eyebrow">Authenticated Workspace</p>
+      <p class="eyebrow">Local-First Workspace</p>
       <h1>Collection Manager</h1>
-      <p>Build your own collections and cards, then move to focused study session.</p>
+      <p>Manage collections/cards locally without login. Sign in only when you need cloud-backed focused session APIs.</p>
+      <p class="text-muted small mode-label">
+        Mode: {{ isAuthenticated ? 'Cloud (authenticated)' : 'Local (no login)' }}
+      </p>
     </header>
 
     <div class="manage-grid">
@@ -69,7 +72,10 @@
             <div class="actions-row">
               <button v-if="!isEditingDeck" class="btn btn-outline-primary btn-sm" @click="startEditDeck">Edit collection</button>
               <button class="btn btn-outline-danger btn-sm" @click="handleDeleteDeck">Delete</button>
-              <button class="btn btn-success btn-sm" @click="goToSession">Open Session</button>
+                <button v-if="isAuthenticated" class="btn btn-success btn-sm" @click="goToSession">Open Session</button>
+                <RouterLink v-else class="btn btn-outline-secondary btn-sm" :to="{ name: 'login', query: { redirect: '/manage' } }">
+                  Login for Session
+                </RouterLink>
             </div>
           </div>
 
@@ -108,24 +114,20 @@
             </article>
           </div>
 
-          <h3>Create or edit card</h3>
+          <h3>Create card</h3>
           <form class="card-form" @submit.prevent="handleSubmitCard">
-            <input v-model="cardForm.front" class="form-control" type="text" placeholder="Front text" required />
-            <input v-model="cardForm.back" class="form-control" type="text" placeholder="Back text" required />
-            <input v-model="cardForm.hint" class="form-control" type="text" placeholder="Hint (optional)" />
+            <input v-model="createCardForm.front" class="form-control" type="text" placeholder="Front text" required />
+            <input v-model="createCardForm.back" class="form-control" type="text" placeholder="Back text" required />
+            <input v-model="createCardForm.hint" class="form-control" type="text" placeholder="Hint (optional)" />
             <input
-              v-model="cardForm.tagsText"
+              v-model="createCardForm.tagsText"
               class="form-control"
               type="text"
               placeholder="Tags, comma separated"
             />
             <div class="actions-row">
-              <button class="btn btn-primary" type="submit">
-                {{ cardForm.editingCardId ? 'Save card' : 'Add card' }}
-              </button>
-              <button v-if="cardForm.editingCardId" class="btn btn-outline-secondary" type="button" @click="resetCardForm">
-                Cancel
-              </button>
+              <button class="btn btn-primary" type="submit">Add card</button>
+              <button class="btn btn-outline-secondary" type="button" @click="clearCreateCardForm">Clear</button>
             </div>
           </form>
 
@@ -176,11 +178,37 @@
                 </div>
               </div>
               <div class="actions-col">
-                <button class="btn btn-outline-primary btn-sm" @click="startEditCard(card.id)">Edit</button>
+                <button class="btn btn-outline-primary btn-sm" @click="openEditCardModal(card.id)">Edit</button>
                 <button class="btn btn-outline-danger btn-sm" @click="removeCard(card.id)">Delete</button>
               </div>
             </article>
           </div>
+
+          <Teleport to="body">
+            <div v-if="editCardModal.isOpen" class="modal-backdrop" @click.self="closeEditCardModal">
+              <section class="modal-card" role="dialog" aria-modal="true" aria-label="Edit card">
+                <div class="modal-head">
+                  <h3>Edit card</h3>
+                  <button class="btn btn-outline-secondary btn-sm" type="button" @click="closeEditCardModal">Close</button>
+                </div>
+                <form class="modal-form" @submit.prevent="submitEditCard">
+                  <input v-model="editCardModal.front" class="form-control" type="text" placeholder="Front text" required />
+                  <input v-model="editCardModal.back" class="form-control" type="text" placeholder="Back text" required />
+                  <input v-model="editCardModal.hint" class="form-control" type="text" placeholder="Hint (optional)" />
+                  <input
+                    v-model="editCardModal.tagsText"
+                    class="form-control"
+                    type="text"
+                    placeholder="Tags, comma separated"
+                  />
+                  <div class="actions-row">
+                    <button class="btn btn-primary" type="submit">Save changes</button>
+                    <button class="btn btn-outline-secondary" type="button" @click="closeEditCardModal">Cancel</button>
+                  </div>
+                </form>
+              </section>
+            </div>
+          </Teleport>
         </section>
 
         <section v-else class="empty-center">Choose a collection to start managing cards.</section>
@@ -192,9 +220,11 @@
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/AS/AuthStore'
 import { useStudyStore } from '@/stores/WordsNote/StudyStore'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const studyStore = useStudyStore()
 
 const selectedDeckId = ref('')
@@ -210,8 +240,16 @@ const deckEditForm = reactive({
 })
 const isEditingDeck = ref(false)
 
-const cardForm = reactive({
-  editingCardId: '',
+const createCardForm = reactive({
+  front: '',
+  back: '',
+  hint: '',
+  tagsText: '',
+})
+
+const editCardModal = reactive({
+  isOpen: false,
+  cardId: '',
   front: '',
   back: '',
   hint: '',
@@ -225,6 +263,8 @@ const deckSort = ref<'recent' | 'title' | 'cards'>('recent')
 const cardQuery = ref('')
 const cardFilter = ref<'all' | 'due' | 'mastered' | 'new'>('all')
 const cardSort = ref<'dueSoon' | 'frontAZ' | 'recentReview' | 'streakDesc'>('dueSoon')
+
+const isAuthenticated = computed(() => authStore.isAuthenticated)
 
 const deckList = computed(() => studyStore.deckList)
 const filteredDeckList = computed(() => {
@@ -357,19 +397,14 @@ function parseTags(tagsText: string) {
 async function handleSubmitCard() {
   if (!selectedDeckId.value) return
 
-  const front = cardForm.front.trim()
-  const back = cardForm.back.trim()
+  const front = createCardForm.front.trim()
+  const back = createCardForm.back.trim()
   if (!front || !back) return
 
-  const tags = parseTags(cardForm.tagsText)
+  const tags = parseTags(createCardForm.tagsText)
+  await studyStore.createCard(selectedDeckId.value, front, back, createCardForm.hint.trim(), tags)
 
-  if (cardForm.editingCardId) {
-    await studyStore.updateCard(cardForm.editingCardId, front, back, cardForm.hint, tags)
-  } else {
-    await studyStore.createCard(selectedDeckId.value, front, back, cardForm.hint, tags)
-  }
-
-  resetCardForm()
+  clearCreateCardForm()
 }
 
 async function handleImportCards() {
@@ -384,29 +419,50 @@ async function handleImportCards() {
   }
 }
 
-function resetCardForm() {
-  cardForm.editingCardId = ''
-  cardForm.front = ''
-  cardForm.back = ''
-  cardForm.hint = ''
-  cardForm.tagsText = ''
+function clearCreateCardForm() {
+  createCardForm.front = ''
+  createCardForm.back = ''
+  createCardForm.hint = ''
+  createCardForm.tagsText = ''
 }
 
-function startEditCard(cardId: string) {
+function openEditCardModal(cardId: string) {
   const card = deckCards.value.find((item) => item.id === cardId)
   if (!card) return
 
-  cardForm.editingCardId = card.id
-  cardForm.front = card.front
-  cardForm.back = card.back
-  cardForm.hint = card.hint ?? ''
-  cardForm.tagsText = card.tags.join(', ')
+  editCardModal.isOpen = true
+  editCardModal.cardId = card.id
+  editCardModal.front = card.front
+  editCardModal.back = card.back
+  editCardModal.hint = card.hint ?? ''
+  editCardModal.tagsText = card.tags.join(', ')
+}
+
+function closeEditCardModal() {
+  editCardModal.isOpen = false
+  editCardModal.cardId = ''
+  editCardModal.front = ''
+  editCardModal.back = ''
+  editCardModal.hint = ''
+  editCardModal.tagsText = ''
+}
+
+async function submitEditCard() {
+  if (!selectedDeckId.value || !editCardModal.cardId) return
+
+  const front = editCardModal.front.trim()
+  const back = editCardModal.back.trim()
+  if (!front || !back) return
+
+  const tags = parseTags(editCardModal.tagsText)
+  await studyStore.updateCard(editCardModal.cardId, front, back, editCardModal.hint.trim(), tags)
+  closeEditCardModal()
 }
 
 async function removeCard(cardId: string) {
   await studyStore.removeCard(cardId)
-  if (cardForm.editingCardId === cardId) {
-    resetCardForm()
+  if (editCardModal.cardId === cardId) {
+    closeEditCardModal()
   }
 }
 
@@ -418,7 +474,8 @@ async function handleDeleteDeck() {
 
   const nextDeck = studyStore.deckList[0]
   selectedDeckId.value = nextDeck?.id ?? ''
-  resetCardForm()
+  clearCreateCardForm()
+  closeEditCardModal()
   cancelEditDeck()
 }
 
@@ -442,7 +499,8 @@ onMounted(async () => {
 })
 
 watch(selectedDeckId, () => {
-  resetCardForm()
+  clearCreateCardForm()
+  closeEditCardModal()
   cancelEditDeck()
   cardQuery.value = ''
   cardFilter.value = 'all'
@@ -626,6 +684,42 @@ watch(filteredDeckList, (nextDecks) => {
   gap: 0.35rem;
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  z-index: 1200;
+}
+
+.modal-card {
+  width: min(620px, 96vw);
+  background: var(--wn-surface);
+  border: 1px solid var(--wn-border);
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: var(--wn-shadow-soft);
+}
+
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.modal-head h3 {
+  margin: 0;
+}
+
+.modal-form {
+  display: grid;
+  gap: 0.55rem;
+}
+
 .empty-text {
   color: var(--wn-muted);
   margin-top: 0.75rem;
@@ -653,6 +747,10 @@ watch(filteredDeckList, (nextDecks) => {
 
   .metrics {
     grid-template-columns: 1fr;
+  }
+
+  .modal-card {
+    width: 100%;
   }
 }
 </style>

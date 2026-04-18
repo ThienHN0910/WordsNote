@@ -11,6 +11,13 @@ namespace WordsNote.Desktop.ViewModels;
 
 public sealed class MainViewModel : INotifyPropertyChanged
 {
+    private const int LandingTabIndex = 0;
+    private const int LearnTabIndex = 1;
+    private const int ManageTabIndex = 3;
+    private const int SettingsTabIndex = 4;
+    private const int LoginTabIndex = 5;
+    private const int PrivacyTabIndex = 2;
+
     private readonly WordsNoteApiClient _apiClient = new();
     private readonly LocalManageStorageService _localManageStorage = new();
     private readonly GoogleBrowserAuthService _googleBrowserAuthService = new();
@@ -29,6 +36,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _authToken = string.Empty;
     private bool _isAuthenticated;
     private string _lastSyncMessage = string.Empty;
+    private string _themeMode = "light";
 
     private StudyDeck? _learnSelectedDeck;
     private string _learnMode = "flash";
@@ -56,7 +64,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _cardBack = string.Empty;
     private string _cardHint = string.Empty;
     private string _cardTagsText = string.Empty;
-    private string _editingCardId = string.Empty;
 
     private string _manageCardQuery = string.Empty;
     private string _manageCardFilter = "all";
@@ -130,6 +137,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         get => _googleIdToken;
         set => SetProperty(ref _googleIdToken, value);
+    }
+
+    public string ThemeMode
+    {
+        get => _themeMode;
+        set => SetProperty(ref _themeMode, NormalizeThemeMode(value));
     }
 
     public string AuthToken
@@ -353,20 +366,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         set => SetProperty(ref _cardTagsText, value);
     }
 
-    public string EditingCardId
-    {
-        get => _editingCardId;
-        private set
-        {
-            if (SetProperty(ref _editingCardId, value))
-            {
-                OnPropertyChanged(nameof(IsEditingCard));
-            }
-        }
-    }
-
-    public bool IsEditingCard => !string.IsNullOrWhiteSpace(EditingCardId);
-
     public string ManageCardQuery
     {
         get => _manageCardQuery;
@@ -480,6 +479,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
             GoogleClientId = settings.GoogleClientId;
         }
 
+        ThemeMode = settings.ThemeMode;
+
         UpdatePrivacyContent();
         await ReloadDataAsync();
     }
@@ -495,10 +496,41 @@ public sealed class MainViewModel : INotifyPropertyChanged
             {
                 ApiBaseUrl = ApiBaseUrl,
                 GoogleClientId = GoogleClientId,
+                ThemeMode = ThemeMode,
             });
 
             StatusMessage = "Settings saved.";
         }, "Unable to save desktop settings.");
+    }
+
+    public void OpenLandingPage()
+    {
+        SelectedTabIndex = LandingTabIndex;
+    }
+
+    public void OpenLoginPage()
+    {
+        SelectedTabIndex = LoginTabIndex;
+    }
+
+    public void OpenManagePage()
+    {
+        SelectedTabIndex = ManageTabIndex;
+    }
+
+    public void OpenLearnPage()
+    {
+        SelectedTabIndex = LearnTabIndex;
+    }
+
+    public void OpenSettingsPage()
+    {
+        SelectedTabIndex = SettingsTabIndex;
+    }
+
+    public void OpenPrivacyPage()
+    {
+        SelectedTabIndex = PrivacyTabIndex;
     }
 
     public void ApplyApiBaseUrl()
@@ -793,16 +825,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (IsAuthenticated)
             {
-                if (IsEditingCard)
-                {
-                    await _apiClient.UpdateCardAsync(EditingCardId, ManageSelectedDeck.Id, front, back, CardHint.Trim(), tags);
-                    StatusMessage = "Card updated in cloud.";
-                }
-                else
-                {
-                    await _apiClient.CreateCardAsync(ManageSelectedDeck.Id, front, back, CardHint.Trim(), tags);
-                    StatusMessage = "Card created in cloud.";
-                }
+                await _apiClient.CreateCardAsync(ManageSelectedDeck.Id, front, back, CardHint.Trim(), tags);
+                StatusMessage = "Card created in cloud.";
 
                 var selectedDeckId = ManageSelectedDeck.Id;
                 await ReloadDataAsync();
@@ -810,16 +834,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
             }
             else
             {
-                if (IsEditingCard)
-                {
-                    UpdateLocalCard(EditingCardId, ManageSelectedDeck.Id, front, back, CardHint.Trim(), tags);
-                    StatusMessage = "Card updated locally.";
-                }
-                else
-                {
-                    CreateLocalCard(ManageSelectedDeck.Id, front, back, CardHint.Trim(), tags);
-                    StatusMessage = "Card created locally.";
-                }
+                CreateLocalCard(ManageSelectedDeck.Id, front, back, CardHint.Trim(), tags);
+                StatusMessage = "Card created locally.";
 
                 await SaveLocalSnapshotAsync();
                 EnsureSelectedDecks();
@@ -832,23 +848,58 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }, "Unable to save card.");
     }
 
-    public void StartEditSelectedCard()
+    public async Task UpdateCardAsync(string cardId, string frontInput, string backInput, string hintInput, string tagsText)
     {
-        if (ManageSelectedCard is null)
+        if (ManageSelectedDeck is null)
         {
+            StatusMessage = "Select a collection first.";
             return;
         }
 
-        EditingCardId = ManageSelectedCard.Id;
-        CardFront = ManageSelectedCard.Front;
-        CardBack = ManageSelectedCard.Back;
-        CardHint = ManageSelectedCard.Hint ?? string.Empty;
-        CardTagsText = string.Join(", ", ManageSelectedCard.Tags);
+        if (string.IsNullOrWhiteSpace(cardId))
+        {
+            StatusMessage = "Select a card first.";
+            return;
+        }
+
+        var front = frontInput.Trim();
+        var back = backInput.Trim();
+        if (string.IsNullOrWhiteSpace(front) || string.IsNullOrWhiteSpace(back))
+        {
+            StatusMessage = "Front and back are required.";
+            return;
+        }
+
+        var hint = hintInput.Trim();
+        var tags = ParseTags(tagsText);
+
+        await RunBusyAsync(async () =>
+        {
+            if (IsAuthenticated)
+            {
+                await _apiClient.UpdateCardAsync(cardId, ManageSelectedDeck.Id, front, back, hint, tags);
+                var selectedDeckId = ManageSelectedDeck.Id;
+                await ReloadDataAsync();
+                ManageSelectedDeck = Decks.FirstOrDefault(deck => deck.Id == selectedDeckId) ?? Decks.FirstOrDefault();
+                StatusMessage = "Card updated in cloud.";
+            }
+            else
+            {
+                UpdateLocalCard(cardId, ManageSelectedDeck.Id, front, back, hint, tags);
+                await SaveLocalSnapshotAsync();
+                EnsureSelectedDecks();
+                RefreshManageDecks();
+                RefreshManageCards();
+                RefreshLearnComputed();
+                StatusMessage = "Card updated locally.";
+            }
+
+            ManageSelectedCard = FilteredManageCards.FirstOrDefault(card => card.Id == cardId) ?? FilteredManageCards.FirstOrDefault();
+        }, "Unable to update card.");
     }
 
     public void ClearCardForm()
     {
-        EditingCardId = string.Empty;
         CardFront = string.Empty;
         CardBack = string.Empty;
         CardHint = string.Empty;
@@ -884,10 +935,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
             ManageSelectedDeck = Decks.FirstOrDefault(deck => deck.Id == selectedDeckId) ?? Decks.FirstOrDefault();
             ManageSelectedCard = FilteredManageCards.FirstOrDefault();
-            if (EditingCardId == deletingCardId)
-            {
-                ClearCardForm();
-            }
 
             StatusMessage = IsAuthenticated ? "Card deleted from cloud." : "Card deleted locally.";
         }, "Unable to delete card.");
@@ -1217,7 +1264,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         StatusMessage = "Please sign in to use cloud manage features.";
-        SelectedTabIndex = 3;
+        SelectedTabIndex = LoginTabIndex;
         return false;
     }
 
@@ -1554,5 +1601,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    private static string NormalizeThemeMode(string? value)
+    {
+        return string.Equals(value?.Trim(), "dark", StringComparison.OrdinalIgnoreCase)
+            ? "dark"
+            : "light";
     }
 }

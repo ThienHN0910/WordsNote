@@ -28,16 +28,22 @@ WordsNote is a learning platform for vocabulary and flashcards, delivered as:
 - Public privacy route: /privacy-policy with language query mode
   - /privacy-policy?lang=vi
   - /privacy-policy?lang=en
-- Authenticated management route: /manage
-- Google sign-in for management operations
+- Local-first management route: /manage (no login required, browser local storage)
+  - Card UX: create form is create-only; editing runs in popup modal from card actions
+- Auth-required focused session route: /manage/:deckId/session
+- Google sign-in is optional and used for cloud-backed session/deep-study actions
 
 ### Browser Extension
 
-- Learn-only popup modes:
+- Local-first popup workspaces:
+  - Learn Lab (flashcards, learn, practice)
+  - Manage Lab (local collection/card CRUD + text import)
+- No authentication required
+- Manage is local-only (no cloud write)
+- Learn popup modes:
   - Flashcards
   - Learn
   - Practice
-- Local mode using browser storage
 - Optional Cloud mode (read-only fetch from public API)
 - Sync To Local flow to copy cloud cards into local review dataset
 - Collection-level filtering in popup
@@ -45,13 +51,15 @@ WordsNote is a learning platform for vocabulary and flashcards, delivered as:
 ### Desktop App (WPF)
 
 - Home/Landing workspace
+- Dedicated Login workspace (separate from Manage)
 - Learn workspace:
   - Flashcards
   - Learn (typed answer with normalized compare)
   - Practice (multiple choice)
-- Privacy policy workspace (VI/EN)
+- Privacy policy workspace (VI/EN) hidden from main tabs and opened from landing link/button
 - Manage workspace:
   - Local mode without login: CRUD collections/cards, import, filter/sort (no backend calls)
+  - Card UX: create form is create-only; edit opens popup dialog via Edit Selected
   - Google login for cloud mode (browser flow with optional ID token fallback)
   - Sync Local -> Cloud and Sync Cloud -> Local
   - Input placeholders for faster desktop data entry

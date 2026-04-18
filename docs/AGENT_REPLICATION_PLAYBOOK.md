@@ -101,6 +101,7 @@ Read:
 Extract:
 
 - no-auth local behavior
+- local manage behavior (collections/cards CRUD and import)
 - highlight capture workflow
 - local storage model
 - cloud read-only sync and sync-to-local flow

@@ -20,9 +20,6 @@ const routesFFP: Array<RouteRecordRaw> = [
     path: '/manage',
     name: 'manageCollections',
     component: () => import('@/pages/WordsNote/StudyHubPage.vue'),
-    meta: {
-      requiresAuth: true,
-    },
   },
   {
     path: '/manage/:deckId/session',

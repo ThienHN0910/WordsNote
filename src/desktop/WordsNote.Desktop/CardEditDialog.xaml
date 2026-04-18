@@ -1,0 +1,45 @@
+<Window x:Class="WordsNote.Desktop.CardEditDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Edit Selected Card"
+        Height="460"
+        Width="640"
+        MinHeight="420"
+        MinWidth="560"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResizeWithGrip"
+        ShowInTaskbar="False">
+    <Border x:Name="RootBorder" Padding="18" Background="#FFFFFF" BorderBrush="#D1D5DB" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Margin="0,0,0,12">
+                <TextBlock x:Name="TitleText" FontSize="24" FontWeight="Bold" Text="Edit Card" Foreground="#1F2333" />
+                <TextBlock x:Name="SubtitleText" Margin="0,4,0,0" Text="Update front/back, hint, and tags for the selected card." Foreground="#5B6275" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <StackPanel Grid.Row="1">
+                <TextBlock x:Name="FrontLabel" Margin="0,0,0,4" FontWeight="SemiBold" Text="Front" Foreground="#1F2333" />
+                <TextBox x:Name="FrontTextBox" Height="34" Padding="8,4" VerticalContentAlignment="Center" />
+
+                <TextBlock x:Name="BackLabel" Margin="0,12,0,4" FontWeight="SemiBold" Text="Back" Foreground="#1F2333" />
+                <TextBox x:Name="BackTextBox" Height="34" Padding="8,4" VerticalContentAlignment="Center" />
+
+                <TextBlock x:Name="HintLabel" Margin="0,12,0,4" FontWeight="SemiBold" Text="Hint (optional)" Foreground="#1F2333" />
+                <TextBox x:Name="HintTextBox" Height="34" Padding="8,4" VerticalContentAlignment="Center" />
+
+                <TextBlock x:Name="TagsLabel" Margin="0,12,0,4" FontWeight="SemiBold" Text="Tags (comma separated)" Foreground="#1F2333" />
+                <TextBox x:Name="TagsTextBox" Height="34" Padding="8,4" VerticalContentAlignment="Center" />
+            </StackPanel>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                <Button x:Name="CancelButton" Width="98" Height="34" Margin="0,0,8,0" Content="Cancel" IsCancel="True" Click="Cancel_Click" />
+                <Button x:Name="SaveButton" Width="130" Height="34" Content="Save Changes" IsDefault="True" Click="Save_Click" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

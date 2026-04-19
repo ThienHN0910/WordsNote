@@ -8,10 +8,12 @@ namespace WordsNote.Desktop.Services;
 public sealed class LocalManageStorageService
 {
     private readonly string _filePath;
+    private readonly string _syncStateFilePath;
 
     public LocalManageStorageService(IAppDataPathProvider pathProvider)
     {
         _filePath = pathProvider.GetFilePath("manage-local-data.json");
+        _syncStateFilePath = pathProvider.GetFilePath("manage-local-sync-state.json");
     }
 
     public async Task<(List<StudyDeck> Decks, List<StudyCard> Cards)> LoadAsync(CancellationToken cancellationToken = default)
@@ -43,6 +45,52 @@ public sealed class LocalManageStorageService
             stream,
             payload,
             WordsNoteJsonSerializerContext.Default.LocalManageData,
+            cancellationToken);
+    }
+
+    public async Task<LocalCloudSyncState> LoadSyncStateAsync(CancellationToken cancellationToken = default)
+    {
+        if (!File.Exists(_syncStateFilePath))
+        {
+            return new LocalCloudSyncState();
+        }
+
+        await using var stream = File.OpenRead(_syncStateFilePath);
+        var state = await JsonSerializer.DeserializeAsync(
+            stream,
+            WordsNoteJsonSerializerContext.Default.LocalCloudSyncState,
+            cancellationToken);
+
+        return state is null
+            ? new LocalCloudSyncState()
+            : new LocalCloudSyncState
+            {
+                DeckIdMap = state.DeckIdMap
+                    .Where(item => !string.IsNullOrWhiteSpace(item.Key) && !string.IsNullOrWhiteSpace(item.Value))
+                    .ToDictionary(item => item.Key.Trim(), item => item.Value.Trim(), StringComparer.OrdinalIgnoreCase),
+                CardIdMap = state.CardIdMap
+                    .Where(item => !string.IsNullOrWhiteSpace(item.Key) && !string.IsNullOrWhiteSpace(item.Value))
+                    .ToDictionary(item => item.Key.Trim(), item => item.Value.Trim(), StringComparer.OrdinalIgnoreCase),
+            };
+    }
+
+    public async Task SaveSyncStateAsync(LocalCloudSyncState state, CancellationToken cancellationToken = default)
+    {
+        var payload = new LocalCloudSyncState
+        {
+            DeckIdMap = state.DeckIdMap
+                .Where(item => !string.IsNullOrWhiteSpace(item.Key) && !string.IsNullOrWhiteSpace(item.Value))
+                .ToDictionary(item => item.Key.Trim(), item => item.Value.Trim(), StringComparer.OrdinalIgnoreCase),
+            CardIdMap = state.CardIdMap
+                .Where(item => !string.IsNullOrWhiteSpace(item.Key) && !string.IsNullOrWhiteSpace(item.Value))
+                .ToDictionary(item => item.Key.Trim(), item => item.Value.Trim(), StringComparer.OrdinalIgnoreCase),
+        };
+
+        await using var stream = File.Create(_syncStateFilePath);
+        await JsonSerializer.SerializeAsync(
+            stream,
+            payload,
+            WordsNoteJsonSerializerContext.Default.LocalCloudSyncState,
             cancellationToken);
     }
 
@@ -84,4 +132,11 @@ internal sealed class LocalManageData
     public List<StudyDeck> Decks { get; set; } = [];
 
     public List<StudyCard> Cards { get; set; } = [];
+}
+
+public sealed class LocalCloudSyncState
+{
+    public Dictionary<string, string> DeckIdMap { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    public Dictionary<string, string> CardIdMap { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }

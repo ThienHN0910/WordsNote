@@ -25,11 +25,20 @@
           @keyup.enter="saveCloudEndpoint"
         />
         <button class="ghost" @click="saveCloudEndpoint">Save Endpoint</button>
+        <input
+          v-model="cloudAuthTokenDraft"
+          class="cloud-input"
+          type="password"
+          placeholder="Paste cloud JWT token"
+          @keyup.enter="saveCloudAuth"
+        />
+        <button class="ghost" @click="saveCloudAuth">Save Token</button>
         <button class="ghost" @click="syncCloudToLocal">Sync To Local</button>
+        <button class="ghost" :disabled="!isCloudAuthenticated" @click="syncLocalToCloud">Sync Local -> Cloud</button>
       </div>
 
       <p v-if="sourceMode === 'cloud'" class="muted cloud-note">
-        Read-only sync from public API. Endpoint: {{ cloudApiBaseUrl }}
+        Endpoint: {{ cloudApiBaseUrl }}. Cloud write mode {{ isCloudAuthenticated ? 'enabled' : 'requires token' }}.
       </p>
       <p v-if="syncSummary" class="sync-summary">{{ syncSummary }}</p>
     </section>
@@ -150,11 +159,20 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
-import { getDueLocalCards, reviewLocalCard, syncCloudCardsToLocal } from '../../services/storage.js';
+import {
+  getDueLocalCards,
+  getLocalCards,
+  getLocalCollections,
+  reviewLocalCard,
+  syncCloudCardsToLocal,
+} from '../../services/storage.js';
 import {
   fetchPublicLearnSnapshot,
+  getCloudAuthToken,
   getCloudApiBaseUrl,
+  setCloudAuthToken,
   setCloudApiBaseUrl,
+  syncLocalSnapshotToCloud,
 } from '../../services/remoteStudy.js';
 
 const allCards = ref([]);
@@ -166,6 +184,8 @@ const selectedCollectionId = ref('all');
 const sourceMode = ref('local');
 const cloudApiBaseUrl = ref('http://words-note.runasp.net');
 const cloudApiBaseDraft = ref('http://words-note.runasp.net');
+const cloudAuthToken = ref('');
+const cloudAuthTokenDraft = ref('');
 
 const mode = ref('flash');
 const currentIndex = ref(0);
@@ -224,8 +244,12 @@ const countLabel = computed(() => {
 const sourceDescription = computed(() =>
   sourceMode.value === 'local'
     ? 'Learn-only popup, no login required'
-    : 'Cloud mode reads public collections/cards with no auth',
+    : isCloudAuthenticated.value
+      ? 'Cloud mode can read public data and sync local changes to cloud'
+      : 'Cloud mode reads public data. Add token to enable local -> cloud sync',
 );
+
+const isCloudAuthenticated = computed(() => cloudAuthToken.value.length > 0);
 
 const emptyTitle = computed(() =>
   sourceMode.value === 'local' ? 'No cards due right now.' : 'No public cards found.',
@@ -446,6 +470,14 @@ async function saveCloudEndpoint() {
   }
 }
 
+async function saveCloudAuth() {
+  cloudAuthToken.value = await setCloudAuthToken(cloudAuthTokenDraft.value);
+  cloudAuthTokenDraft.value = cloudAuthToken.value;
+  syncSummary.value = cloudAuthToken.value
+    ? 'Cloud token saved. Local -> cloud sync is enabled.'
+    : 'Cloud token cleared. Local -> cloud sync is disabled.';
+}
+
 async function syncCloudToLocal() {
   loading.value = true;
   errorMsg.value = '';
@@ -468,6 +500,32 @@ async function syncCloudToLocal() {
   } catch (error) {
     const detail = error instanceof Error ? error.message : '';
     errorMsg.value = `Cloud sync to local failed.${detail ? ` ${detail}` : ''}`;
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function syncLocalToCloud() {
+  loading.value = true;
+  errorMsg.value = '';
+
+  try {
+    if (!isCloudAuthenticated.value) {
+      throw new Error('Save cloud JWT token first.');
+    }
+
+    const [collections, cards] = await Promise.all([getLocalCollections(), getLocalCards()]);
+    const result = await syncLocalSnapshotToCloud({
+      baseUrl: cloudApiBaseUrl.value,
+      token: cloudAuthToken.value,
+      collections,
+      cards,
+    });
+
+    syncSummary.value = `Local -> cloud done: uploaded ${result.uploadedCards}, updated ${result.updatedCards}, skipped ${result.skippedCards}.`;
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : '';
+    errorMsg.value = `Local to cloud sync failed.${detail ? ` ${detail}` : ''}`;
   } finally {
     loading.value = false;
   }
@@ -500,6 +558,8 @@ watch(
 onMounted(async () => {
   cloudApiBaseUrl.value = await getCloudApiBaseUrl();
   cloudApiBaseDraft.value = cloudApiBaseUrl.value;
+  cloudAuthToken.value = await getCloudAuthToken();
+  cloudAuthTokenDraft.value = cloudAuthToken.value;
   await refresh();
 });
 </script>

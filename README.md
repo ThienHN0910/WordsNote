@@ -41,14 +41,15 @@ WordsNote is a learning platform for vocabulary and flashcards, delivered as:
 - Local-first popup workspaces:
   - Learn Lab (flashcards, learn, practice)
   - Manage Lab (local collection/card CRUD + text import)
-- No authentication required
-- Manage is local-only (no cloud write)
+- Cloud token is optional and persisted locally in extension storage
+- Manage remains local-first; cloud write is available through explicit sync action
 - Learn popup modes:
   - Flashcards
   - Learn
   - Practice
-- Optional Cloud mode (read-only fetch from public API)
+- Optional Cloud mode for public read
 - Sync To Local flow to copy cloud cards into local review dataset
+- Sync Local -> Cloud flow (requires saved JWT token)
 - Collection-level filtering in popup
 
 ### Desktop App (WPF)

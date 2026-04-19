@@ -59,13 +59,15 @@ apiClient.interceptors.response.use(
   response => response,
   error => {
     if (error.response && error.response.status === 401) {
-      const shouldRedirectToLogin =
+      const shouldHandleAuthFailure =
         isProtectedApiRequest(error.config) ||
         router.currentRoute.value.matched.some(record => record.meta.requiresAuth);
 
-      authStore.clearAuthToken();
+      if (shouldHandleAuthFailure) {
+        authStore.clearAuthToken();
+      }
 
-      if (shouldRedirectToLogin && router.currentRoute.value.name !== 'login') {
+      if (shouldHandleAuthFailure && router.currentRoute.value.name !== 'login') {
         router.push({
           name: 'login',
           query: {

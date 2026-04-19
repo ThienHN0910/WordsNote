@@ -523,7 +523,7 @@ async function handleSyncLocalToCloud() {
 
   try {
     const result = await studyStore.syncLocalToCloud()
-    syncMessage.value = `Synced ${result.deckCount} local collection(s), uploaded ${result.uploadedCards} new card(s), updated ${result.updatedCards} card(s) in cloud.`
+    syncMessage.value = `Synced ${result.deckCount} local collection(s): uploaded ${result.uploadedCards}, updated ${result.updatedCards}, skipped ${result.skippedCards} unchanged card(s).`
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unable to sync local data to cloud.'
     syncError.value = message

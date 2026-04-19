@@ -9,6 +9,7 @@ namespace WordsNote.Desktop.Services.Serialization;
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(DesktopAppSettings))]
 [JsonSerializable(typeof(LocalManageData))]
+[JsonSerializable(typeof(LocalCloudSyncState))]
 [JsonSerializable(typeof(StudyDeck))]
 [JsonSerializable(typeof(StudyCard))]
 [JsonSerializable(typeof(ImportCardsResult))]

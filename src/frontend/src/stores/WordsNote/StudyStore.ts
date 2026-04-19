@@ -5,12 +5,20 @@ import type { CardDifficulty, DeepStudyAnswerResult, StudyCard, StudyDeck } from
 import { useAuthStore } from '@/stores/AS/AuthStore'
 import { pinia } from '@/stores/pinia'
 import {
+  loadLocalCloudSyncState,
   loadLocalStudySnapshot,
   makeLocalCard,
   makeLocalDeck,
+  saveLocalCloudSyncState,
   saveLocalStudySnapshot,
   touchLocalDeck,
 } from '@/services/WordsNote/localManageStorage'
+import {
+  createCardFingerprint,
+  createCardMatchKey,
+  createDeckFingerprint,
+  createDeckMatchKey,
+} from '@/services/WordsNote/syncSnapshot'
 
 interface ImportCardsResult {
   imported: number
@@ -21,6 +29,7 @@ interface SyncLocalToCloudResult {
   deckCount: number
   uploadedCards: number
   updatedCards: number
+  skippedCards: number
 }
 
 interface SyncCloudToLocalResult {
@@ -99,10 +108,6 @@ export const useStudyStore = defineStore('study', () => {
 
   function resolveCollectionId(card: StudyCard) {
     return card.collectionId || card.deckId || ''
-  }
-
-  function normalizeSyncText(value: string) {
-    return value.trim().toLowerCase()
   }
 
   function isCloudMode() {
@@ -415,56 +420,73 @@ export const useStudyStore = defineStore('study', () => {
         deckCount: 0,
         uploadedCards: 0,
         updatedCards: 0,
+        skippedCards: 0,
       }
     }
 
+    const syncState = loadLocalCloudSyncState()
     const [cloudDecksResponse, cloudCardsResponse] = await Promise.all([StudyAPI.getDecks(), StudyAPI.getCards()])
     const cloudDecks = cloudDecksResponse.data.map((deck) => normalizeRemoteDeck(deck)).filter((deck) => Boolean(deck.id))
     const cloudCards = cloudCardsResponse.data.map((card) => normalizeRemoteCard(card)).filter((card) => Boolean(card.id))
 
-    const localToCloudDeckId = new Map<string, string>()
+    const cloudDeckById = new Map(cloudDecks.map((deck) => [deck.id, deck]))
+    const cloudDeckByMatchKey = new Map(cloudDecks.map((deck) => [createDeckMatchKey(deck.title), deck]))
+
+    const nextDeckIdMap: Record<string, string> = {}
 
     for (const localDeck of localSnapshot.decks) {
-      const localDeckTitle = normalizeSyncText(localDeck.title)
-      let cloudDeck = cloudDecks.find((deck) => normalizeSyncText(deck.title) === localDeckTitle)
+      const mappedCloudDeckId = syncState.deckIdMap[localDeck.id]
+      const mappedCloudDeck = mappedCloudDeckId ? cloudDeckById.get(mappedCloudDeckId) : undefined
+      let cloudDeck = mappedCloudDeck ?? cloudDeckByMatchKey.get(createDeckMatchKey(localDeck.title))
 
       if (!cloudDeck) {
         const createdResponse = await StudyAPI.createDeck(localDeck.title, localDeck.description)
         cloudDeck = normalizeRemoteDeck(createdResponse.data)
         cloudDecks.push(cloudDeck)
+        cloudDeckById.set(cloudDeck.id, cloudDeck)
+        cloudDeckByMatchKey.set(createDeckMatchKey(cloudDeck.title), cloudDeck)
       } else {
-        const updatedResponse = await StudyAPI.updateDeck(cloudDeck.id, localDeck.title, localDeck.description)
-        cloudDeck = normalizeRemoteDeck(updatedResponse.data)
-        const cloudDeckIndex = cloudDecks.findIndex((deck) => deck.id === cloudDeck?.id)
-        if (cloudDeckIndex >= 0) {
-          cloudDecks[cloudDeckIndex] = cloudDeck
+        const localFingerprint = createDeckFingerprint(localDeck)
+        const cloudFingerprint = createDeckFingerprint(cloudDeck)
+        if (localFingerprint !== cloudFingerprint) {
+          const updatedResponse = await StudyAPI.updateDeck(cloudDeck.id, localDeck.title, localDeck.description)
+          cloudDeck = normalizeRemoteDeck(updatedResponse.data)
+          const cloudDeckIndex = cloudDecks.findIndex((deck) => deck.id === cloudDeck?.id)
+          if (cloudDeckIndex >= 0) {
+            cloudDecks[cloudDeckIndex] = cloudDeck
+          }
+
+          cloudDeckById.set(cloudDeck.id, cloudDeck)
+          cloudDeckByMatchKey.set(createDeckMatchKey(cloudDeck.title), cloudDeck)
         }
       }
 
-      localToCloudDeckId.set(localDeck.id, cloudDeck.id)
+      nextDeckIdMap[localDeck.id] = cloudDeck.id
     }
+
+    const cloudCardById = new Map(cloudCards.map((card) => [card.id, card]))
+    const cloudCardByMatchKey = new Map(
+      cloudCards.map((card) => [createCardMatchKey(resolveCollectionId(card), card.front, card.back), card]),
+    )
+
+    const nextCardIdMap: Record<string, string> = {}
 
     let uploadedCards = 0
     let updatedCards = 0
+    let skippedCards = 0
 
     for (const localCard of localSnapshot.cards) {
       const localDeckId = resolveCollectionId(localCard)
-      const cloudDeckId = localToCloudDeckId.get(localDeckId)
+      const cloudDeckId = nextDeckIdMap[localDeckId]
 
       if (!cloudDeckId) {
         continue
       }
 
-      const localFront = normalizeSyncText(localCard.front)
-      const localBack = normalizeSyncText(localCard.back)
-
-      const existingCloudCard = cloudCards.find((card) => {
-        if (resolveCollectionId(card) !== cloudDeckId) {
-          return false
-        }
-
-        return normalizeSyncText(card.front) === localFront && normalizeSyncText(card.back) === localBack
-      })
+      const mappedCloudCardId = syncState.cardIdMap[localCard.id]
+      const mappedCloudCard = mappedCloudCardId ? cloudCardById.get(mappedCloudCardId) : undefined
+      const existingCloudCard = mappedCloudCard
+        ?? cloudCardByMatchKey.get(createCardMatchKey(cloudDeckId, localCard.front, localCard.back))
 
       if (!existingCloudCard) {
         const createdResponse = await StudyAPI.createCard({
@@ -474,8 +496,30 @@ export const useStudyStore = defineStore('study', () => {
           hint: localCard.hint ?? '',
           tags: localCard.tags,
         })
-        cloudCards.push(normalizeRemoteCard(createdResponse.data))
+        const createdCloudCard = normalizeRemoteCard(createdResponse.data)
+        cloudCards.push(createdCloudCard)
+        cloudCardById.set(createdCloudCard.id, createdCloudCard)
+        cloudCardByMatchKey.set(
+          createCardMatchKey(resolveCollectionId(createdCloudCard), createdCloudCard.front, createdCloudCard.back),
+          createdCloudCard,
+        )
+        nextCardIdMap[localCard.id] = createdCloudCard.id
         uploadedCards += 1
+        continue
+      }
+
+      const localFingerprint = createCardFingerprint({
+        ...localCard,
+        collectionId: cloudDeckId,
+      })
+      const cloudFingerprint = createCardFingerprint({
+        ...existingCloudCard,
+        collectionId: resolveCollectionId(existingCloudCard),
+      })
+
+      if (localFingerprint === cloudFingerprint) {
+        nextCardIdMap[localCard.id] = existingCloudCard.id
+        skippedCards += 1
         continue
       }
 
@@ -489,11 +533,23 @@ export const useStudyStore = defineStore('study', () => {
 
       const existingIndex = cloudCards.findIndex((card) => card.id === existingCloudCard.id)
       if (existingIndex >= 0) {
-        cloudCards[existingIndex] = normalizeRemoteCard(updatedResponse.data)
+        const updatedCard = normalizeRemoteCard(updatedResponse.data)
+        cloudCards[existingIndex] = updatedCard
+        cloudCardById.set(updatedCard.id, updatedCard)
+        cloudCardByMatchKey.set(
+          createCardMatchKey(resolveCollectionId(updatedCard), updatedCard.front, updatedCard.back),
+          updatedCard,
+        )
+        nextCardIdMap[localCard.id] = updatedCard.id
       }
 
       updatedCards += 1
     }
+
+    saveLocalCloudSyncState({
+      deckIdMap: nextDeckIdMap,
+      cardIdMap: nextCardIdMap,
+    })
 
     await load()
 
@@ -501,6 +557,7 @@ export const useStudyStore = defineStore('study', () => {
       deckCount: localSnapshot.decks.length,
       uploadedCards,
       updatedCards,
+      skippedCards,
     }
   }
 

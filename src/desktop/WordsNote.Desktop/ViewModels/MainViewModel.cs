@@ -496,6 +496,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
             GoogleClientId = settings.GoogleClientId;
         }
 
+        if (!string.IsNullOrWhiteSpace(settings.AuthToken))
+        {
+            AuthToken = settings.AuthToken;
+            IsAuthenticated = true;
+            _apiClient.SetToken(AuthToken);
+        }
+
         ThemeMode = settings.ThemeMode;
 
         UpdatePrivacyContent();
@@ -509,12 +516,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             ApplyApiBaseUrl();
             GoogleClientId = GoogleClientId.Trim();
 
-            await _settingsStorage.SaveAsync(new DesktopAppSettings
-            {
-                ApiBaseUrl = ApiBaseUrl,
-                GoogleClientId = GoogleClientId,
-                ThemeMode = ThemeMode,
-            });
+            await PersistCurrentSettingsAsync();
 
             StatusMessage = "Settings saved.";
         }, "Unable to save desktop settings.");
@@ -599,6 +601,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             IsAuthenticated = true;
             _apiClient.SetToken(token);
             GoogleIdToken = string.Empty;
+            await PersistCurrentSettingsAsync();
             StatusMessage = "Google token accepted. Signed in successfully.";
             await ReloadDataAsync();
         }, "Google token login failed.");
@@ -615,6 +618,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             AuthToken = token;
             IsAuthenticated = true;
             _apiClient.SetToken(token);
+            await PersistCurrentSettingsAsync();
             StatusMessage = "Google browser login succeeded.";
             await ReloadDataAsync();
         }, "Google browser login failed.");
@@ -625,6 +629,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         AuthToken = string.Empty;
         IsAuthenticated = false;
         _apiClient.SetToken(null);
+        await PersistCurrentSettingsAsync();
         StatusMessage = "Signed out.";
         await ReloadDataAsync();
     }
@@ -1019,29 +1024,55 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 return;
             }
 
+            var syncState = await _localManageStorage.LoadSyncStateAsync();
+
             var cloudDecks = await _apiClient.GetCollectionsAsync();
             var cloudCards = await _apiClient.GetCardsAsync();
+
+            var cloudDeckById = cloudDecks.ToDictionary(deck => deck.Id, StringComparer.OrdinalIgnoreCase);
+            var cloudDeckByMatchKey = cloudDecks
+                .GroupBy(deck => SyncSnapshot.CreateDeckMatchKey(deck.Title), StringComparer.Ordinal)
+                .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
 
             var deckMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var localDeck in localSnapshot.Decks)
             {
-                var existing = cloudDecks.FirstOrDefault(deck =>
-                    string.Equals(deck.Title.Trim(), localDeck.Title.Trim(), StringComparison.OrdinalIgnoreCase));
+                syncState.DeckIdMap.TryGetValue(localDeck.Id, out var mappedCloudDeckId);
+                var existing = !string.IsNullOrWhiteSpace(mappedCloudDeckId) && cloudDeckById.TryGetValue(mappedCloudDeckId, out var mappedDeck)
+                    ? mappedDeck
+                    : cloudDeckByMatchKey.GetValueOrDefault(SyncSnapshot.CreateDeckMatchKey(localDeck.Title));
 
                 if (existing is null)
                 {
                     existing = await _apiClient.CreateCollectionAsync(localDeck.Title, localDeck.Description);
                     cloudDecks.Add(existing);
+                    cloudDeckById[existing.Id] = existing;
+                    cloudDeckByMatchKey[SyncSnapshot.CreateDeckMatchKey(existing.Title)] = existing;
                 }
                 else
                 {
-                    await _apiClient.UpdateCollectionAsync(existing.Id, localDeck.Title, localDeck.Description);
+                    var localFingerprint = SyncSnapshot.CreateDeckFingerprint(localDeck);
+                    var cloudFingerprint = SyncSnapshot.CreateDeckFingerprint(existing);
+                    if (!string.Equals(localFingerprint, cloudFingerprint, StringComparison.Ordinal))
+                    {
+                        existing = await _apiClient.UpdateCollectionAsync(existing.Id, localDeck.Title, localDeck.Description);
+                        cloudDeckById[existing.Id] = existing;
+                        cloudDeckByMatchKey[SyncSnapshot.CreateDeckMatchKey(existing.Title)] = existing;
+                    }
                 }
 
                 deckMap[localDeck.Id] = existing.Id;
             }
 
+            var cloudCardById = cloudCards.ToDictionary(card => card.Id, StringComparer.OrdinalIgnoreCase);
+            var cloudCardByMatchKey = cloudCards
+                .GroupBy(card => SyncSnapshot.CreateCardMatchKey(ResolveCollectionId(card), card.Front, card.Back), StringComparer.Ordinal)
+                .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+
             var uploadedCards = 0;
+            var updatedCards = 0;
+            var skippedCards = 0;
+            var cardMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var localCard in localSnapshot.Cards)
             {
                 if (!deckMap.TryGetValue(ResolveCollectionId(localCard), out var cloudDeckId))
@@ -1049,10 +1080,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
                     continue;
                 }
 
-                var candidateCards = cloudCards.Where(card => ResolveCollectionId(card) == cloudDeckId).ToList();
-                var existingCloudCard = candidateCards.FirstOrDefault(card =>
-                    string.Equals(card.Front.Trim(), localCard.Front.Trim(), StringComparison.OrdinalIgnoreCase) &&
-                    string.Equals(card.Back.Trim(), localCard.Back.Trim(), StringComparison.OrdinalIgnoreCase));
+                syncState.CardIdMap.TryGetValue(localCard.Id, out var mappedCloudCardId);
+                var existingCloudCard = !string.IsNullOrWhiteSpace(mappedCloudCardId) && cloudCardById.TryGetValue(mappedCloudCardId, out var mappedCard)
+                    ? mappedCard
+                    : cloudCardByMatchKey.GetValueOrDefault(SyncSnapshot.CreateCardMatchKey(cloudDeckId, localCard.Front, localCard.Back));
 
                 if (existingCloudCard is null)
                 {
@@ -1063,21 +1094,43 @@ public sealed class MainViewModel : INotifyPropertyChanged
                         localCard.Hint ?? string.Empty,
                         localCard.Tags);
                     cloudCards.Add(created);
+                    cloudCardById[created.Id] = created;
+                    cloudCardByMatchKey[SyncSnapshot.CreateCardMatchKey(ResolveCollectionId(created), created.Front, created.Back)] = created;
+                    cardMap[localCard.Id] = created.Id;
                     uploadedCards += 1;
                 }
                 else
                 {
-                    await _apiClient.UpdateCardAsync(
+                    var cloudFingerprint = SyncSnapshot.CreateCardFingerprint(existingCloudCard, ResolveCollectionId(existingCloudCard));
+                    var localFingerprint = SyncSnapshot.CreateCardFingerprint(localCard, cloudDeckId);
+                    if (string.Equals(localFingerprint, cloudFingerprint, StringComparison.Ordinal))
+                    {
+                        cardMap[localCard.Id] = existingCloudCard.Id;
+                        skippedCards += 1;
+                        continue;
+                    }
+
+                    var updated = await _apiClient.UpdateCardAsync(
                         existingCloudCard.Id,
                         cloudDeckId,
                         localCard.Front,
                         localCard.Back,
                         localCard.Hint ?? string.Empty,
                         localCard.Tags);
+                    cloudCardById[updated.Id] = updated;
+                    cloudCardByMatchKey[SyncSnapshot.CreateCardMatchKey(ResolveCollectionId(updated), updated.Front, updated.Back)] = updated;
+                    cardMap[localCard.Id] = updated.Id;
+                    updatedCards += 1;
                 }
             }
 
-            LastSyncMessage = $"Synced {localSnapshot.Decks.Count} local collection(s) and uploaded {uploadedCards} new card(s) to cloud.";
+            await _localManageStorage.SaveSyncStateAsync(new LocalCloudSyncState
+            {
+                DeckIdMap = deckMap,
+                CardIdMap = cardMap,
+            });
+
+            LastSyncMessage = $"Synced {localSnapshot.Decks.Count} local collection(s): uploaded {uploadedCards}, updated {updatedCards}, skipped {skippedCards} unchanged card(s).";
             StatusMessage = LastSyncMessage;
             await ReloadDataAsync();
         }, "Unable to sync local data to cloud.");
@@ -1271,6 +1324,17 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private async Task SaveLocalSnapshotAsync()
     {
         await _localManageStorage.SaveAsync(Decks, Cards);
+    }
+
+    private Task PersistCurrentSettingsAsync()
+    {
+        return _settingsStorage.SaveAsync(new DesktopAppSettings
+        {
+            ApiBaseUrl = ApiBaseUrl,
+            GoogleClientId = GoogleClientId,
+            AuthToken = AuthToken,
+            ThemeMode = ThemeMode,
+        });
     }
 
     private bool EnsureAuthenticated()
@@ -1552,7 +1616,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 "",
                 "2. Data We Collect",
                 "Manage mode can use authenticated API calls; learning data includes collections/cards you create.",
-                "Desktop app stores auth token in-memory only for runtime and does not persist it to disk by default.",
+                "Desktop app can persist auth token in local desktop settings to restore login state between app restarts.",
                 "",
                 "3. Usage",
                 "Data is used for Flashcards, Learn, Practice, and manage workflows.",
@@ -1578,7 +1642,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             "",
             "2. Du lieu thu thap",
             "Che do Manage su dung API co xac thuc; du lieu hoc gom collections/cards ban tao.",
-            "Desktop app chi giu token trong bo nho khi chay, khong mac dinh ghi token ra dia.",
+            "Desktop app co the luu auth token trong settings local de khoi phuc dang nhap sau khi mo lai ung dung.",
             "",
             "3. Muc dich su dung",
             "Du lieu duoc dung cho Flashcards, Learn, Practice va quy trinh quan ly hoc.",

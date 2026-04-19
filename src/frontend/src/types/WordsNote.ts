@@ -32,6 +32,11 @@ export interface StudySnapshot {
   cards: StudyCard[]
 }
 
+export interface StudyLocalCloudSyncState {
+  deckIdMap: Record<string, string>
+  cardIdMap: Record<string, string>
+}
+
 export interface DeepStudyAnswerResult {
   cardId: string
   isCorrect: boolean

@@ -142,7 +142,7 @@ Desktop authentication behavior:
 
 - Supports Google browser login flow (system browser + local callback to retrieve ID token)
 - Supports manual Google ID token submission as fallback (`POST /api/auth/google`)
-- Stores JWT token in memory for current runtime session only
+- Persists JWT token in `%LocalAppData%/WordsNote/desktop/desktop-settings.json` to restore login state across app restarts
 
 Desktop feature/auth scope:
 
@@ -168,17 +168,19 @@ MSIX packaging project path:
 
 ## Chrome Extension Configuration
 
-Extension currently runs in local mode and does not require authentication.
+Extension runs local-first and does not require mandatory login.
 
 Recommended:
 
 - Keep extension popup scoped to Learn-only experience (flashcards, learn, practice).
 - Do not add web route navigation (no homepage or manage flow in popup).
 - Default behavior must work with local storage only (`wordsnote_local_cards`).
-- Optional cloud read-only sync uses public API endpoint base URL, defaulting to `http://words-note.runasp.net`.
+- Optional cloud sync uses API endpoint base URL, defaulting to `http://words-note.runasp.net`.
 - Cloud endpoint is persisted in extension storage key `wordsnote_cloud_api_base_url`.
+- Optional cloud JWT token is persisted in extension storage key `wordsnote_cloud_auth_token`.
 - Extension supports collection-level filtering in Local and Cloud modes.
 - `Sync To Local` copies cloud cards into local storage for local review flow.
+- `Sync Local -> Cloud` uploads local collections/cards with the saved JWT token.
 
 ## Security Notes
 

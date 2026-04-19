@@ -1,6 +1,7 @@
-import type { StudyCard, StudyDeck, StudySnapshot } from '@/types/WordsNote'
+import type { StudyCard, StudyDeck, StudyLocalCloudSyncState, StudySnapshot } from '@/types/WordsNote'
 
 const STORAGE_KEY = 'wordsnote_manage_local_data_v1'
+const SYNC_STATE_KEY = 'wordsnote_manage_local_cloud_sync_state_v1'
 
 function getNowIso() {
   return new Date().toISOString()
@@ -44,6 +45,13 @@ function emptySnapshot(): StudySnapshot {
   }
 }
 
+function emptySyncState(): StudyLocalCloudSyncState {
+  return {
+    deckIdMap: {},
+    cardIdMap: {},
+  }
+}
+
 export function loadLocalStudySnapshot(): StudySnapshot {
   const raw = localStorage.getItem(STORAGE_KEY)
   if (!raw) {
@@ -67,6 +75,51 @@ export function saveLocalStudySnapshot(snapshot: StudySnapshot) {
   }
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+}
+
+export function loadLocalCloudSyncState(): StudyLocalCloudSyncState {
+  const raw = localStorage.getItem(SYNC_STATE_KEY)
+  if (!raw) {
+    return emptySyncState()
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<StudyLocalCloudSyncState>
+    const deckIdMap = parsed.deckIdMap && typeof parsed.deckIdMap === 'object' ? parsed.deckIdMap : {}
+    const cardIdMap = parsed.cardIdMap && typeof parsed.cardIdMap === 'object' ? parsed.cardIdMap : {}
+
+    return {
+      deckIdMap: Object.fromEntries(
+        Object.entries(deckIdMap)
+          .map(([localId, cloudId]) => [String(localId).trim(), String(cloudId).trim()])
+          .filter(([localId, cloudId]) => Boolean(localId && cloudId)),
+      ),
+      cardIdMap: Object.fromEntries(
+        Object.entries(cardIdMap)
+          .map(([localId, cloudId]) => [String(localId).trim(), String(cloudId).trim()])
+          .filter(([localId, cloudId]) => Boolean(localId && cloudId)),
+      ),
+    }
+  } catch {
+    return emptySyncState()
+  }
+}
+
+export function saveLocalCloudSyncState(state: StudyLocalCloudSyncState) {
+  const payload: StudyLocalCloudSyncState = {
+    deckIdMap: Object.fromEntries(
+      Object.entries(state.deckIdMap || {})
+        .map(([localId, cloudId]) => [String(localId).trim(), String(cloudId).trim()])
+        .filter(([localId, cloudId]) => Boolean(localId && cloudId)),
+    ),
+    cardIdMap: Object.fromEntries(
+      Object.entries(state.cardIdMap || {})
+        .map(([localId, cloudId]) => [String(localId).trim(), String(cloudId).trim()])
+        .filter(([localId, cloudId]) => Boolean(localId && cloudId)),
+    ),
+  }
+
+  localStorage.setItem(SYNC_STATE_KEY, JSON.stringify(payload))
 }
 
 export function makeLocalDeck(title: string, description: string): StudyDeck {

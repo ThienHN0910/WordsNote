@@ -11,7 +11,9 @@ Base path: `/api`
 	- `Sync Cloud -> Local`: reads `GET /api/collections` + `GET /api/cards` and stores snapshot in browser local storage.
 	- `Sync Local -> Cloud`: requires login; upserts local collections/cards through existing collections/cards write APIs.
 - Public legal page is available at frontend route `/privacy-policy` with language query `?lang=vi|en`.
-- Extension Cloud mode uses only public read endpoints (`GET /api/collections`, `GET /api/cards`) and syncs results to local storage client-side.
+- Extension Cloud mode supports:
+	- Public read (`GET /api/collections`, `GET /api/cards`) for Learn snapshot and `Sync To Local`.
+	- Token-based `Sync Local -> Cloud` using protected write endpoints (`POST/PUT /api/collections`, `POST/PUT /api/cards`).
 - WPF desktop app mirrors frontend feature scope:
 	- Learn workspace uses public read endpoints.
 	- Manage workspace supports local offline mode when not logged in.

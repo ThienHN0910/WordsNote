@@ -12,6 +12,8 @@ public sealed class DesktopAppSettings
 
     public string GoogleClientId { get; set; } = string.Empty;
 
+    public string AuthToken { get; set; } = string.Empty;
+
     public string ThemeMode { get; set; } = "light";
 }
 
@@ -47,6 +49,7 @@ public sealed class DesktopSettingsStorageService
             ? _defaults.ApiBaseUrl.Trim()
             : settings.ApiBaseUrl.Trim();
         settings.GoogleClientId = settings.GoogleClientId?.Trim() ?? string.Empty;
+        settings.AuthToken = settings.AuthToken?.Trim() ?? string.Empty;
         settings.ThemeMode = NormalizeThemeMode(settings.ThemeMode);
         return settings;
     }
@@ -59,6 +62,7 @@ public sealed class DesktopSettingsStorageService
                 ? _defaults.ApiBaseUrl.Trim()
                 : settings.ApiBaseUrl.Trim(),
             GoogleClientId = settings.GoogleClientId?.Trim() ?? string.Empty,
+            AuthToken = settings.AuthToken?.Trim() ?? string.Empty,
             ThemeMode = NormalizeThemeMode(settings.ThemeMode),
         };
 
@@ -83,6 +87,7 @@ public sealed class DesktopSettingsStorageService
         {
             ApiBaseUrl = _defaults.ApiBaseUrl.Trim(),
             GoogleClientId = _defaults.GoogleClientId?.Trim() ?? string.Empty,
+            AuthToken = string.Empty,
             ThemeMode = NormalizeThemeMode(_defaults.ThemeMode),
         };
     }

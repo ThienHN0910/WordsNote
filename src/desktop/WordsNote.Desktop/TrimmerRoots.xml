@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<linker>
+  <assembly fullname="WordsNote.Desktop">
+    <type fullname="WordsNote.Desktop.Services.Configuration.DesktopRuntimeOptions" preserve="all" />
+    <type fullname="WordsNote.Desktop.Services.Serialization.WordsNoteJsonSerializerContext" preserve="all" />
+    <type fullname="WordsNote.Desktop.Services.DesktopAppSettings" preserve="all" />
+    <type fullname="WordsNote.Desktop.Services.LocalManageData" preserve="all" />
+    <type fullname="WordsNote.Desktop.Models.StudyDeck" preserve="all" />
+    <type fullname="WordsNote.Desktop.Models.StudyCard" preserve="all" />
+    <type fullname="WordsNote.Desktop.Models.ImportCardsResult" preserve="all" />
+    <type fullname="WordsNote.Desktop.Services.GoogleAuthTokenRequest" preserve="all" />
+    <type fullname="WordsNote.Desktop.Services.CollectionUpsertRequest" preserve="all" />
+    <type fullname="WordsNote.Desktop.Services.CardUpsertRequest" preserve="all" />
+    <type fullname="WordsNote.Desktop.Services.CardsImportRequest" preserve="all" />
+  </assembly>
+</linker>

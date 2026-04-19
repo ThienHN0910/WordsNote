@@ -1,11 +1,14 @@
 using System.IO;
 using System.Text.Json;
+using Microsoft.Extensions.Options;
+using WordsNote.Desktop.Services.Configuration;
+using WordsNote.Desktop.Services.Serialization;
 
 namespace WordsNote.Desktop.Services;
 
 public sealed class DesktopAppSettings
 {
-    public string ApiBaseUrl { get; set; } = "http://words-note.runasp.net";
+    public string ApiBaseUrl { get; set; } = string.Empty;
 
     public string GoogleClientId { get; set; } = string.Empty;
 
@@ -14,39 +17,35 @@ public sealed class DesktopAppSettings
 
 public sealed class DesktopSettingsStorageService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        WriteIndented = true,
-    };
-
     private readonly string _filePath;
+    private readonly DesktopRuntimeOptions _defaults;
 
-    public DesktopSettingsStorageService()
+    public DesktopSettingsStorageService(IAppDataPathProvider pathProvider, IOptions<DesktopRuntimeOptions> runtimeOptions)
     {
-        var baseFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "WordsNote",
-            "desktop");
-        Directory.CreateDirectory(baseFolder);
-        _filePath = Path.Combine(baseFolder, "desktop-settings.json");
+        _filePath = pathProvider.GetFilePath("desktop-settings.json");
+        _defaults = runtimeOptions.Value;
     }
 
     public async Task<DesktopAppSettings> LoadAsync(CancellationToken cancellationToken = default)
     {
         if (!File.Exists(_filePath))
         {
-            return new DesktopAppSettings();
+            return CreateDefaultSettings();
         }
 
         await using var stream = File.OpenRead(_filePath);
-        var settings = await JsonSerializer.DeserializeAsync<DesktopAppSettings>(stream, JsonOptions, cancellationToken);
-        if (settings is null || string.IsNullOrWhiteSpace(settings.ApiBaseUrl))
+        var settings = await JsonSerializer.DeserializeAsync(
+            stream,
+            WordsNoteJsonSerializerContext.Default.DesktopAppSettings,
+            cancellationToken);
+        if (settings is null)
         {
-            return new DesktopAppSettings();
+            return CreateDefaultSettings();
         }
 
-        settings.ApiBaseUrl = settings.ApiBaseUrl.Trim();
+        settings.ApiBaseUrl = string.IsNullOrWhiteSpace(settings.ApiBaseUrl)
+            ? _defaults.ApiBaseUrl.Trim()
+            : settings.ApiBaseUrl.Trim();
         settings.GoogleClientId = settings.GoogleClientId?.Trim() ?? string.Empty;
         settings.ThemeMode = NormalizeThemeMode(settings.ThemeMode);
         return settings;
@@ -57,14 +56,18 @@ public sealed class DesktopSettingsStorageService
         var payload = new DesktopAppSettings
         {
             ApiBaseUrl = string.IsNullOrWhiteSpace(settings.ApiBaseUrl)
-                ? "http://words-note.runasp.net"
+                ? _defaults.ApiBaseUrl.Trim()
                 : settings.ApiBaseUrl.Trim(),
             GoogleClientId = settings.GoogleClientId?.Trim() ?? string.Empty,
             ThemeMode = NormalizeThemeMode(settings.ThemeMode),
         };
 
         await using var stream = File.Create(_filePath);
-        await JsonSerializer.SerializeAsync(stream, payload, JsonOptions, cancellationToken);
+        await JsonSerializer.SerializeAsync(
+            stream,
+            payload,
+            WordsNoteJsonSerializerContext.Default.DesktopAppSettings,
+            cancellationToken);
     }
 
     private static string NormalizeThemeMode(string? value)
@@ -72,5 +75,15 @@ public sealed class DesktopSettingsStorageService
         return string.Equals(value?.Trim(), "dark", StringComparison.OrdinalIgnoreCase)
             ? "dark"
             : "light";
+    }
+
+    private DesktopAppSettings CreateDefaultSettings()
+    {
+        return new DesktopAppSettings
+        {
+            ApiBaseUrl = _defaults.ApiBaseUrl.Trim(),
+            GoogleClientId = _defaults.GoogleClientId?.Trim() ?? string.Empty,
+            ThemeMode = NormalizeThemeMode(_defaults.ThemeMode),
+        };
     }
 }

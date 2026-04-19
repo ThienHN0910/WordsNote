@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<linker>
+  <!--
+    WPF transitively references System.Data surface (DataSet/DataTable XML paths)
+    that is trimming-unfriendly and generates noisy IL2026 analysis warnings.
+
+    This descriptor keeps specific framework assemblies untrimmed (action="copy")
+    to stabilize trimmed publish behavior without broad suppression of all warnings.
+  -->
+  <assembly fullname="System.Data" action="copy" />
+  <assembly fullname="System.Data.Common" action="copy" />
+  <assembly fullname="System.Data.DataSetExtensions" action="copy" />
+  <assembly fullname="PresentationFramework-SystemData" action="copy" />
+</linker>

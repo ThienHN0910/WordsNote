@@ -2,19 +2,24 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
+using Microsoft.Extensions.Options;
 using WordsNote.Desktop.Models;
+using WordsNote.Desktop.Services.Configuration;
+using WordsNote.Desktop.Services.Serialization;
 
 namespace WordsNote.Desktop.Services;
 
 public sealed class WordsNoteApiClient
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-    };
+    private readonly HttpClient _httpClient;
+    private string _baseUrl = string.Empty;
 
-    private readonly HttpClient _httpClient = new();
-    private string _baseUrl = "http://localhost:3000";
+    public WordsNoteApiClient(HttpClient httpClient, IOptions<DesktopRuntimeOptions> runtimeOptions)
+    {
+        _httpClient = httpClient;
+        SetBaseUrl(runtimeOptions.Value.ApiBaseUrl);
+    }
 
     public string BaseUrl => _baseUrl;
 
@@ -52,28 +57,54 @@ public sealed class WordsNoteApiClient
             throw new InvalidOperationException("Google ID token is required.");
         }
 
-        var payload = new Dictionary<string, string>
+        var payload = new GoogleAuthTokenRequest
         {
-            ["idToken"] = idToken.Trim(),
+            IdToken = idToken.Trim(),
         };
 
-        var response = await _httpClient.PostAsJsonAsync(BuildUri("/api/auth/google"), payload, cancellationToken);
+        var response = await _httpClient.PostAsJsonAsync(
+            BuildUri("/api/auth/google"),
+            payload,
+            WordsNoteJsonSerializerContext.Default.GoogleAuthTokenRequest,
+            cancellationToken);
         return await ReadTokenResponseAsync(response, cancellationToken);
     }
 
     public async Task<List<StudyDeck>> GetCollectionsAsync(CancellationToken cancellationToken = default)
     {
-        return await GetAsync<List<StudyDeck>>("/api/collections", cancellationToken) ?? [];
+        return await GetAsync("/api/collections", WordsNoteJsonSerializerContext.Default.ListStudyDeck, cancellationToken) ?? [];
     }
 
     public async Task<StudyDeck> CreateCollectionAsync(string title, string description, CancellationToken cancellationToken = default)
     {
-        return await PostAsync<StudyDeck>("/api/collections", new { title, description }, cancellationToken);
+        var payload = new CollectionUpsertRequest
+        {
+            Title = title,
+            Description = description,
+        };
+
+        return await PostAsync(
+            "/api/collections",
+            payload,
+            WordsNoteJsonSerializerContext.Default.CollectionUpsertRequest,
+            WordsNoteJsonSerializerContext.Default.StudyDeck,
+            cancellationToken);
     }
 
     public async Task<StudyDeck> UpdateCollectionAsync(string id, string title, string description, CancellationToken cancellationToken = default)
     {
-        return await PutAsync<StudyDeck>($"/api/collections/{id}", new { title, description }, cancellationToken);
+        var payload = new CollectionUpsertRequest
+        {
+            Title = title,
+            Description = description,
+        };
+
+        return await PutAsync(
+            $"/api/collections/{id}",
+            payload,
+            WordsNoteJsonSerializerContext.Default.CollectionUpsertRequest,
+            WordsNoteJsonSerializerContext.Default.StudyDeck,
+            cancellationToken);
     }
 
     public async Task DeleteCollectionAsync(string id, CancellationToken cancellationToken = default)
@@ -86,31 +117,45 @@ public sealed class WordsNoteApiClient
         var path = string.IsNullOrWhiteSpace(collectionId)
             ? "/api/cards"
             : $"/api/cards?collectionId={Uri.EscapeDataString(collectionId)}";
-        return await GetAsync<List<StudyCard>>(path, cancellationToken) ?? [];
+        return await GetAsync(path, WordsNoteJsonSerializerContext.Default.ListStudyCard, cancellationToken) ?? [];
     }
 
     public async Task<StudyCard> CreateCardAsync(string collectionId, string front, string back, string hint, IEnumerable<string> tags, CancellationToken cancellationToken = default)
     {
-        return await PostAsync<StudyCard>("/api/cards", new
+        var payload = new CardUpsertRequest
         {
-            collectionId,
-            front,
-            back,
-            hint,
-            tags,
-        }, cancellationToken);
+            CollectionId = collectionId,
+            Front = front,
+            Back = back,
+            Hint = hint,
+            Tags = [.. tags],
+        };
+
+        return await PostAsync(
+            "/api/cards",
+            payload,
+            WordsNoteJsonSerializerContext.Default.CardUpsertRequest,
+            WordsNoteJsonSerializerContext.Default.StudyCard,
+            cancellationToken);
     }
 
     public async Task<StudyCard> UpdateCardAsync(string cardId, string collectionId, string front, string back, string hint, IEnumerable<string> tags, CancellationToken cancellationToken = default)
     {
-        return await PutAsync<StudyCard>($"/api/cards/{cardId}", new
+        var payload = new CardUpsertRequest
         {
-            collectionId,
-            front,
-            back,
-            hint,
-            tags,
-        }, cancellationToken);
+            CollectionId = collectionId,
+            Front = front,
+            Back = back,
+            Hint = hint,
+            Tags = [.. tags],
+        };
+
+        return await PutAsync(
+            $"/api/cards/{cardId}",
+            payload,
+            WordsNoteJsonSerializerContext.Default.CardUpsertRequest,
+            WordsNoteJsonSerializerContext.Default.StudyCard,
+            cancellationToken);
     }
 
     public async Task DeleteCardAsync(string cardId, CancellationToken cancellationToken = default)
@@ -120,29 +165,46 @@ public sealed class WordsNoteApiClient
 
     public async Task<ImportCardsResult> ImportCardsAsync(string collectionId, string rawText, CancellationToken cancellationToken = default)
     {
-        return await PostAsync<ImportCardsResult>("/api/cards/import", new
+        var payload = new CardsImportRequest
         {
-            collectionId,
-            rawText,
-        }, cancellationToken);
+            CollectionId = collectionId,
+            RawText = rawText,
+        };
+
+        return await PostAsync(
+            "/api/cards/import",
+            payload,
+            WordsNoteJsonSerializerContext.Default.CardsImportRequest,
+            WordsNoteJsonSerializerContext.Default.ImportCardsResult,
+            cancellationToken);
     }
 
-    private async Task<T> GetAsync<T>(string path, CancellationToken cancellationToken)
+    private async Task<T> GetAsync<T>(string path, JsonTypeInfo<T> responseTypeInfo, CancellationToken cancellationToken)
     {
         var response = await _httpClient.GetAsync(BuildUri(path), cancellationToken);
-        return await ReadResponseAsync<T>(response, cancellationToken);
+        return await ReadResponseAsync(response, responseTypeInfo, cancellationToken);
     }
 
-    private async Task<T> PostAsync<T>(string path, object body, CancellationToken cancellationToken)
+    private async Task<TResponse> PostAsync<TRequest, TResponse>(
+        string path,
+        TRequest body,
+        JsonTypeInfo<TRequest> requestTypeInfo,
+        JsonTypeInfo<TResponse> responseTypeInfo,
+        CancellationToken cancellationToken)
     {
-        var response = await _httpClient.PostAsJsonAsync(BuildUri(path), body, cancellationToken);
-        return await ReadResponseAsync<T>(response, cancellationToken);
+        var response = await _httpClient.PostAsJsonAsync(BuildUri(path), body, requestTypeInfo, cancellationToken);
+        return await ReadResponseAsync(response, responseTypeInfo, cancellationToken);
     }
 
-    private async Task<T> PutAsync<T>(string path, object body, CancellationToken cancellationToken)
+    private async Task<TResponse> PutAsync<TRequest, TResponse>(
+        string path,
+        TRequest body,
+        JsonTypeInfo<TRequest> requestTypeInfo,
+        JsonTypeInfo<TResponse> responseTypeInfo,
+        CancellationToken cancellationToken)
     {
-        var response = await _httpClient.PutAsJsonAsync(BuildUri(path), body, cancellationToken);
-        return await ReadResponseAsync<T>(response, cancellationToken);
+        var response = await _httpClient.PutAsJsonAsync(BuildUri(path), body, requestTypeInfo, cancellationToken);
+        return await ReadResponseAsync(response, responseTypeInfo, cancellationToken);
     }
 
     private async Task DeleteAsync(string path, CancellationToken cancellationToken)
@@ -157,7 +219,10 @@ public sealed class WordsNoteApiClient
         throw new InvalidOperationException(ExtractError(content, response.StatusCode));
     }
 
-    private async Task<T> ReadResponseAsync<T>(HttpResponseMessage response, CancellationToken cancellationToken)
+    private async Task<T> ReadResponseAsync<T>(
+        HttpResponseMessage response,
+        JsonTypeInfo<T> responseTypeInfo,
+        CancellationToken cancellationToken)
     {
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
         if (!response.IsSuccessStatusCode)
@@ -165,12 +230,7 @@ public sealed class WordsNoteApiClient
             throw new InvalidOperationException(ExtractError(content, response.StatusCode));
         }
 
-        if (typeof(T) == typeof(string))
-        {
-            return (T)(object)content;
-        }
-
-        var value = JsonSerializer.Deserialize<T>(content, JsonOptions);
+        var value = JsonSerializer.Deserialize(content, responseTypeInfo);
         if (value is null)
         {
             throw new InvalidOperationException("API returned empty response.");
@@ -219,8 +279,7 @@ public sealed class WordsNoteApiClient
                 }
             }
 
-            var token = JsonSerializer.Deserialize<string>(content, JsonOptions);
-            return token ?? string.Empty;
+            return content.Trim('"', ' ', '\n', '\r', '\t');
         }
         catch
         {
@@ -263,4 +322,36 @@ public sealed class WordsNoteApiClient
     {
         return new($"{_baseUrl.TrimEnd('/')}{path}");
     }
+}
+
+internal sealed class GoogleAuthTokenRequest
+{
+    public string IdToken { get; set; } = string.Empty;
+}
+
+internal sealed class CollectionUpsertRequest
+{
+    public string Title { get; set; } = string.Empty;
+
+    public string Description { get; set; } = string.Empty;
+}
+
+internal sealed class CardUpsertRequest
+{
+    public string CollectionId { get; set; } = string.Empty;
+
+    public string Front { get; set; } = string.Empty;
+
+    public string Back { get; set; } = string.Empty;
+
+    public string Hint { get; set; } = string.Empty;
+
+    public List<string> Tags { get; set; } = [];
+}
+
+internal sealed class CardsImportRequest
+{
+    public string CollectionId { get; set; } = string.Empty;
+
+    public string RawText { get; set; } = string.Empty;
 }

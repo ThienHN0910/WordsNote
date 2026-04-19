@@ -1,27 +1,17 @@
 using System.Text.Json;
 using System.IO;
 using WordsNote.Desktop.Models;
+using WordsNote.Desktop.Services.Serialization;
 
 namespace WordsNote.Desktop.Services;
 
 public sealed class LocalManageStorageService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        WriteIndented = true,
-    };
-
     private readonly string _filePath;
 
-    public LocalManageStorageService()
+    public LocalManageStorageService(IAppDataPathProvider pathProvider)
     {
-        var baseFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "WordsNote",
-            "desktop");
-        Directory.CreateDirectory(baseFolder);
-        _filePath = Path.Combine(baseFolder, "manage-local-data.json");
+        _filePath = pathProvider.GetFilePath("manage-local-data.json");
     }
 
     public async Task<(List<StudyDeck> Decks, List<StudyCard> Cards)> LoadAsync(CancellationToken cancellationToken = default)
@@ -32,7 +22,10 @@ public sealed class LocalManageStorageService
         }
 
         await using var stream = File.OpenRead(_filePath);
-        var data = await JsonSerializer.DeserializeAsync<LocalManageData>(stream, JsonOptions, cancellationToken);
+        var data = await JsonSerializer.DeserializeAsync(
+            stream,
+            WordsNoteJsonSerializerContext.Default.LocalManageData,
+            cancellationToken);
         return (data?.Decks ?? [], data?.Cards ?? []);
     }
 
@@ -46,7 +39,11 @@ public sealed class LocalManageStorageService
         };
 
         await using var stream = File.Create(_filePath);
-        await JsonSerializer.SerializeAsync(stream, payload, JsonOptions, cancellationToken);
+        await JsonSerializer.SerializeAsync(
+            stream,
+            payload,
+            WordsNoteJsonSerializerContext.Default.LocalManageData,
+            cancellationToken);
     }
 
     private static StudyDeck CloneDeck(StudyDeck deck)
@@ -78,12 +75,13 @@ public sealed class LocalManageStorageService
         };
     }
 
-    private sealed class LocalManageData
-    {
-        public string UpdatedAt { get; set; } = string.Empty;
+}
 
-        public List<StudyDeck> Decks { get; set; } = [];
+internal sealed class LocalManageData
+{
+    public string UpdatedAt { get; set; } = string.Empty;
 
-        public List<StudyCard> Cards { get; set; } = [];
-    }
+    public List<StudyDeck> Decks { get; set; } = [];
+
+    public List<StudyCard> Cards { get; set; } = [];
 }

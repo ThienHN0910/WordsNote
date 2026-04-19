@@ -10,10 +10,11 @@ namespace WordsNote.Desktop;
 /// </summary>
 public partial class MainWindow : Window
 {
-    private readonly MainViewModel _viewModel = new();
+    private readonly MainViewModel _viewModel;
 
-    public MainWindow()
+    public MainWindow(MainViewModel viewModel)
     {
+        _viewModel = viewModel;
         InitializeComponent();
         DataContext = _viewModel;
     }

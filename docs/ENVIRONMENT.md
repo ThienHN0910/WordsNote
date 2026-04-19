@@ -116,11 +116,27 @@ Notes:
 
 ## Desktop (WPF) Configuration
 
-Desktop app currently uses runtime API base URL configured in-app from the top bar.
+Desktop app now uses `appsettings.json` + environment-variable override with DI/IConfiguration.
 
-Default value:
+Desktop configuration source priority:
 
-- `http://words-note.runasp.net`
+1. `WORDSNOTE_` environment variables
+2. `appsettings.{DOTNET_ENVIRONMENT}.json`
+3. `appsettings.json`
+4. persisted user settings at runtime (`desktop-settings.json`)
+
+Config section:
+
+- `Desktop:ApiBaseUrl`
+- `Desktop:GoogleClientId`
+- `Desktop:ThemeMode`
+- `Desktop:LocalDataFolderName`
+
+Environment variable examples:
+
+- `WORDSNOTE_Desktop__ApiBaseUrl=https://api.example.com`
+- `WORDSNOTE_Desktop__GoogleClientId=...`
+- `WORDSNOTE_Desktop__ThemeMode=dark`
 
 Desktop authentication behavior:
 
@@ -132,6 +148,8 @@ Desktop feature/auth scope:
 
 - Manage workspace works in local mode without auth and persists data to local JSON storage:
   - `%LocalAppData%/WordsNote/desktop/manage-local-data.json`
+- Desktop settings are persisted under:
+  - `%LocalAppData%/WordsNote/desktop/desktop-settings.json`
 - After Google login, desktop enters cloud mode for manage operations and enables both sync directions:
   - `Sync Local -> Cloud`
   - `Sync Cloud -> Local`
@@ -143,6 +161,10 @@ Run desktop locally:
 dotnet build src/desktop/WordsNote.Desktop.sln
 dotnet run --project src/desktop/WordsNote.Desktop/WordsNote.Desktop.csproj
 ```
+
+MSIX packaging project path:
+
+- `src/desktop/WordsNote.Package/WordsNote.Package.wapproj`
 
 ## Chrome Extension Configuration
 

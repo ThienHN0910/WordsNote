@@ -4,8 +4,10 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Options;
 using WordsNote.Desktop.Models;
 using WordsNote.Desktop.Services;
+using WordsNote.Desktop.Services.Configuration;
 
 namespace WordsNote.Desktop.ViewModels;
 
@@ -18,20 +20,17 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private const int LoginTabIndex = 5;
     private const int PrivacyTabIndex = 2;
 
-    private readonly WordsNoteApiClient _apiClient = new();
-    private readonly LocalManageStorageService _localManageStorage = new();
-    private readonly GoogleBrowserAuthService _googleBrowserAuthService = new();
-    private readonly DesktopSettingsStorageService _settingsStorage = new();
+    private readonly WordsNoteApiClient _apiClient;
+    private readonly LocalManageStorageService _localManageStorage;
+    private readonly GoogleBrowserAuthService _googleBrowserAuthService;
+    private readonly DesktopSettingsStorageService _settingsStorage;
 
-    private string _apiBaseUrl = "http://words-note.runasp.net";
+    private string _apiBaseUrl = string.Empty;
     private bool _isBusy;
     private string _statusMessage = "Ready";
     private int _selectedTabIndex;
 
-    private string _googleClientId =
-        Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID")
-        ?? Environment.GetEnvironmentVariable("VITE_GOOGLE_CLIENT_ID")
-        ?? string.Empty;
+    private string _googleClientId = string.Empty;
     private string _googleIdToken = string.Empty;
     private string _authToken = string.Empty;
     private bool _isAuthenticated;
@@ -92,6 +91,24 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ObservableCollection<StudyCard> FilteredManageCards { get; } = [];
 
     public ObservableCollection<string> LearnPracticeOptions { get; } = [];
+
+    public MainViewModel(
+        WordsNoteApiClient apiClient,
+        LocalManageStorageService localManageStorage,
+        GoogleBrowserAuthService googleBrowserAuthService,
+        DesktopSettingsStorageService settingsStorage,
+        IOptions<DesktopRuntimeOptions> runtimeOptions)
+    {
+        _apiClient = apiClient;
+        _localManageStorage = localManageStorage;
+        _googleBrowserAuthService = googleBrowserAuthService;
+        _settingsStorage = settingsStorage;
+
+        var defaults = runtimeOptions.Value;
+        _apiBaseUrl = defaults.ApiBaseUrl.Trim();
+        _googleClientId = defaults.GoogleClientId?.Trim() ?? string.Empty;
+        _themeMode = NormalizeThemeMode(defaults.ThemeMode);
+    }
 
     public string ApiBaseUrl
     {

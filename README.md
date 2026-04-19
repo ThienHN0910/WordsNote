@@ -112,7 +112,9 @@ Load unpacked extension from src/extension/dist.
 - dotnet build src/desktop/WordsNote.Desktop.sln
 - dotnet run --project src/desktop/WordsNote.Desktop/WordsNote.Desktop.csproj
 
-Desktop default API base URL is `http://words-note.runasp.net` and can be changed in-app.
+Desktop defaults are loaded from `src/desktop/WordsNote.Desktop/appsettings.json`.
+Override values by environment variables with prefix `WORDSNOTE_` (for example `WORDSNOTE_Desktop__ApiBaseUrl`).
+For MSIX packaging (`src/desktop/WordsNote.Package`), build from Visual Studio with Windows packaging tooling installed.
 
 Note:
 Current extension host permissions are configured for words-note.runasp.net.
@@ -142,6 +144,7 @@ Detailed contracts are documented in docs/API_REFERENCE.md.
 - docs/AGENT_REPLICATION_PLAYBOOK.md
 - docs/WORDSNOTE_EXECUTION_PLAN.md
 - docs/WPF_DESKTOP_EXECUTION_PLAN.md
+- docs/MSIX_STORE_PREP.md
 
 ## Build Status (Latest)
 

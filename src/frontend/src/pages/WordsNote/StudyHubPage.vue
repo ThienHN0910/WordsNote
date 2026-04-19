@@ -7,9 +7,70 @@
       <p class="text-muted small mode-label">
         Mode: {{ isAuthenticated ? 'Cloud (authenticated)' : 'Local (no login)' }}
       </p>
+
+      <section class="sync-panel">
+        <h2>Cloud and Sync Quick Actions</h2>
+        <p class="text-muted small">
+          Without login, actions remain local. Use Sync Cloud -> Local to copy cloud data into browser storage.
+          Use Sync Local -> Cloud after login.
+        </p>
+        <div class="actions-row">
+          <button class="btn btn-outline-primary btn-sm" :disabled="isSyncing || isManageLoading" @click="handleSyncCloudToLocal">
+            {{ isSyncing ? 'Syncing...' : 'Sync Cloud -> Local' }}
+          </button>
+          <button class="btn btn-primary btn-sm" :disabled="!canSyncLocalToCloud" @click="handleSyncLocalToCloud">
+            {{ isSyncing ? 'Syncing...' : 'Sync Local -> Cloud' }}
+          </button>
+        </div>
+        <p v-if="syncMessage" class="sync-note ok">{{ syncMessage }}</p>
+        <p v-if="syncError" class="sync-note warn">{{ syncError }}</p>
+      </section>
     </header>
 
-    <div class="manage-grid">
+    <div v-if="isManageLoading" class="manage-grid manage-grid-skeleton">
+      <aside class="panel panel-skeleton">
+        <AppSkeleton width="45%" height="20px" radius="10px" />
+        <div class="stack" style="margin-top: 0.7rem;">
+          <AppSkeleton height="38px" radius="10px" />
+          <AppSkeleton height="78px" radius="10px" />
+          <AppSkeleton width="34%" height="1px" radius="1px" />
+          <AppSkeleton width="46%" height="20px" radius="10px" />
+          <AppSkeleton height="38px" radius="10px" />
+          <AppSkeleton height="38px" radius="10px" />
+          <AppSkeleton v-for="slot in 5" :key="`deck-skeleton-${slot}`" height="56px" radius="12px" />
+        </div>
+      </aside>
+
+      <main class="panel panel-skeleton main-panel">
+        <AppSkeleton width="54%" height="30px" radius="10px" />
+        <AppSkeleton width="72%" height="16px" radius="10px" />
+
+        <div class="metrics metrics-skeleton">
+          <article v-for="metric in 3" :key="`metric-skeleton-${metric}`">
+            <AppSkeleton width="66%" height="12px" radius="10px" />
+            <AppSkeleton width="40%" height="28px" radius="10px" />
+          </article>
+        </div>
+
+        <AppSkeleton width="26%" height="22px" radius="10px" />
+        <div class="stack" style="margin-top: 0.4rem;">
+          <AppSkeleton height="42px" radius="10px" />
+          <AppSkeleton height="42px" radius="10px" />
+          <AppSkeleton height="42px" radius="10px" />
+          <AppSkeleton height="42px" radius="10px" />
+        </div>
+
+        <AppSkeleton width="20%" height="22px" radius="10px" style="margin-top: 1rem;" />
+        <AppSkeleton height="106px" radius="10px" style="margin-top: 0.4rem;" />
+
+        <AppSkeleton width="18%" height="22px" radius="10px" style="margin-top: 1rem;" />
+        <div class="stack" style="margin-top: 0.45rem;">
+          <AppSkeleton v-for="row in 3" :key="`card-row-skeleton-${row}`" height="92px" radius="12px" />
+        </div>
+      </main>
+    </div>
+
+    <div v-else class="manage-grid">
       <aside class="panel">
         <h2>Create collection</h2>
         <form class="stack" @submit.prevent="handleCreateDeck">
@@ -222,6 +283,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/AS/AuthStore'
 import { useStudyStore } from '@/stores/WordsNote/StudyStore'
+import AppSkeleton from '@/components/ui/AppSkeleton.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -263,8 +325,13 @@ const deckSort = ref<'recent' | 'title' | 'cards'>('recent')
 const cardQuery = ref('')
 const cardFilter = ref<'all' | 'due' | 'mastered' | 'new'>('all')
 const cardSort = ref<'dueSoon' | 'frontAZ' | 'recentReview' | 'streakDesc'>('dueSoon')
+const isSyncing = ref(false)
+const syncMessage = ref('')
+const syncError = ref('')
+const isManageLoading = ref(true)
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
+const canSyncLocalToCloud = computed(() => isAuthenticated.value && !isSyncing.value && !isManageLoading.value)
 
 const deckList = computed(() => studyStore.deckList)
 const filteredDeckList = computed(() => {
@@ -419,6 +486,52 @@ async function handleImportCards() {
   }
 }
 
+async function handleSyncCloudToLocal() {
+  syncError.value = ''
+  syncMessage.value = ''
+  isSyncing.value = true
+
+  try {
+    const currentDeckId = selectedDeckId.value
+    const result = await studyStore.syncCloudToLocal()
+
+    if (currentDeckId && studyStore.getDeckById(currentDeckId)) {
+      selectedDeckId.value = currentDeckId
+    } else {
+      selectedDeckId.value = studyStore.deckList[0]?.id ?? ''
+    }
+
+    syncMessage.value = `Synced cloud -> local with ${result.deckCount} collection(s) and ${result.cardCount} card(s).`
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unable to sync cloud data to local.'
+    syncError.value = message
+  } finally {
+    isSyncing.value = false
+  }
+}
+
+async function handleSyncLocalToCloud() {
+  syncError.value = ''
+  syncMessage.value = ''
+
+  if (!isAuthenticated.value) {
+    syncError.value = 'Please login with Google first to sync local data to cloud.'
+    return
+  }
+
+  isSyncing.value = true
+
+  try {
+    const result = await studyStore.syncLocalToCloud()
+    syncMessage.value = `Synced ${result.deckCount} local collection(s), uploaded ${result.uploadedCards} new card(s), updated ${result.updatedCards} card(s) in cloud.`
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unable to sync local data to cloud.'
+    syncError.value = message
+  } finally {
+    isSyncing.value = false
+  }
+}
+
 function clearCreateCardForm() {
   createCardForm.front = ''
   createCardForm.back = ''
@@ -490,12 +603,26 @@ function goToSession() {
   })
 }
 
-onMounted(async () => {
-  await studyStore.load()
+async function reloadManageWorkspace(preferredDeckId?: string) {
+  isManageLoading.value = true
 
-  if (studyStore.deckList.length > 0) {
-    selectedDeckId.value = studyStore.deckList[0].id
+  try {
+    await studyStore.load()
+
+    const targetDeckId = preferredDeckId ?? selectedDeckId.value
+    if (targetDeckId && studyStore.getDeckById(targetDeckId)) {
+      selectedDeckId.value = targetDeckId
+      return
+    }
+
+    selectedDeckId.value = studyStore.deckList[0]?.id ?? ''
+  } finally {
+    isManageLoading.value = false
   }
+}
+
+onMounted(async () => {
+  await reloadManageWorkspace()
 })
 
 watch(selectedDeckId, () => {
@@ -520,14 +647,7 @@ watch(filteredDeckList, (nextDecks) => {
 
 watch(isAuthenticated, async () => {
   const currentDeckId = selectedDeckId.value
-  await studyStore.load()
-
-  if (currentDeckId && studyStore.getDeckById(currentDeckId)) {
-    selectedDeckId.value = currentDeckId
-    return
-  }
-
-  selectedDeckId.value = studyStore.deckList[0]?.id ?? ''
+  await reloadManageWorkspace(currentDeckId)
 })
 </script>
 
@@ -554,10 +674,56 @@ watch(isAuthenticated, async () => {
   color: var(--wn-muted);
 }
 
+.sync-panel {
+  margin-top: 0.8rem;
+  border: 1px solid var(--wn-border);
+  border-radius: 14px;
+  background: var(--wn-surface-soft);
+  padding: 0.75rem;
+}
+
+.sync-panel h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.sync-note {
+  margin: 0.55rem 0 0;
+  font-size: 0.9rem;
+}
+
+.ok {
+  color: #0f766e;
+  font-weight: 600;
+}
+
+.warn {
+  color: #b45309;
+  font-weight: 600;
+}
+
 .manage-grid {
   display: grid;
   grid-template-columns: 320px 1fr;
   gap: 1rem;
+}
+
+.manage-loader {
+  margin-top: 1rem;
+}
+
+.manage-grid-skeleton {
+  align-items: start;
+}
+
+.panel-skeleton {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.metrics-skeleton article {
+  display: grid;
+  gap: 0.5rem;
 }
 
 .panel {

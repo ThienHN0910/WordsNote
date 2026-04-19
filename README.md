@@ -30,6 +30,9 @@ WordsNote is a learning platform for vocabulary and flashcards, delivered as:
   - /privacy-policy?lang=en
 - Local-first management route: /manage (no login required, browser local storage)
   - Card UX: create form is create-only; editing runs in popup modal from card actions
+  - Cloud/Sync quick actions in Manage:
+    - Sync Cloud -> Local copies cloud collections/cards into browser local storage
+    - Sync Local -> Cloud uploads local collections/cards to cloud (requires login)
 - Auth-required focused session route: /manage/:deckId/session
 - Google sign-in is optional and used for cloud-backed session/deep-study actions
 

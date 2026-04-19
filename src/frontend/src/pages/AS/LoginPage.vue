@@ -12,7 +12,14 @@
             <div ref="googleButtonRef"></div>
           </div>
 
-          <div v-if="isLoading" class="text-center text-muted mb-3">Signing in...</div>
+          <div v-if="isLoading" class="mb-3 d-flex justify-content-center">
+            <AppLoading
+              variant="inline"
+              size="sm"
+              label="Signing in"
+              description="Validating your Google account..."
+            />
+          </div>
 
           <div v-if="errorMessage" class="alert alert-danger mb-0" role="alert">
             {{ errorMessage }}
@@ -27,6 +34,7 @@ import { onMounted, ref } from 'vue'
 import { AuthService } from '@/services/AS/AuthService'
 import { useAuthStore } from '@/stores/AS/AuthStore'
 import { useRoute, useRouter } from 'vue-router'
+import AppLoading from '@/components/ui/AppLoading.vue'
 
 const googleButtonRef = ref<HTMLElement | null>(null)
 const isLoading = ref(false)

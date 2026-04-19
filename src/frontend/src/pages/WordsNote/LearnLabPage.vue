@@ -8,32 +8,59 @@
         <RouterLink to="/manage">Manage</RouterLink> data.
       </p>
       <p v-if="!isLoadingManage" class="source-note ok">{{ sourceNote }}</p>
-      <p v-else class="source-note">Loading collection data...</p>
+      <div v-else class="source-skeleton">
+        <AppSkeleton width="270px" height="13px" radius="999px" />
+      </div>
       <p v-if="manageLoadError" class="source-note warn">{{ manageLoadError }}</p>
     </header>
 
     <div class="learn-grid">
       <aside class="deck-panel">
         <h2>Decks</h2>
-        <p v-if="isLoadingManage" class="muted">Loading your Manage decks...</p>
-        <p v-else-if="learnDecks.length === 0" class="muted">
-          No collections yet. Create one in <RouterLink class="manage-link" to="/manage">Manage</RouterLink>.
-        </p>
+        <div v-if="isLoadingManage" class="deck-skeleton-list">
+          <AppSkeleton v-for="slot in 6" :key="slot" height="56px" radius="12px" />
+        </div>
+        <template v-else>
+          <p v-if="learnDecks.length === 0" class="muted">
+            No collections yet. Create one in <RouterLink class="manage-link" to="/manage">Manage</RouterLink>.
+          </p>
 
-        <button
-          v-for="deck in learnDecks"
-          :key="deck.id"
-          class="deck-button"
-          :class="{ active: activeDeck?.id === deck.id }"
-          @click="selectDeck(deck.id)"
-        >
-          <strong>{{ deck.title }}</strong>
-          <small>{{ deck.cards.length }} cards</small>
-        </button>
+          <button
+            v-for="deck in learnDecks"
+            :key="deck.id"
+            class="deck-button"
+            :class="{ active: activeDeck?.id === deck.id }"
+            @click="selectDeck(deck.id)"
+          >
+            <strong>{{ deck.title }}</strong>
+            <small>{{ deck.cards.length }} cards</small>
+          </button>
+        </template>
       </aside>
 
       <main class="lab-panel">
-        <div v-if="!activeDeck" class="empty-state">
+        <section v-if="isLoadingManage" class="learn-card-skeleton">
+          <div class="mode-skeleton-row">
+            <AppSkeleton width="108px" height="34px" radius="999px" />
+            <AppSkeleton width="86px" height="34px" radius="999px" />
+            <AppSkeleton width="94px" height="34px" radius="999px" />
+          </div>
+          <AppSkeleton width="58%" height="18px" radius="10px" />
+
+          <div class="learn-card-skeleton-box">
+            <AppSkeleton width="22%" height="11px" radius="999px" />
+            <AppSkeleton width="85%" height="26px" radius="10px" />
+            <AppSkeleton width="44%" height="13px" radius="10px" />
+
+            <div class="learn-card-skeleton-options">
+              <AppSkeleton width="32%" height="40px" radius="10px" />
+              <AppSkeleton width="30%" height="40px" radius="10px" />
+              <AppSkeleton width="24%" height="40px" radius="10px" />
+            </div>
+          </div>
+        </section>
+
+        <div v-else-if="!activeDeck" class="empty-state">
           <p>No deck available yet.</p>
           <RouterLink class="manage-link" to="/manage">Create collection in Manage</RouterLink>
         </div>
@@ -127,6 +154,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useStudyStore } from '@/stores/WordsNote/StudyStore'
+import AppSkeleton from '@/components/ui/AppSkeleton.vue'
 
 interface LearnCard {
   id: string
@@ -416,6 +444,10 @@ onUnmounted(() => {
   font-size: 0.9rem;
 }
 
+.source-skeleton {
+  margin-top: 0.25rem;
+}
+
 .learn-grid {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -433,6 +465,11 @@ onUnmounted(() => {
 
 .deck-panel h2 {
   margin-top: 0;
+}
+
+.deck-skeleton-list {
+  display: grid;
+  gap: 0.5rem;
 }
 
 .deck-button {
@@ -487,6 +524,35 @@ onUnmounted(() => {
   padding: 1rem;
   background: var(--wn-surface-soft);
   min-height: 270px;
+}
+
+.learn-card-skeleton {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.mode-skeleton-row {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.learn-card-skeleton-box {
+  border-radius: 16px;
+  border: 1px dashed var(--wn-border);
+  padding: 1rem;
+  background: var(--wn-surface-soft);
+  min-height: 240px;
+  display: grid;
+  align-content: center;
+  gap: 0.7rem;
+}
+
+.learn-card-skeleton-options {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
 }
 
 .flip-card {

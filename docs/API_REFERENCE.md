@@ -7,6 +7,9 @@ Base path: `/api`
 - Public learning experience (`/learn` in frontend) does not require authentication.
 - Learn reads collections/cards via public read endpoints.
 - Collection and card write operations for management require JWT authentication.
+- Frontend Manage supports two-way sync behavior on top of existing APIs:
+	- `Sync Cloud -> Local`: reads `GET /api/collections` + `GET /api/cards` and stores snapshot in browser local storage.
+	- `Sync Local -> Cloud`: requires login; upserts local collections/cards through existing collections/cards write APIs.
 - Public legal page is available at frontend route `/privacy-policy` with language query `?lang=vi|en`.
 - Extension Cloud mode uses only public read endpoints (`GET /api/collections`, `GET /api/cards`) and syncs results to local storage client-side.
 - WPF desktop app mirrors frontend feature scope:

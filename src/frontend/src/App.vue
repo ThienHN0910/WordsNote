@@ -2,13 +2,28 @@
   <div class="app-shell">
     <AppNavbar />
     <main class="app-main">
-      <RouterView />
+      <RouterView v-slot="{ Component }">
+        <Suspense timeout="0">
+          <component :is="Component" />
+
+          <template #fallback>
+            <AppLoading
+              variant="page"
+              size="lg"
+              label="Loading page"
+              description="Preparing your workspace..."
+              :full-height="true"
+            />
+          </template>
+        </Suspense>
+      </RouterView>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
 import AppNavbar from './components/AppNavbar.vue'
+import AppLoading from './components/ui/AppLoading.vue'
 import { RouterView } from 'vue-router'
 </script>
 

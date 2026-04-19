@@ -9,7 +9,15 @@
       <button class="btn btn-outline-secondary" @click="goBack">Back to Manage</button>
     </div>
 
-    <div v-if="!deck" class="alert alert-warning">Collection not found.</div>
+    <AppLoading
+      v-if="isLoadingSession"
+      variant="page"
+      size="lg"
+      label="Loading session"
+      description="Preparing due cards and study state..."
+    />
+
+    <div v-else-if="!deck" class="alert alert-warning">Collection not found.</div>
 
     <template v-else>
       <div class="mode-switch">
@@ -83,6 +91,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStudyStore } from '@/stores/WordsNote/StudyStore'
 import type { CardDifficulty } from '@/types/WordsNote'
+import AppLoading from '@/components/ui/AppLoading.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -94,6 +103,7 @@ const showAnswer = ref(false)
 const quizAnswer = ref('')
 const quizFeedback = ref('')
 const quizCorrect = ref(false)
+const isLoadingSession = ref(true)
 
 const deckId = computed(() => String(route.params.deckId ?? ''))
 const deck = computed(() => studyStore.getDeckById(deckId.value))
@@ -159,8 +169,12 @@ function goBack() {
 }
 
 onMounted(async () => {
-  if (studyStore.deckList.length === 0) {
-    await studyStore.load()
+  try {
+    if (studyStore.deckList.length === 0) {
+      await studyStore.load()
+    }
+  } finally {
+    isLoadingSession.value = false
   }
 })
 

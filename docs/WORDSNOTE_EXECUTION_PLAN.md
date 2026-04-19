@@ -10,6 +10,7 @@
 - Completed: Phase 6 cleanup and UX redesign finalization
 - Completed: Phase 7 desktop WPF rollout (landing, learn, manage, privacy + local/cloud sync)
 - Completed: Phase 8 web parity hotfix (auth persistence, public learn resilience, desktop-web copy alignment)
+- Completed: Phase 9 frontend manage sync parity (Sync Cloud -> Local and Sync Local -> Cloud)
 
 ## Release Snapshot (2026-04-19)
 

@@ -106,39 +106,43 @@ function normalizeSyncState(raw) {
 
 function normalizeLocalCollection(collection) {
   return {
-    id: String(collection.id || '').trim(),
-    title: String(collection.title || '').trim(),
-    description: String(collection.description || '').trim(),
+    id: String(collection.id || collection.Id || '').trim(),
+    title: String(collection.title || collection.Title || '').trim(),
+    description: String(collection.description || collection.Description || '').trim(),
   };
 }
 
 function normalizeLocalCard(card) {
   return {
-    id: String(card.id || '').trim(),
-    collectionId: String(card.collectionId || card.deckId || '').trim(),
-    front: String(card.front || '').trim(),
-    back: String(card.back || '').trim(),
-    hint: String(card.hint || '').trim(),
-    tags: Array.isArray(card.tags) ? card.tags.map((tag) => String(tag).trim()).filter(Boolean) : [],
+    id: String(card.id || card.Id || '').trim(),
+    collectionId: String(card.collectionId || card.CollectionId || card.deckId || card.DeckId || '').trim(),
+    front: String(card.front || card.Front || '').trim(),
+    back: String(card.back || card.Back || '').trim(),
+    hint: String(card.hint || card.Hint || '').trim(),
+    tags: Array.isArray(card.tags || card.Tags)
+      ? (card.tags || card.Tags || []).map((tag) => String(tag).trim()).filter(Boolean)
+      : [],
   };
 }
 
 function normalizeCloudCollection(collection) {
   return {
-    id: String(collection.id || '').trim(),
-    title: String(collection.title || '').trim(),
-    description: String(collection.description || '').trim(),
+    id: String(collection.id || collection.Id || '').trim(),
+    title: String(collection.title || collection.Title || '').trim(),
+    description: String(collection.description || collection.Description || '').trim(),
   };
 }
 
 function normalizeCloudCard(card) {
   return {
-    id: String(card.id || '').trim(),
-    collectionId: String(card.collectionId || card.deckId || '').trim(),
-    front: String(card.front || '').trim(),
-    back: String(card.back || '').trim(),
-    hint: String(card.hint || '').trim(),
-    tags: Array.isArray(card.tags) ? card.tags.map((tag) => String(tag).trim()).filter(Boolean) : [],
+    id: String(card.id || card.Id || '').trim(),
+    collectionId: String(card.collectionId || card.CollectionId || card.deckId || card.DeckId || '').trim(),
+    front: String(card.front || card.Front || '').trim(),
+    back: String(card.back || card.Back || '').trim(),
+    hint: String(card.hint || card.Hint || '').trim(),
+    tags: Array.isArray(card.tags || card.Tags)
+      ? (card.tags || card.Tags || []).map((tag) => String(tag).trim()).filter(Boolean)
+      : [],
   };
 }
 

@@ -60,6 +60,9 @@ const onGoogleCredential = async (credential: string) => {
     }
 
     authStore.setAuthToken(response.data)
+    if (!authStore.hasAuthSession) {
+      throw new Error('Backend login response did not contain a valid JWT token.')
+    }
     router.push(resolveRedirectRoute())
   } catch (error) {
     errorMessage.value = `Login failed. ${error}`

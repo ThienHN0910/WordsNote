@@ -41,12 +41,23 @@ type StudyLoadSource = 'cloud' | 'local'
 
 type CloudDeckPayload = Partial<StudyDeck> & {
   Id?: string
+  Title?: string
+  Description?: string
+  CreatedAt?: string
+  UpdatedAt?: string
 }
 
 type CloudCardPayload = Partial<StudyCard> & {
   Id?: string
   CollectionId?: string
   DeckId?: string
+  Front?: string
+  Back?: string
+  Hint?: string
+  Tags?: string[]
+  DueAt?: string
+  LastReviewedAt?: string
+  Streak?: number
 }
 
 export const useStudyStore = defineStore('study', () => {
@@ -60,10 +71,10 @@ export const useStudyStore = defineStore('study', () => {
 
     return {
       id: String(rawDeck.id ?? rawDeck.Id ?? '').trim(),
-      title: String(rawDeck.title ?? '').trim(),
-      description: String(rawDeck.description ?? '').trim(),
-      createdAt: String(rawDeck.createdAt ?? now),
-      updatedAt: String(rawDeck.updatedAt ?? rawDeck.createdAt ?? now),
+      title: String(rawDeck.title ?? rawDeck.Title ?? '').trim(),
+      description: String(rawDeck.description ?? rawDeck.Description ?? '').trim(),
+      createdAt: String(rawDeck.createdAt ?? rawDeck.CreatedAt ?? now),
+      updatedAt: String(rawDeck.updatedAt ?? rawDeck.UpdatedAt ?? rawDeck.createdAt ?? rawDeck.CreatedAt ?? now),
     }
   }
 
@@ -77,13 +88,17 @@ export const useStudyStore = defineStore('study', () => {
       id: String(rawCard.id ?? rawCard.Id ?? '').trim(),
       collectionId,
       deckId: collectionId || undefined,
-      front: String(rawCard.front ?? '').trim(),
-      back: String(rawCard.back ?? '').trim(),
-      hint: rawCard.hint ? String(rawCard.hint).trim() : undefined,
-      tags: Array.isArray(rawCard.tags) ? rawCard.tags.map((tag) => String(tag).trim()).filter(Boolean) : [],
-      dueAt: String(rawCard.dueAt ?? now),
-      lastReviewedAt: rawCard.lastReviewedAt ? String(rawCard.lastReviewedAt) : undefined,
-      streak: Number(rawCard.streak ?? 0),
+      front: String(rawCard.front ?? rawCard.Front ?? '').trim(),
+      back: String(rawCard.back ?? rawCard.Back ?? '').trim(),
+      hint: rawCard.hint ?? rawCard.Hint ? String(rawCard.hint ?? rawCard.Hint).trim() : undefined,
+      tags: Array.isArray(rawCard.tags ?? rawCard.Tags)
+        ? (rawCard.tags ?? rawCard.Tags ?? []).map((tag) => String(tag).trim()).filter(Boolean)
+        : [],
+      dueAt: String(rawCard.dueAt ?? rawCard.DueAt ?? now),
+      lastReviewedAt: rawCard.lastReviewedAt ?? rawCard.LastReviewedAt
+        ? String(rawCard.lastReviewedAt ?? rawCard.LastReviewedAt)
+        : undefined,
+      streak: Number(rawCard.streak ?? rawCard.Streak ?? 0),
     }
   }
 

@@ -42,7 +42,11 @@ function isProtectedApiRequest(config: { url?: string; method?: string } | undef
     return method !== 'get';
   }
 
-  return authStore.hasAuthSession;
+  if (path.startsWith('/api/')) {
+    return method !== 'get';
+  }
+
+  return false;
 }
 
 apiClient.interceptors.request.use(config => {

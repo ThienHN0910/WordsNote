@@ -17,10 +17,74 @@ interface ImportCardsResult {
   skipped: number
 }
 
+type StudyLoadSource = 'cloud' | 'local'
+
+type CloudDeckPayload = Partial<StudyDeck> & {
+  Id?: string
+}
+
+type CloudCardPayload = Partial<StudyCard> & {
+  Id?: string
+  CollectionId?: string
+  DeckId?: string
+}
+
 export const useStudyStore = defineStore('study', () => {
   const authStore = useAuthStore(pinia)
   const decks = ref<StudyDeck[]>([])
   const cards = ref<StudyCard[]>([])
+  const lastLoadSource = ref<StudyLoadSource>('local')
+
+  function normalizeRemoteDeck(rawDeck: CloudDeckPayload): StudyDeck {
+    const now = new Date().toISOString()
+
+    return {
+      id: String(rawDeck.id ?? rawDeck.Id ?? '').trim(),
+      title: String(rawDeck.title ?? '').trim(),
+      description: String(rawDeck.description ?? '').trim(),
+      createdAt: String(rawDeck.createdAt ?? now),
+      updatedAt: String(rawDeck.updatedAt ?? rawDeck.createdAt ?? now),
+    }
+  }
+
+  function normalizeRemoteCard(rawCard: CloudCardPayload): StudyCard {
+    const now = new Date().toISOString()
+    const collectionId = String(
+      rawCard.collectionId ?? rawCard.CollectionId ?? rawCard.deckId ?? rawCard.DeckId ?? '',
+    ).trim()
+
+    return {
+      id: String(rawCard.id ?? rawCard.Id ?? '').trim(),
+      collectionId,
+      deckId: collectionId || undefined,
+      front: String(rawCard.front ?? '').trim(),
+      back: String(rawCard.back ?? '').trim(),
+      hint: rawCard.hint ? String(rawCard.hint).trim() : undefined,
+      tags: Array.isArray(rawCard.tags) ? rawCard.tags.map((tag) => String(tag).trim()).filter(Boolean) : [],
+      dueAt: String(rawCard.dueAt ?? now),
+      lastReviewedAt: rawCard.lastReviewedAt ? String(rawCard.lastReviewedAt) : undefined,
+      streak: Number(rawCard.streak ?? 0),
+    }
+  }
+
+  function setCloudSnapshot(rawDecks: StudyDeck[] | CloudDeckPayload[], rawCards: StudyCard[] | CloudCardPayload[]) {
+    decks.value = rawDecks
+      .map((deck) => normalizeRemoteDeck(deck))
+      .filter((deck) => Boolean(deck.id))
+
+    cards.value = rawCards
+      .map((card) => normalizeRemoteCard(card))
+      .filter((card) => Boolean(card.id && card.collectionId))
+
+    lastLoadSource.value = 'cloud'
+  }
+
+  function setLocalSnapshot() {
+    const snapshot = loadLocalStudySnapshot()
+    decks.value = snapshot.decks
+    cards.value = snapshot.cards
+    lastLoadSource.value = 'local'
+  }
 
   function resolveCollectionId(card: StudyCard) {
     return card.collectionId || card.deckId || ''
@@ -40,14 +104,21 @@ export const useStudyStore = defineStore('study', () => {
   async function load() {
     if (isCloudMode()) {
       const [decksResponse, cardsResponse] = await Promise.all([StudyAPI.getDecks(), StudyAPI.getCards()])
-      decks.value = decksResponse.data
-      cards.value = cardsResponse.data
+      setCloudSnapshot(decksResponse.data, cardsResponse.data)
       return
     }
 
-    const snapshot = loadLocalStudySnapshot()
-    decks.value = snapshot.decks
-    cards.value = snapshot.cards
+    setLocalSnapshot()
+  }
+
+  async function loadForLearn() {
+    try {
+      const [decksResponse, cardsResponse] = await Promise.all([StudyAPI.getDecks(), StudyAPI.getCards()])
+      setCloudSnapshot(decksResponse.data, cardsResponse.data)
+      return
+    } catch {
+      setLocalSnapshot()
+    }
   }
 
   const deckList = computed(() => [...decks.value].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)))
@@ -309,14 +380,17 @@ export const useStudyStore = defineStore('study', () => {
     }
 
     const response = await StudyAPI.getDecks()
-    decks.value = response.data
+    decks.value = response.data.map((deck) => normalizeRemoteDeck(deck)).filter((deck) => Boolean(deck.id))
+    lastLoadSource.value = 'cloud'
   }
 
   return {
     decks,
     cards,
+    lastLoadSource,
     deckList,
     load,
+    loadForLearn,
     getDeckById,
     getDeckCards,
     getDueCards,

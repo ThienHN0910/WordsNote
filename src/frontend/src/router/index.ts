@@ -16,7 +16,9 @@ router.beforeEach((to) => {
   }
 
   const authStore = useAuthStore(pinia)
-  if (authStore.isAuthenticated && authStore.auth_token) {
+  authStore.rehydrateFromPersistedState()
+
+  if (authStore.hasAuthSession) {
     return true
   }
 

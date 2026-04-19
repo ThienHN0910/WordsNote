@@ -517,6 +517,18 @@ watch(filteredDeckList, (nextDecks) => {
     selectedDeckId.value = nextDecks[0].id
   }
 })
+
+watch(isAuthenticated, async () => {
+  const currentDeckId = selectedDeckId.value
+  await studyStore.load()
+
+  if (currentDeckId && studyStore.getDeckById(currentDeckId)) {
+    selectedDeckId.value = currentDeckId
+    return
+  }
+
+  selectedDeckId.value = studyStore.deckList[0]?.id ?? ''
+})
 </script>
 
 <style scoped>

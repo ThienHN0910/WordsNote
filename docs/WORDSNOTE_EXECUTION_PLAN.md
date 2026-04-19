@@ -9,6 +9,7 @@
 - Completed: Phase 5 hardening and validation (unit tests, multi-app builds, backend runtime smoke test)
 - Completed: Phase 6 cleanup and UX redesign finalization
 - Completed: Phase 7 desktop WPF rollout (landing, learn, manage, privacy + local/cloud sync)
+- Completed: Phase 8 web parity hotfix (auth persistence, public learn resilience, desktop-web copy alignment)
 
 Latest finalization scope:
 
@@ -277,6 +278,9 @@ Sprint 5:
 Sprint 6:
 - Phase 7 desktop WPF parity rollout
 
+Sprint 7:
+- Phase 8 web auth/learn parity stabilization
+
 ## 5.1 Local-First Alignment Plan (Desktop + Web + Extension)
 
 Objective:
@@ -300,6 +304,46 @@ Execution steps:
 
 Status:
 - Completed in current execution cycle (2026-04-18).
+
+## 5.2 Web Parity Stabilization Plan (2026-04-19)
+
+Objective:
+- Keep web behavior consistent with desktop local-first model while preserving optional cloud auth workflows.
+
+Plan:
+1. Auth persistence hardening
+  - Persist auth token in browser local storage instead of session storage.
+  - Rehydrate auth state at startup and in route guards.
+  - Migrate legacy session-storage token payload when available.
+2. Public learn resilience
+  - Add Learn-specific load path that first attempts public cloud reads (`GET /api/collections`, `GET /api/cards`).
+  - Fallback to local manage snapshot when cloud read is unavailable.
+3. Safe unauthorized handling
+  - Redirect to login on `401` only for protected API intents.
+  - Avoid forcing login redirect for public-read learn requests.
+4. Desktop-web UI/copy alignment
+  - Update landing and learn copy to reflect local-first + optional-login product behavior.
+
+Execution result:
+- Completed in current execution cycle (2026-04-19).
+- Implemented files:
+  - `src/frontend/src/stores/AS/AuthStore.ts`
+  - `src/frontend/src/main.ts`
+  - `src/frontend/src/router/index.ts`
+  - `src/frontend/src/apis/apiClient.ts`
+  - `src/frontend/src/stores/WordsNote/StudyStore.ts`
+  - `src/frontend/src/pages/WordsNote/LearnLabPage.vue`
+  - `src/frontend/src/pages/WordsNote/StudyHubPage.vue`
+  - `src/frontend/src/pages/AS/LoginPage.vue`
+  - `src/frontend/src/pages/LandingPage.vue`
+
+Validation:
+1. Frontend build command:
+  - `cd src/frontend && npm run build`
+2. Smoke scenarios:
+  - Login then refresh keeps authenticated state.
+  - Anonymous Learn route can still load data via public cloud read; local fallback remains available.
+  - Anonymous Manage remains local-first; focused session route still requires auth.
 
 ## 6. Immediate Next Action (recommended)
 

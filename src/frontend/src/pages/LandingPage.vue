@@ -4,12 +4,13 @@
       <p class="eyebrow">WordsNote Studio</p>
       <h1>Learn in a way that feels handcrafted, not generic.</h1>
       <p class="lead">
-        Explore flashcards and practice mode without signing in. Sign in only when you want to manage
-        your own collections and cards.
+        Learn and Manage both work without sign-in. Use Google sign-in only when you need cloud-backed
+        session and deep-study APIs.
       </p>
       <div class="hero-actions">
         <RouterLink class="cta primary" to="/learn">Start Learning</RouterLink>
         <RouterLink class="cta ghost" to="/manage">Manage Collections</RouterLink>
+        <RouterLink class="cta ghost" :to="{ name: 'login', query: { redirect: '/manage' } }">Open Login</RouterLink>
       </div>
     </div>
 
@@ -27,6 +28,21 @@
         <p>Challenge yourself with quick multiple-choice rounds and score tracking.</p>
       </article>
     </div>
+
+    <section class="quick-start">
+      <h2>Quick Start</h2>
+      <ol>
+        <li>Open Learn for Flashcards, Learn, and Practice modes.</li>
+        <li>Open Manage to create collections and cards in local-first mode.</li>
+        <li>Use Login only when you need cloud-backed focused sessions.</li>
+        <li>Read Privacy Policy in your preferred language (VI/EN).</li>
+      </ol>
+      <div class="quick-start-actions">
+        <RouterLink class="cta primary" to="/learn">Open Learn</RouterLink>
+        <RouterLink class="cta ghost" to="/manage">Open Manage</RouterLink>
+        <RouterLink class="cta ghost" to="/privacy-policy">Privacy Policy</RouterLink>
+      </div>
+    </section>
   </section>
 </template>
 
@@ -123,5 +139,35 @@ h1 {
 .feature-grid p {
   margin: 0;
   color: var(--wn-muted);
+}
+
+.quick-start {
+  border-radius: 22px;
+  padding: 1.15rem;
+  border: 1px solid color-mix(in srgb, var(--wn-primary) 25%, var(--wn-border));
+  background:
+    radial-gradient(120% 120% at 0% 0%, color-mix(in srgb, var(--wn-primary) 12%, transparent), transparent 52%),
+    var(--wn-surface);
+  box-shadow: var(--wn-shadow-soft);
+}
+
+.quick-start h2 {
+  margin-top: 0;
+  margin-bottom: 0.55rem;
+}
+
+.quick-start ol {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--wn-muted);
+  display: grid;
+  gap: 0.3rem;
+}
+
+.quick-start-actions {
+  margin-top: 0.9rem;
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
 }
 </style>

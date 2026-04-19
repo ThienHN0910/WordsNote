@@ -126,6 +126,12 @@ const initializeGoogleButton = async () => {
 }
 
 onMounted(() => {
+  authStore.rehydrateFromPersistedState()
+  if (authStore.hasAuthSession) {
+    void router.replace(resolveRedirectRoute())
+    return
+  }
+
   void initializeGoogleButton()
 })
 </script>

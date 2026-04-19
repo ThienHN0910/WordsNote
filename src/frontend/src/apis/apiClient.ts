@@ -12,6 +12,39 @@ const apiClient = axios.create({
   }
 });
 
+function getRequestPath(rawUrl: string | undefined) {
+  if (!rawUrl) {
+    return '';
+  }
+
+  const normalized = rawUrl.toLowerCase();
+  const queryIndex = normalized.indexOf('?');
+  return queryIndex >= 0 ? normalized.slice(0, queryIndex) : normalized;
+}
+
+function isProtectedApiRequest(config: { url?: string; method?: string } | undefined) {
+  const path = getRequestPath(config?.url);
+  const method = String(config?.method || 'get').toLowerCase();
+
+  if (!path) {
+    return authStore.hasAuthSession;
+  }
+
+  if (path.startsWith('/api/auth')) {
+    return false;
+  }
+
+  if (path.startsWith('/api/study') || path.startsWith('/api/tests') || path.startsWith('/api/user')) {
+    return true;
+  }
+
+  if (path.startsWith('/api/collections') || path.startsWith('/api/cards')) {
+    return method !== 'get';
+  }
+
+  return authStore.hasAuthSession;
+}
+
 apiClient.interceptors.request.use(config => {
   const token = authStore.auth_token;
   if (token) {
@@ -26,8 +59,20 @@ apiClient.interceptors.response.use(
   response => response,
   error => {
     if (error.response && error.response.status === 401) {
+      const shouldRedirectToLogin =
+        isProtectedApiRequest(error.config) ||
+        router.currentRoute.value.matched.some(record => record.meta.requiresAuth);
+
       authStore.clearAuthToken();
-      router.push({ name: 'login' }); 
+
+      if (shouldRedirectToLogin && router.currentRoute.value.name !== 'login') {
+        router.push({
+          name: 'login',
+          query: {
+            redirect: router.currentRoute.value.fullPath,
+          },
+        });
+      }
     }
     return Promise.reject(error);
   }

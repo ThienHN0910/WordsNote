@@ -4,10 +4,10 @@
       <p class="eyebrow">Dynamic Learning Space</p>
       <h1>Flashcards, Learn, Practice from your Manage collections.</h1>
       <p>
-        Learn now uses live collection/card data from
-        <RouterLink to="/manage">Manage</RouterLink> only.
+        Learn uses public cloud collections when available and automatically falls back to local
+        <RouterLink to="/manage">Manage</RouterLink> data.
       </p>
-      <p v-if="!isLoadingManage" class="source-note ok">Showing dynamic decks from Manage collections.</p>
+      <p v-if="!isLoadingManage" class="source-note ok">{{ sourceNote }}</p>
       <p v-else class="source-note">Loading collection data...</p>
       <p v-if="manageLoadError" class="source-note warn">{{ manageLoadError }}</p>
     </header>
@@ -126,7 +126,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
-import { useAuthStore } from '@/stores/AS/AuthStore'
 import { useStudyStore } from '@/stores/WordsNote/StudyStore'
 
 interface LearnCard {
@@ -144,7 +143,6 @@ interface LearnDeck {
   cards: LearnCard[]
 }
 
-const authStore = useAuthStore()
 const studyStore = useStudyStore()
 
 const activeDeckId = ref('')
@@ -184,6 +182,13 @@ const dynamicDecks = computed<LearnDeck[]>(() =>
 
 const learnDecks = computed(() => dynamicDecks.value)
 const activeDeck = computed(() => learnDecks.value.find((deck) => deck.id === activeDeckId.value) ?? null)
+const sourceNote = computed(() => {
+  if (studyStore.lastLoadSource === 'cloud') {
+    return 'Showing live public collections from cloud.'
+  }
+
+  return 'Cloud source unavailable. Showing local collections from browser storage.'
+})
 
 const currentCard = computed(() => {
   if (!activeDeck.value || activeDeck.value.cards.length === 0) {
@@ -361,7 +366,7 @@ async function loadManageDecks() {
   manageLoadError.value = ''
 
   try {
-    await studyStore.load()
+    await studyStore.loadForLearn()
   } catch {
     manageLoadError.value = 'Could not load Manage collections. Please try again.'
   } finally {
@@ -376,13 +381,6 @@ onMounted(async () => {
 onUnmounted(() => {
   clearLearnAutoAdvanceTimer()
 })
-
-watch(
-  () => authStore.isAuthenticated,
-  async () => {
-    await loadManageDecks()
-  },
-)
 </script>
 
 <style scoped>

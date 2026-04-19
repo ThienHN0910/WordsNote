@@ -3,15 +3,26 @@
     <div class="hero-card">
       <p class="eyebrow">WordsNote Studio</p>
       <h1>Learn in a way that feels handcrafted, not generic.</h1>
+
+      <section class="quick-start">
+        <h2>Quick Start</h2>
+        <ol>
+          <li>Open Learn for Flashcards, Learn, and Practice modes.</li>
+          <li>Open Manage to create collections and cards in local-first mode.</li>
+          <li>Use Login only when you need cloud-backed focused sessions.</li>
+          <li>Read Privacy Policy in your preferred language (VI/EN).</li>
+        </ol>
+        <div class="quick-start-actions">
+          <RouterLink class="cta primary" to="/learn">Open Learn</RouterLink>
+          <RouterLink class="cta ghost" to="/manage">Open Manage</RouterLink>
+          <RouterLink class="cta ghost" to="/privacy-policy">Privacy Policy</RouterLink>
+        </div>
+      </section>
+
       <p class="lead">
         Learn and Manage both work without sign-in. Use Google sign-in only when you need cloud-backed
         session and deep-study APIs.
       </p>
-      <div class="hero-actions">
-        <RouterLink class="cta primary" to="/learn">Start Learning</RouterLink>
-        <RouterLink class="cta ghost" to="/manage">Manage Collections</RouterLink>
-        <RouterLink class="cta ghost" :to="{ name: 'login', query: { redirect: '/manage' } }">Open Login</RouterLink>
-      </div>
     </div>
 
     <div class="feature-grid">
@@ -29,20 +40,6 @@
       </article>
     </div>
 
-    <section class="quick-start">
-      <h2>Quick Start</h2>
-      <ol>
-        <li>Open Learn for Flashcards, Learn, and Practice modes.</li>
-        <li>Open Manage to create collections and cards in local-first mode.</li>
-        <li>Use Login only when you need cloud-backed focused sessions.</li>
-        <li>Read Privacy Policy in your preferred language (VI/EN).</li>
-      </ol>
-      <div class="quick-start-actions">
-        <RouterLink class="cta primary" to="/learn">Open Learn</RouterLink>
-        <RouterLink class="cta ghost" to="/manage">Open Manage</RouterLink>
-        <RouterLink class="cta ghost" to="/privacy-policy">Privacy Policy</RouterLink>
-      </div>
-    </section>
   </section>
 </template>
 
@@ -91,13 +88,6 @@ h1 {
   color: var(--wn-muted);
 }
 
-.hero-actions {
-  margin-top: 1.3rem;
-  display: flex;
-  gap: 0.8rem;
-  flex-wrap: wrap;
-}
-
 .cta {
   text-decoration: none;
   padding: 0.7rem 1rem;
@@ -142,6 +132,7 @@ h1 {
 }
 
 .quick-start {
+  margin-top: 1rem;
   border-radius: 22px;
   padding: 1.15rem;
   border: 1px solid color-mix(in srgb, var(--wn-primary) 25%, var(--wn-border));

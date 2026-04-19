@@ -9,7 +9,6 @@
       <nav class="links">
         <RouterLink to="/" class="pill">Home</RouterLink>
         <RouterLink to="/learn" class="pill">Learn</RouterLink>
-        <RouterLink to="/privacy-policy" class="pill">Privacy</RouterLink>
         <RouterLink to="/manage" class="pill">Manage</RouterLink>
       </nav>
 

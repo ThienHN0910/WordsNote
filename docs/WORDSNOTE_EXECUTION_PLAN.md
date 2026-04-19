@@ -11,6 +11,18 @@
 - Completed: Phase 7 desktop WPF rollout (landing, learn, manage, privacy + local/cloud sync)
 - Completed: Phase 8 web parity hotfix (auth persistence, public learn resilience, desktop-web copy alignment)
 
+## Release Snapshot (2026-04-19)
+
+- Current release target: WordsNote v1.1.0
+- Baseline delta: `v1.0.1` (`ba96f80`) -> `main` (`f741786`)
+- High-level delivery in this release:
+  - Desktop parity app added (WPF) with local-first manage + optional cloud sync
+  - MSIX packaging project and Store preparation docs
+  - Web auth persistence and anonymous Learn stabilization
+  - Extension local-first manage and cloud-read sync flow hardening
+- Detailed release notes: `docs/RELEASE_NOTES.md`
+- Local release artifact bundle: `release/v1.1.0/`
+
 Latest finalization scope:
 
 - New route architecture:

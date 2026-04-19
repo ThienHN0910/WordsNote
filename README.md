@@ -145,6 +145,14 @@ Detailed contracts are documented in docs/API_REFERENCE.md.
 - docs/WORDSNOTE_EXECUTION_PLAN.md
 - docs/WPF_DESKTOP_EXECUTION_PLAN.md
 - docs/MSIX_STORE_PREP.md
+- docs/RELEASE_NOTES.md
+
+## Latest Release
+
+- Current: WordsNote v1.1.0 (19/04/2026)
+- Previous: WordsNote v1.0.1 (17/04/2026)
+- See docs/RELEASE_NOTES.md for full release details and commit list.
+- Local packaged assets are available under `release/v1.1.0/`.
 
 ## Build Status (Latest)
 

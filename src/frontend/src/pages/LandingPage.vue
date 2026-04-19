@@ -4,27 +4,27 @@
       <p class="eyebrow">WordsNote Studio</p>
       <h1>Learn in a way that feels handcrafted, not generic.</h1>
 
-      <section class="quick-start">
-        <h2>Quick Start</h2>
-        <ol>
-          <li>Open Learn for Flashcards, Learn, and Practice modes.</li>
-          <li>Open Manage to create collections and cards in local-first mode.</li>
-          <li>Use Login only when you need cloud-backed focused sessions.</li>
-          <li>Read Privacy Policy in your preferred language (VI/EN).</li>
-        </ol>
-        <div class="quick-start-actions">
-          <RouterLink class="cta primary" to="/learn">Open Learn</RouterLink>
-          <RouterLink class="cta ghost" to="/manage">Open Manage</RouterLink>
-          <RouterLink class="cta ghost" to="/privacy-policy">Privacy Policy</RouterLink>
-        </div>
-      </section>
-
       <p class="lead">
         Learn and Manage both work without sign-in. Use Google sign-in only when you need cloud-backed
         session and deep-study APIs.
       </p>
     </div>
-
+    
+    <section class="quick-start">
+      <h2>Quick Start</h2>
+      <ol>
+        <li>Open Learn for Flashcards, Learn, and Practice modes.</li>
+        <li>Open Manage to create collections and cards in local-first mode.</li>
+        <li>Use Login only when you need cloud-backed focused sessions.</li>
+        <li>Read Privacy Policy in your preferred language (VI/EN).</li>
+      </ol>
+      <div class="quick-start-actions">
+        <RouterLink class="cta primary" to="/learn">Open Learn</RouterLink>
+        <RouterLink class="cta ghost" to="/manage">Open Manage</RouterLink>
+        <RouterLink class="cta ghost" to="/privacy-policy">Privacy Policy</RouterLink>
+      </div>
+    </section>
+    
     <div class="feature-grid">
       <article>
         <h2>Flashcards</h2>

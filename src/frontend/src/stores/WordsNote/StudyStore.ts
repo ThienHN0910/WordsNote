@@ -127,12 +127,17 @@ export const useStudyStore = defineStore('study', () => {
   }
 
   async function loadForLearn() {
+    setLocalSnapshot()
+    const hasLocalData = decks.value.length > 0 || cards.value.length > 0
+    if (hasLocalData) {
+      return
+    }
+
     try {
       const [decksResponse, cardsResponse] = await Promise.all([StudyAPI.getDecks(), StudyAPI.getCards()])
       setCloudSnapshot(decksResponse.data, cardsResponse.data)
-      return
     } catch {
-      setLocalSnapshot()
+      // Keep local empty state when cloud source is unavailable.
     }
   }
 

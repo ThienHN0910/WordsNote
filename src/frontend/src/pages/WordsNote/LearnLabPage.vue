@@ -4,7 +4,7 @@
       <p class="eyebrow">Dynamic Learning Space</p>
       <h1>Flashcards, Learn, Practice from your Manage collections.</h1>
       <p>
-        Learn uses public cloud collections when available and automatically falls back to local
+        Learn loads local Manage collections first. If local is empty, it fetches public cloud collections.
         <RouterLink to="/manage">Manage</RouterLink> data.
       </p>
       <p v-if="!isLoadingManage" class="source-note ok">{{ sourceNote }}</p>
@@ -211,11 +211,15 @@ const dynamicDecks = computed<LearnDeck[]>(() =>
 const learnDecks = computed(() => dynamicDecks.value)
 const activeDeck = computed(() => learnDecks.value.find((deck) => deck.id === activeDeckId.value) ?? null)
 const sourceNote = computed(() => {
-  if (studyStore.lastLoadSource === 'cloud') {
-    return 'Showing live public collections from cloud.'
+  if (studyStore.lastLoadSource === 'local' && learnDecks.value.length > 0) {
+    return 'Showing local collections from browser storage.'
   }
 
-  return 'Cloud source unavailable. Showing local collections from browser storage.'
+  if (studyStore.lastLoadSource === 'cloud') {
+    return 'Local is empty. Showing public cloud collections.'
+  }
+
+  return 'No local collections and cloud source is unavailable right now.'
 })
 
 const currentCard = computed(() => {

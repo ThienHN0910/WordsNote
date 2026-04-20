@@ -87,9 +87,9 @@ export const AppDownloadService = {
   },
 
   async saveOverride(override: DownloadPageOverride) {
-    const payload = sanitizeOverride(override)
+    const payload = sanitizeOverrideForSave(override)
     const response = await DownloadConfigAPI.upsertConfig(payload)
-    return sanitizeOverride(response.data || payload)
+    return sanitizeOverride(response.data || ({} as DownloadPageOverride))
   },
 
   async clearOverride() {
@@ -106,7 +106,7 @@ function normalizeRepo(repo: string) {
     }
   }
 
-  return 'ThinHN/WordsNote'
+  return 'ThienHN0910/WordsNote'
 }
 
 function mapReleaseAsset(rawAsset: unknown): GithubReleaseAsset {
@@ -210,6 +210,17 @@ function sanitizeOverride(override: DownloadPageOverride) {
     manualLinksByVersion: sanitizeManualLinksByVersion(override.manualLinksByVersion),
     updatedByEmail: normalizeText(override.updatedByEmail),
     updatedAt: normalizeText(override.updatedAt),
+  } as DownloadPageOverride
+}
+
+function sanitizeOverrideForSave(override: DownloadPageOverride) {
+  return {
+    title: normalizeText(override.title),
+    summary: normalizeText(override.summary),
+    repo: normalizeText(override.repo),
+    maxVisibleVersions: normalizeCount(override.maxVisibleVersions),
+    featuredTag: normalizeText(override.featuredTag),
+    manualLinksByVersion: sanitizeManualLinksByVersion(override.manualLinksByVersion),
   } as DownloadPageOverride
 }
 

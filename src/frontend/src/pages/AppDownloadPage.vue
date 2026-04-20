@@ -131,7 +131,7 @@
 
         <label>
           GitHub repository
-          <input v-model="overrideForm.repo" type="text" placeholder="ThinHN/WordsNote" />
+          <input v-model="overrideForm.repo" type="text" placeholder="ThienHN0910/WordsNote" />
         </label>
 
         <label>

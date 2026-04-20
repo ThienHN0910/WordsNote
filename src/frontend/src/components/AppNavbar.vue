@@ -25,7 +25,7 @@
             <span>{{ themeLabel }}</span>
           </button>
         </li>
-        <User />
+        <AppUserMenu />
       </ul>
     </div>
   </header>
@@ -35,7 +35,7 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { RouterLink } from 'vue-router'
-import User from '@/components/AS/User.vue'
+import AppUserMenu from '@/components/AS/AppUserMenu.vue'
 import { useThemeStore } from '@/stores/CFS/ThemeSettingStore'
 
 const themeStore = useThemeStore()

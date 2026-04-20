@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import type { RouteRecordRaw } from 'vue-router'
 import routesAS from './routerAS'
 import routesFFP from './routerFFP'
 import { useAuthStore } from '@/stores/AS/AuthStore'

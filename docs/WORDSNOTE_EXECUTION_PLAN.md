@@ -50,6 +50,9 @@ Latest finalization scope:
   - Card UX mirrors web manage: create-only form and popup edit via Edit Selected
   - Browser-based Google login flow plus ID token fallback
   - Sync Local -> Cloud and Sync Cloud -> Local
+- Download page rendering optimization:
+  - Heavy `All GitHub versions and assets` block is lazy-loaded as async component
+  - Reuses shared frontend loading component `src/frontend/src/components/ui/AppLoading.vue` as fallback
 
 ## 1. Target Product Scope
 

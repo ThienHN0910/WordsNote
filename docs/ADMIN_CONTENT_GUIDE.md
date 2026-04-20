@@ -50,6 +50,7 @@ Expected behavior:
 - Collection list is sorted by most recently updated.
 - `Sync Cloud -> Local` copies cloud snapshot into local storage.
 - `Sync Local -> Cloud` uploads local snapshot and requires login.
+- Create collection form supports expand/collapse toggle for faster workspace focus.
 
 ## 5. Card Management (Local-First + Optional Cloud Sync)
 
@@ -71,6 +72,8 @@ Card UX policy:
 
 - Create form is create-only.
 - Existing cards are edited from the card action popup/dialog.
+- Create card and Quick import sections support expand/collapse toggles.
+- Cards list is paginated in manage view for large datasets.
 
 Import rules:
 

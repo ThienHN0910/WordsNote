@@ -50,6 +50,9 @@ Improved web behavior includes:
 - Fixed web auth persistence flow so refresh does not unexpectedly clear valid login session.
 - Fixed `400 Bad Request` on download-config save by sending sanitized payload (exclude server-managed metadata fields).
 - Added pending-state UI locks on manage/download mutation actions to prevent accidental duplicate creates/updates.
+- Added lazy-load for the heavy download catalog section using async component loading with shared `AppLoading` fallback UI.
+- Added expand/collapse toggles for `Create collection`, `Create card`, and `Quick import` in web manage page.
+- Added cards pagination in web manage page to keep large card lists easier to navigate.
 
 Documentation updates include:
 - Updated release notes with a unified release-note structure aligned to previous release format.

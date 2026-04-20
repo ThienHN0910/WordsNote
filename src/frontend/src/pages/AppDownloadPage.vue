@@ -138,24 +138,7 @@
       </article>
     </section>
 
-    <section class="catalog" v-if="releaseCards.length">
-      <h2>All GitHub versions and assets</h2>
-      <div class="catalog-grid">
-        <article class="catalog-card" v-for="item in releaseCards" :key="item.release.tagName || item.release.name">
-          <header>
-            <h3>{{ item.release.tagName || item.release.name }}</h3>
-            <p>{{ formatPublishedAt(item.release.publishedAt) }}</p>
-          </header>
-
-          <ul>
-            <li v-for="link in item.links" :key="link.url">
-              <a :href="link.url" target="_blank" rel="noopener noreferrer">{{ link.name }}</a>
-              <span>{{ formatFileSize(link.size) }}</span>
-            </li>
-          </ul>
-        </article>
-      </div>
-    </section>
+    <AppDownloadCatalogSection v-if="releaseCards.length" :release-cards="releaseCards" />
 
     <article class="editor" v-if="canEdit">
       <h2>Edit download page settings</h2>
@@ -275,10 +258,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, reactive, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/AS/AuthStore'
 import { AppDownloadService } from '@/services/FFP/AppDownloadService'
 import { UserService } from '@/services/AS/UserService'
+import AppLoading from '@/components/ui/AppLoading.vue'
 import type {
   DownloadPageOverride,
   GithubReleaseSnapshot,
@@ -292,6 +276,13 @@ interface ReleaseCard {
   release: GithubReleaseSnapshot
   links: ReleaseDownloadLink[]
 }
+
+const AppDownloadCatalogSection = defineAsyncComponent({
+  loader: () => import('@/components/FFP/AppDownloadCatalogSection.vue'),
+  loadingComponent: AppLoading,
+  delay: 120,
+  suspensible: false,
+})
 
 interface QuickAccessLink {
   title: string
@@ -922,7 +913,6 @@ h1 {
 .release-panel,
 .channel-rail,
 .channel-panel,
-.catalog,
 .editor {
   border: 1px solid var(--wn-border);
   border-radius: 18px;
@@ -939,7 +929,6 @@ h1 {
 
 .version-rail h2,
 .channel-rail h2,
-.catalog h2,
 .editor h2 {
   margin: 0 0 0.72rem;
 }
@@ -1079,50 +1068,6 @@ h1 {
 }
 
 .link-name {
-  overflow-wrap: anywhere;
-}
-
-.catalog-grid {
-  display: grid;
-  gap: 0.8rem;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-}
-
-.catalog-card {
-  border: 1px solid var(--wn-border);
-  border-radius: 14px;
-  padding: 0.75rem;
-  background: var(--wn-surface-soft);
-}
-
-.catalog-card h3 {
-  margin: 0;
-}
-
-.catalog-card p {
-  margin: 0.2rem 0 0.6rem;
-  color: var(--wn-muted);
-  font-size: 0.86rem;
-}
-
-.catalog-card ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.36rem;
-}
-
-.catalog-card li {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-}
-
-.catalog-card a {
-  color: var(--wn-link);
-  text-decoration: none;
   overflow-wrap: anywhere;
 }
 

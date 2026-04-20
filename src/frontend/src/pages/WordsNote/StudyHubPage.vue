@@ -72,8 +72,13 @@
 
     <div v-else class="manage-grid">
       <aside class="panel">
-        <h2>Create collection</h2>
-        <form class="stack" @submit.prevent="handleCreateDeck">
+        <div class="section-head section-head-tight">
+          <h2>Create collection</h2>
+          <button class="btn btn-outline-secondary btn-sm" type="button" @click="toggleCreateCollectionSection">
+            {{ isCreateCollectionOpen ? 'Collapse' : 'Expand' }}
+          </button>
+        </div>
+        <form v-show="isCreateCollectionOpen" class="stack" @submit.prevent="handleCreateDeck">
           <input
             v-model="newDeck.title"
             class="form-control"
@@ -188,8 +193,13 @@
             </article>
           </div>
 
-          <h3>Create card</h3>
-          <form class="card-form" @submit.prevent="handleSubmitCard">
+          <div class="section-head">
+            <h3>Create card</h3>
+            <button class="btn btn-outline-secondary btn-sm" type="button" @click="toggleCreateCardSection">
+              {{ isCreateCardOpen ? 'Collapse' : 'Expand' }}
+            </button>
+          </div>
+          <form v-show="isCreateCardOpen" class="card-form" @submit.prevent="handleSubmitCard">
             <input v-model="createCardForm.front" class="form-control" type="text" placeholder="Front text" required />
             <input v-model="createCardForm.back" class="form-control" type="text" placeholder="Back text" required />
             <input v-model="createCardForm.hint" class="form-control" type="text" placeholder="Hint (optional)" />
@@ -207,20 +217,27 @@
             </div>
           </form>
 
-          <h3>Quick import</h3>
-          <textarea
-            v-model="importText"
-            class="form-control mb-2"
-            rows="5"
-            placeholder="Example:\ndeadline:a date when work must finish"
-          />
-          <div class="actions-row">
-            <button class="btn btn-outline-primary" :disabled="isImportingCards" @click="handleImportCards">
-              {{ isImportingCards ? 'Importing...' : 'Import lines' }}
+          <div class="section-head">
+            <h3>Quick import</h3>
+            <button class="btn btn-outline-secondary btn-sm" type="button" @click="toggleQuickImportSection">
+              {{ isQuickImportOpen ? 'Collapse' : 'Expand' }}
             </button>
-            <span v-if="importResult" class="text-muted small">{{ importResult }}</span>
           </div>
-          <p class="small text-muted">Use one card per line. Front and back are separated by colon.</p>
+          <div v-show="isQuickImportOpen" class="stack">
+            <textarea
+              v-model="importText"
+              class="form-control mb-2"
+              rows="5"
+              placeholder="Example:\ndeadline:a date when work must finish"
+            />
+            <div class="actions-row">
+              <button class="btn btn-outline-primary" :disabled="isImportingCards" @click="handleImportCards">
+                {{ isImportingCards ? 'Importing...' : 'Import lines' }}
+              </button>
+              <span v-if="importResult" class="text-muted small">{{ importResult }}</span>
+            </div>
+            <p class="small text-muted">Use one card per line. Front and back are separated by colon.</p>
+          </div>
 
           <h3>Cards</h3>
           <div class="card-controls">
@@ -246,7 +263,7 @@
 
           <p v-if="!filteredDeckCards.length" class="empty-text">No cards match your current filters.</p>
           <div v-else class="stack">
-            <article v-for="card in filteredDeckCards" :key="card.id" class="card-row">
+            <article v-for="card in pagedDeckCards" :key="card.id" class="card-row">
               <div>
                 <strong>{{ card.front }}</strong>
                 <p>{{ card.back }}</p>
@@ -262,6 +279,16 @@
                 </button>
               </div>
             </article>
+
+            <div v-if="totalCardPages > 1" class="pagination-row">
+              <button class="btn btn-outline-secondary btn-sm" type="button" :disabled="!canGoPrevCardPage" @click="goPrevCardPage">
+                Prev
+              </button>
+              <span class="pagination-label">Page {{ cardPage }} / {{ totalCardPages }}</span>
+              <button class="btn btn-outline-secondary btn-sm" type="button" :disabled="!canGoNextCardPage" @click="goNextCardPage">
+                Next
+              </button>
+            </div>
           </div>
 
           <Teleport to="body">
@@ -357,6 +384,11 @@ const isCreatingCard = ref(false)
 const isImportingCards = ref(false)
 const isSavingEditCard = ref(false)
 const deletingCardIds = ref(new Set<string>())
+const isCreateCollectionOpen = ref(true)
+const isCreateCardOpen = ref(true)
+const isQuickImportOpen = ref(true)
+const cardPage = ref(1)
+const cardsPerPage = 8
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const canSyncLocalToCloud = computed(() => isAuthenticated.value && !isSyncing.value && !isManageLoading.value)
@@ -435,6 +467,15 @@ const filteredDeckCards = computed(() => {
     return new Date(left.dueAt).getTime() - new Date(right.dueAt).getTime()
   })
 })
+const totalCardPages = computed(() => {
+  return Math.max(1, Math.ceil(filteredDeckCards.value.length / cardsPerPage))
+})
+const pagedDeckCards = computed(() => {
+  const start = (cardPage.value - 1) * cardsPerPage
+  return filteredDeckCards.value.slice(start, start + cardsPerPage)
+})
+const canGoPrevCardPage = computed(() => cardPage.value > 1)
+const canGoNextCardPage = computed(() => cardPage.value < totalCardPages.value)
 const deckStats = computed(() => {
   if (!selectedDeckId.value) {
     return { totalCards: 0, dueCards: 0, masteredCards: 0 }
@@ -444,6 +485,34 @@ const deckStats = computed(() => {
 
 function getDeckStats(deckId: string) {
   return studyStore.getDeckStats(deckId)
+}
+
+function toggleCreateCollectionSection() {
+  isCreateCollectionOpen.value = !isCreateCollectionOpen.value
+}
+
+function toggleCreateCardSection() {
+  isCreateCardOpen.value = !isCreateCardOpen.value
+}
+
+function toggleQuickImportSection() {
+  isQuickImportOpen.value = !isQuickImportOpen.value
+}
+
+function goPrevCardPage() {
+  if (!canGoPrevCardPage.value) {
+    return
+  }
+
+  cardPage.value -= 1
+}
+
+function goNextCardPage() {
+  if (!canGoNextCardPage.value) {
+    return
+  }
+
+  cardPage.value += 1
 }
 
 function startEditDeck() {
@@ -712,6 +781,21 @@ watch(selectedDeckId, () => {
   cardQuery.value = ''
   cardFilter.value = 'all'
   cardSort.value = 'dueSoon'
+  cardPage.value = 1
+})
+
+watch([cardQuery, cardFilter, cardSort], () => {
+  cardPage.value = 1
+})
+
+watch([filteredDeckCards, totalCardPages], () => {
+  if (cardPage.value > totalCardPages.value) {
+    cardPage.value = totalCardPages.value
+  }
+
+  if (cardPage.value < 1) {
+    cardPage.value = 1
+  }
 })
 
 watch(filteredDeckList, (nextDecks) => {
@@ -819,6 +903,22 @@ watch(isAuthenticated, async () => {
   margin-top: 0;
 }
 
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.section-head-tight {
+  margin-bottom: 0.55rem;
+}
+
+.section-head h2,
+.section-head h3 {
+  margin-bottom: 0;
+}
+
 .stack {
   display: grid;
   gap: 0.55rem;
@@ -897,6 +997,20 @@ watch(isAuthenticated, async () => {
 
 .card-form .actions-row {
   grid-column: 1 / -1;
+}
+
+.pagination-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.pagination-label {
+  min-width: 96px;
+  text-align: center;
+  color: var(--wn-muted);
+  font-size: 0.88rem;
 }
 
 .card-controls {
@@ -1009,6 +1123,10 @@ watch(isAuthenticated, async () => {
 
   .modal-card {
     width: 100%;
+  }
+
+  .pagination-row {
+    justify-content: space-between;
   }
 }
 </style>

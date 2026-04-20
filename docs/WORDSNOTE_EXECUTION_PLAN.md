@@ -5,7 +5,7 @@
 - Completed: Phase 1 (documentation rewrite)
 - Completed: Phase 2 core backend rollout (collections/cards aliases, study APIs, tests APIs, answer normalization)
 - Completed: Phase 3 partial frontend rollout (new API contracts for study hub/session)
-- Completed: Phase 4 core extension rollout (no-auth local storage workflow)
+- Completed: Phase 4 core extension rollout (no-auth local-first Learn/Manage + optional cloud sync)
 - Completed: Phase 5 hardening and validation (unit tests, multi-app builds, backend runtime smoke test)
 - Completed: Phase 6 cleanup and UX redesign finalization
 - Completed: Phase 7 desktop WPF rollout (landing, learn, manage, privacy + local/cloud sync)
@@ -20,7 +20,7 @@
   - Desktop parity app added (WPF) with local-first manage + optional cloud sync
   - MSIX packaging project and Store preparation docs
   - Web auth persistence and anonymous Learn stabilization
-  - Extension local-first manage and cloud-read sync flow hardening
+  - Extension local-first manage and cloud sync flow hardening (read + optional write)
 - Detailed release notes: `docs/RELEASE_NOTES.md`
 - Local release artifact bundle: `release/v1.1.0/`
 
@@ -40,7 +40,7 @@ Latest finalization scope:
 - Extension popup aligned with local-first scope:
   - Learn Lab (flashcards, learn, practice)
   - Manage Lab (local collection/card CRUD + local text import)
-- Extension supports Cloud read-only sync, collection filtering, and `Sync To Local` workflow
+- Extension supports Cloud sync, collection filtering, `Sync To Local`, and token-based `Sync Local -> Cloud`
 - New desktop app under `src/desktop/WordsNote.Desktop` with WPF UI and feature parity with active web frontend flows:
   - Landing workspace
   - Dedicated Login workspace
@@ -78,7 +78,7 @@ Main mismatch:
 Confirmed implementation status:
 - Backend already has Desk and Card controllers with JWT auth.
 - Frontend has Landing/Learn/Manage flows and public Privacy Policy page with language query mode.
-- Extension runs local no-auth flow with popup Learn modes, highlighted-text capture, cloud read-only fetch, and sync-to-local.
+- Extension runs local no-auth flow with popup Learn + Manage modes, highlighted-text capture, cloud read fetch, sync-to-local, and optional sync-local-to-cloud.
 
 Naming and contract inconsistencies:
 - Backend route names use singular `desk` and `card`.
@@ -106,8 +106,9 @@ Naming decision (important):
 Extension decision (no auth):
 - Extension runs in anonymous/local mode by default.
 - Data persists in chrome.storage.local.
-- Optional cloud read-only sync can fetch public collections/cards.
+- Optional cloud sync can fetch public collections/cards.
 - Cloud cards can be synchronized into local storage for local study mode.
+- Optional token-based sync can upload local collections/cards to cloud.
 
 ## 4. Execution Phases
 

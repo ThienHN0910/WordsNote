@@ -26,48 +26,54 @@
     <p v-if="loadError" class="error-banner">{{ loadError }}</p>
     <p v-if="isLoading" class="loading-banner">Loading release versions from GitHub...</p>
 
-    <section class="channels" v-if="quickAccessLinks.length || manualLinkGroups.length">
-      <header class="channels-header">
+    <section class="channels" v-if="channelCards.length">
+      <aside class="channel-rail">
         <h2>Get App or Extension</h2>
-        <p>Store links and custom links are displayed separately from GitHub release assets.</p>
-      </header>
+        <p class="channel-rail-sub">Store links and custom links are displayed separately from GitHub release assets.</p>
+        <ul>
+          <li v-for="channel in channelCards" :key="channel.id">
+            <button
+              type="button"
+              class="channel-button"
+              :class="{ active: isSelectedChannel(channel.id) }"
+              @click="selectChannel(channel.id)"
+            >
+              <span class="version-name">{{ channel.title }}</span>
+              <span class="version-date">{{ channel.kicker }}</span>
+              <span class="version-links">{{ channel.links.length }} links</span>
+            </button>
+          </li>
+        </ul>
+      </aside>
 
-      <div class="channels-cta-grid" v-if="quickAccessLinks.length">
-        <a
-          v-for="item in quickAccessLinks"
-          :key="item.url"
-          class="channels-cta"
-          :href="item.url"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <span class="channels-cta-kicker">{{ item.kicker }}</span>
-          <strong>{{ item.title }}</strong>
-          <span class="channels-cta-url">{{ item.url }}</span>
-        </a>
-      </div>
+      <article class="channel-panel" v-if="selectedChannel">
+        <header class="release-header">
+          <div>
+            <p class="release-kicker">Selected channel</p>
+            <h2>{{ selectedChannel.title }}</h2>
+            <p class="release-sub">{{ selectedChannel.kicker }} • {{ selectedChannel.links.length }} links</p>
+          </div>
+        </header>
 
-      <p v-else class="hint">No store CTA links configured yet.</p>
-
-      <div class="channels-groups" v-if="manualLinkGroups.length">
-        <article class="channel-group" v-for="group in manualLinkGroups" :key="group.tagName">
-          <header>
-            <h3>{{ group.tagName }}</h3>
-            <span>{{ group.links.length }} links</span>
-          </header>
-
-          <ul>
-            <li v-for="link in group.links" :key="`${group.tagName}-${link.url}-${link.name}`">
-              <div class="manual-link-body">
-                <strong>{{ link.name }}</strong>
-                <a :href="link.url" target="_blank" rel="noopener noreferrer">{{ link.url }}</a>
-              </div>
-
+        <div class="link-grid" v-if="selectedChannel.links.length">
+          <a
+            v-for="link in selectedChannel.links"
+            :key="`${selectedChannel.id}-${link.url}-${link.name}`"
+            class="download-link-card"
+            :href="link.url"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div class="link-top">
               <span class="kind" :data-kind="link.kind">{{ kindLabel(link.kind) }}</span>
-            </li>
-          </ul>
-        </article>
-      </div>
+            </div>
+            <strong class="link-name">{{ link.name }}</strong>
+            <span class="channels-cta-url">{{ link.url }}</span>
+          </a>
+        </div>
+
+        <p v-else class="empty-state">No links configured for this channel.</p>
+      </article>
     </section>
 
     <section class="workspace" v-if="visibleReleases.length">
@@ -291,6 +297,20 @@ interface QuickAccessLink {
   title: string
   kicker: string
   url: string
+  kind: ReleaseDownloadKind
+}
+
+interface ChannelDisplayLink {
+  name: string
+  url: string
+  kind: ReleaseDownloadKind
+}
+
+interface DownloadChannelCard {
+  id: string
+  title: string
+  kicker: string
+  links: ChannelDisplayLink[]
 }
 
 interface ManualLinkDraft {
@@ -312,6 +332,7 @@ const isResettingSettings = ref(false)
 const editorEmail = ref('')
 const editorRole = ref('')
 const selectedTag = ref('')
+const selectedChannelId = ref('')
 const lastLoadedRepo = ref('')
 
 const fallbackRepo = 'ThienHN0910/WordsNote'
@@ -396,6 +417,7 @@ const quickAccessLinks = computed<QuickAccessLink[]>(() => {
       title: 'Get App',
       kicker: 'Microsoft Store',
       url: appStoreUrl,
+      kind: 'installer',
     })
   }
 
@@ -404,10 +426,54 @@ const quickAccessLinks = computed<QuickAccessLink[]>(() => {
       title: 'Get Extension',
       kicker: 'Microsoft Edge Add-ons',
       url: edgeAddonsUrl,
+      kind: 'other',
     })
   }
 
   return result
+})
+
+const channelCards = computed<DownloadChannelCard[]>(() => {
+  const cards: DownloadChannelCard[] = []
+
+  for (const item of quickAccessLinks.value) {
+    cards.push({
+      id: `cta-${item.title}-${item.kicker}`.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      title: item.title,
+      kicker: item.kicker,
+      links: [
+        {
+          name: item.title,
+          url: item.url,
+          kind: item.kind,
+        },
+      ],
+    })
+  }
+
+  for (const group of manualLinkGroups.value) {
+    cards.push({
+      id: `manual-${group.tagName}`.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      title: group.tagName,
+      kicker: 'Custom links',
+      links: group.links.map((link) => ({
+        name: link.name,
+        url: link.url,
+        kind: link.kind,
+      })),
+    })
+  }
+
+  return cards
+})
+
+const selectedChannel = computed(() => {
+  if (!channelCards.value.length) {
+    return null
+  }
+
+  const matched = channelCards.value.find((item) => item.id === selectedChannelId.value)
+  return matched || channelCards.value[0]
 })
 
 const selectedRelease = computed(() => {
@@ -473,6 +539,14 @@ function getGithubReleaseLinkCount(tagName: string) {
 
 function selectRelease(tagName: string) {
   selectedTag.value = tagName
+}
+
+function selectChannel(channelId: string) {
+  selectedChannelId.value = channelId
+}
+
+function isSelectedChannel(channelId: string) {
+  return selectedChannel.value?.id === channelId
 }
 
 function addManualLink() {
@@ -721,6 +795,17 @@ watch(visibleReleases, (nextReleases) => {
   }
 })
 
+watch(channelCards, (nextChannels) => {
+  if (!nextChannels.length) {
+    selectedChannelId.value = ''
+    return
+  }
+
+  if (!nextChannels.some((channel) => channel.id === selectedChannelId.value)) {
+    selectedChannelId.value = nextChannels[0].id
+  }
+})
+
 watch(hasAuthSession, () => {
   void loadEditorIdentity()
 }, { immediate: true })
@@ -833,9 +918,10 @@ h1 {
   grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
 }
 
-.channels,
 .version-rail,
 .release-panel,
+.channel-rail,
+.channel-panel,
 .catalog,
 .editor {
   border: 1px solid var(--wn-border);
@@ -847,106 +933,19 @@ h1 {
 
 .channels {
   display: grid;
-  gap: 0.8rem;
-}
-
-.channels-header h2 {
-  margin: 0;
-}
-
-.channels-header p {
-  margin: 0.3rem 0 0;
-  color: var(--wn-muted);
-}
-
-.channels-cta-grid {
-  display: grid;
-  gap: 0.7rem;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-}
-
-.channels-cta {
-  border: 1px solid var(--wn-border);
-  border-radius: 14px;
-  background: var(--wn-surface-soft);
-  padding: 0.72rem;
-  text-decoration: none;
-  color: var(--wn-ink);
-  display: grid;
-  gap: 0.24rem;
-}
-
-.channels-cta:hover {
-  border-color: color-mix(in srgb, var(--wn-primary) 45%, var(--wn-border));
-}
-
-.channels-cta-kicker {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--wn-muted);
-}
-
-.channels-cta-url {
-  font-size: 0.82rem;
-  color: var(--wn-link);
-  overflow-wrap: anywhere;
-}
-
-.channels-groups {
-  display: grid;
-  gap: 0.7rem;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-}
-
-.channel-group {
-  border: 1px solid var(--wn-border);
-  border-radius: 12px;
-  background: var(--wn-surface-soft);
-  padding: 0.68rem;
-}
-
-.channel-group header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.55rem;
-}
-
-.channel-group h3 {
-  margin: 0;
-  font-size: 1rem;
-}
-
-.channel-group header span {
-  font-size: 0.8rem;
-  color: var(--wn-muted);
-}
-
-.channel-group ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.5rem;
-}
-
-.channel-group li {
-  border: 1px solid var(--wn-border);
-  border-radius: 10px;
-  background: var(--wn-surface);
-  padding: 0.52rem;
-  display: grid;
-  gap: 0.42rem;
+  gap: 1rem;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
 }
 
 .version-rail h2,
+.channel-rail h2,
 .catalog h2,
 .editor h2 {
   margin: 0 0 0.72rem;
 }
 
-.version-rail ul {
+.version-rail ul,
+.channel-rail ul {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -954,7 +953,8 @@ h1 {
   gap: 0.52rem;
 }
 
-.version-button {
+.version-button,
+.channel-button {
   width: 100%;
   text-align: left;
   border: 1px solid var(--wn-border);
@@ -966,9 +966,21 @@ h1 {
   gap: 0.2rem;
 }
 
-.version-button.active {
+.version-button.active,
+.channel-button.active {
   border-color: var(--wn-primary);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--wn-primary) 45%, transparent);
+}
+
+.channel-rail-sub {
+  margin: 0 0 0.72rem;
+  color: var(--wn-muted);
+}
+
+.channels-cta-url {
+  font-size: 0.82rem;
+  color: var(--wn-link);
+  overflow-wrap: anywhere;
 }
 
 .version-name {
@@ -1261,6 +1273,7 @@ h1 {
 
 @media (max-width: 980px) {
   .hero-shell,
+  .channels,
   .workspace {
     grid-template-columns: 1fr;
   }

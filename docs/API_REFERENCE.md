@@ -6,7 +6,8 @@ Base path: `/api`
 
 - Public learning experience (`/learn` in frontend) does not require authentication.
 - Learn reads collections/cards via public read endpoints.
-- Collection and card write operations for management require JWT authentication.
+- Collection and card write operations against cloud APIs require JWT authentication.
+- Web/desktop manage workspaces can still run local-first CRUD without JWT when operating on local storage snapshots.
 - Frontend Manage supports two-way sync behavior on top of existing APIs:
 	- `Sync Cloud -> Local`: reads `GET /api/collections` + `GET /api/cards` and stores snapshot in browser local storage.
 	- `Sync Local -> Cloud`: requires login; upserts local collections/cards through existing collections/cards write APIs.
@@ -76,6 +77,8 @@ Purpose:
 
 - `title`: string (optional)
 - `summary`: string (optional)
+- `appStoreUrl`: string (optional)
+- `edgeAddonsUrl`: string (optional)
 - `repo`: string (optional), GitHub repository in owner/name format
 - `maxVisibleVersions`: int (1..30)
 - `featuredTag`: string (optional)
@@ -93,6 +96,7 @@ Purpose:
 - Same structure as `GET` response fields above.
 - Empty or invalid manual links are filtered by backend sanitizer.
 - `maxVisibleVersions` is normalized to range 1..30.
+- Server-managed fields (`updatedByEmail`, `updatedAt`) are ignored/recomputed by backend.
 - Caller must be admin (user role `Admin` or configured admin email).
 
 ## Collections

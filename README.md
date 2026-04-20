@@ -33,6 +33,10 @@ WordsNote is a learning platform for vocabulary and flashcards, delivered as:
   - Cloud/Sync quick actions in Manage:
     - Sync Cloud -> Local copies cloud collections/cards into browser local storage
     - Sync Local -> Cloud uploads local collections/cards to cloud (requires login)
+- Download route: /download
+  - Public read uses GET /api/download-config (anonymous access allowed)
+  - Edit and reset use PUT/DELETE /api/download-config and require admin JWT
+  - Caller must be admin (role Admin or configured admin email)
 - Auth-required focused session route: /manage/:deckId/session
 - Google sign-in is optional and used for cloud-backed session/deep-study actions
 
@@ -133,6 +137,7 @@ Base path:
 Main resource groups:
 
 - Auth
+- Download Config
 - Collections
 - Cards
 - Study

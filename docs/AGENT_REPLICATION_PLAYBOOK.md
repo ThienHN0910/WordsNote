@@ -14,7 +14,7 @@ Replicate a monorepo that contains:
 
 1. ASP.NET Core backend (`net8.0`) with MongoDB and JWT
 2. Vue 3 + Vite + Pinia frontend web app
-3. Chrome extension popup flow with no-auth local mode and optional cloud read-only sync
+3. Chrome extension popup flow with no-auth local mode, Learn/Manage labs, and optional cloud sync
 
 Core product domain:
 
@@ -104,7 +104,7 @@ Extract:
 - local manage behavior (collections/cards CRUD and import)
 - highlight capture workflow
 - local storage model
-- cloud read-only sync and sync-to-local flow
+- cloud read sync (`Sync To Local`) and optional cloud write sync (`Sync Local -> Cloud`)
 - collection-level filtering in popup
 
 ## 3) Implementation Blueprint
@@ -115,7 +115,7 @@ Extract:
 4. Implement test APIs.
 5. Add written-answer normalization.
 6. Build frontend management + study + test pages.
-7. Build extension local inbox flow with optional cloud read-only sync.
+7. Build extension Learn/Manage popup with local inbox flow and optional cloud sync.
 8. Add compatibility layer (`desk/card`) if migrating from old clients.
 9. Add tests and smoke checks.
 10. Remove obsolete modules.
@@ -126,7 +126,7 @@ Extract:
 - Keep old names only as temporary compatibility aliases.
 - Keep controller methods thin; move reusable logic to helpers/services.
 - Keep answer normalization deterministic across deep-study and written tests.
-- Keep extension independent from backend auth token.
+- Keep extension independent from web login state; cloud token in extension is optional and scoped to extension sync actions.
 
 ## 5) Guardrails
 
@@ -153,8 +153,10 @@ Extension:
 1. `cd src/extension`
 2. `npm run build`
 3. load unpacked extension and verify no-auth popup flow
-4. verify Cloud mode can read `GET /api/collections` and `GET /api/cards`
-5. verify `Sync To Local` writes cloud cards into local mode dataset
+4. verify Learn Lab and Manage Lab both work in local mode
+5. verify Cloud mode can read `GET /api/collections` and `GET /api/cards`
+6. verify `Sync To Local` writes cloud cards into local mode dataset
+7. verify `Sync Local -> Cloud` works when cloud JWT token is provided in popup
 
 ## 7) Definition Of Done
 
@@ -164,6 +166,6 @@ Replication is complete when:
 2. Flash/quick/deep study modes are functional.
 3. MCQ and written tests run end-to-end.
 4. Written grading is diacritics-insensitive and case-insensitive.
-5. Extension works without login, stores local data, and supports cloud read-only sync to local storage.
+5. Extension works without login, stores local data, supports cloud read sync to local storage, and supports optional local-to-cloud sync with token.
 6. Compatibility aliases are documented and scheduled for cleanup.
 7. Backend, frontend, and extension builds pass.

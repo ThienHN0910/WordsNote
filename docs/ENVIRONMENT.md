@@ -158,6 +158,8 @@ Desktop feature/auth scope:
 
 - Manage workspace works in local mode without auth and persists data to local JSON storage:
   - `%LocalAppData%/WordsNote/desktop/manage-local-data.json`
+- Desktop local/cloud ID mapping state is persisted under:
+  - `%LocalAppData%/WordsNote/desktop/manage-local-sync-state.json`
 - Desktop settings are persisted under:
   - `%LocalAppData%/WordsNote/desktop/desktop-settings.json`
 - After Google login, desktop enters cloud mode for manage operations and enables both sync directions:
@@ -182,9 +184,9 @@ Extension runs local-first and does not require mandatory login.
 
 Recommended:
 
-- Keep extension popup scoped to Learn-only experience (flashcards, learn, practice).
-- Do not add web route navigation (no homepage or manage flow in popup).
-- Default behavior must work with local storage only (`wordsnote_local_cards`).
+- Extension popup contains both Learn Lab and Manage Lab workspaces.
+- Do not add web route navigation (no homepage routing from popup).
+- Default behavior must work with local storage only (`wordsnote_local_cards`, `wordsnote_local_collections`).
 - Optional cloud sync uses API endpoint base URL, defaulting to `http://words-note.runasp.net`.
 - Cloud endpoint is persisted in extension storage key `wordsnote_cloud_api_base_url`.
 - Optional cloud JWT token is persisted in extension storage key `wordsnote_cloud_auth_token`.

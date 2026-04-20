@@ -10,6 +10,8 @@ Scope summary:
 - Added backend download-config API for shared editor persistence
 - Added per-version manual custom links in download editor
 - Download page now supports multiple versions and multiple links per version
+- Added explicit download CTA fields (Microsoft Store + Edge Add-ons)
+- Hardened save/reset and manage mutations against duplicate submit clicks
 - Extension metadata synchronized to `1.1.2`
 
 ### Highlights
@@ -26,6 +28,12 @@ Added features include:
   - Keeps download page public for anonymous users
   - Enables edit controls for admin account only
   - Supports custom manual links per version (outside GitHub assets)
+- Added explicit CTA link fields in shared config:
+  - `appStoreUrl`
+  - `edgeAddonsUrl`
+- Download page UX split:
+  - GitHub release assets shown in version channel
+  - Manual/store links shown in dedicated quick-access/channel sections
 - Added shared backend persistence for download page config:
   - Public read endpoint: `GET /api/download-config`
   - Authenticated write endpoint: `PUT /api/download-config`
@@ -40,6 +48,8 @@ Improved web behavior includes:
 - Added direct navigation to download experience from top bar and landing quick actions.
 - Kept download page public for readers while restricting edit/reset controls to admin.
 - Fixed web auth persistence flow so refresh does not unexpectedly clear valid login session.
+- Fixed `400 Bad Request` on download-config save by sending sanitized payload (exclude server-managed metadata fields).
+- Added pending-state UI locks on manage/download mutation actions to prevent accidental duplicate creates/updates.
 
 Documentation updates include:
 - Updated release notes with a unified release-note structure aligned to previous release format.
@@ -49,6 +59,7 @@ Documentation updates include:
 - Download page metadata overrides are now backend-shared (Mongo), not local-browser scoped.
 - GitHub Releases API availability affects dynamic metadata loading on `/download`.
 - Download config write/reset APIs require admin privileges.
+- Download config now stores explicit CTA URLs (`appStoreUrl`, `edgeAddonsUrl`) instead of deriving CTA links heuristically from manual assets.
 - For distribution, `.msixbundle` is end-user installer artifact while `.msixupload` remains Partner Center submission artifact.
 
 ### Build Validation

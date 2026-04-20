@@ -4,7 +4,8 @@ This guide explains the functional workflow for the WordsNote product:
 
 - Web app with split access:
   - Public learning space (no sign-in)
-  - Authenticated management workspace
+  - Local-first management workspace (no sign-in required)
+  - Authenticated focused session workflow for cloud-backed study actions
 - Chrome extension (no authentication)
 
 ## 1. Main User Flow (Web)
@@ -12,9 +13,9 @@ This guide explains the functional workflow for the WordsNote product:
 1. Open `/learn` and use learning modes immediately (no auth).
 2. Open `/privacy-policy` to review legal/privacy content.
 3. Switch policy language by query parameter (`?lang=vi` or `?lang=en`) for shareable links.
-4. For personal collection management, sign in with Google at `/login`.
-5. In `/manage`, create collections and cards.
-6. Start focused session from manage workspace.
+4. Open `/manage` to create collections/cards in local-first mode.
+5. Optional: sign in with Google at `/login` when you need cloud sync or focused session APIs.
+6. Start focused session from `/manage/:deckId/session` after login.
 7. Review progress and continue spaced repetition.
 
 ## 2. Authentication Policy
@@ -22,7 +23,8 @@ This guide explains the functional workflow for the WordsNote product:
 - Register route is disabled.
 - Login uses Google ID token verification.
 - Only one configured email (`AuthProviders:Google:AdminEmail`) is allowed.
-- Management APIs require JWT returned by Google login endpoint.
+- Cloud-backed management APIs require JWT returned by Google login endpoint.
+- Local-first manage workflows can run without login on web and desktop clients.
 
 ## 3. Public Learning Modes (No Auth)
 
@@ -34,7 +36,7 @@ The public page `/learn` provides:
 
 These modes read dynamic collections/cards through public read APIs and do not require sign-in.
 
-## 4. Collection Management (Auth Required)
+## 4. Collection Management (Local-First + Optional Cloud Sync)
 
 Main actions:
 
@@ -46,8 +48,10 @@ Expected behavior:
 
 - Deleting a collection also removes its cards.
 - Collection list is sorted by most recently updated.
+- `Sync Cloud -> Local` copies cloud snapshot into local storage.
+- `Sync Local -> Cloud` uploads local snapshot and requires login.
 
-## 5. Card Management (Auth Required)
+## 5. Card Management (Local-First + Optional Cloud Sync)
 
 Main actions:
 
@@ -62,6 +66,11 @@ Card fields:
 - back (required)
 - hint (optional)
 - tags (optional)
+
+Card UX policy:
+
+- Create form is create-only.
+- Existing cards are edited from the card action popup/dialog.
 
 Import rules:
 
@@ -113,21 +122,24 @@ Extension goals:
 
 - Save highlighted words/phrases quickly
 - Keep local inbox cards in `chrome.storage.local`
-- Review due local cards in popup with Learn-only modes:
+- Review due local cards in popup Learn Lab modes:
   - Flashcards
   - Learn (typed answer)
   - Practice (multiple choice)
-- Optional cloud sync: read public collections/cards for Learn-only practice (read-only)
+- Manage collections/cards in popup Manage Lab (local CRUD + local text import)
+- Optional cloud sync: read public collections/cards for Learn mode and `Sync To Local`
+- Optional cloud write: `Sync Local -> Cloud` using saved cloud JWT token
 - Collection-level filtering is available in both Local and Cloud modes.
 - `Sync To Local` in Cloud mode fetches cards and stores them into local extension storage for Local Due study.
 
 Important:
 
 - Extension should work without login.
-- Extension should not depend on web JWT token.
-- Extension popup must not include homepage or manage navigation.
-- Scope rule: web app owns `/` and `/manage`; extension owns local Learn-only flow.
-- Cloud sync mode only calls public read endpoints (`GET /api/collections`, `GET /api/cards`) and must not call management/study write APIs.
+- Extension cloud token is optional and independent from web login state.
+- Extension popup must not include homepage route navigation.
+- Scope rule: web app owns route pages (`/`, `/learn`, `/manage`); extension owns popup Learn/Manage labs.
+- Without cloud token, extension Cloud mode is read-only (`GET /api/collections`, `GET /api/cards`).
+- With cloud token, extension can run `Sync Local -> Cloud` via collections/cards write endpoints.
 
 ## 9. Privacy Policy Page
 

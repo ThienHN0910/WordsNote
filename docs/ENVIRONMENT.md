@@ -113,6 +113,15 @@ Notes:
 
 - Frontend displays the allowed email as guidance in login page.
 - Backend enforces the real allowlist via `AuthProviders:Google:AdminEmail`.
+- Download page route `/download` reads shared config from backend endpoint `GET /api/download-config`.
+- Download page keeps public download access for anonymous users; only authenticated admin can edit/reset config.
+
+### Download Page Config Persistence
+
+- Download page editor settings are stored in backend Mongo collection `wordsnote_download_page_configs`.
+- This shared persistence replaces browser-only local storage for download-page overrides.
+- `GET /api/download-config` is public for anonymous download page rendering.
+- `PUT /api/download-config` and `DELETE /api/download-config` are admin-only operations.
 
 ## Desktop (WPF) Configuration
 

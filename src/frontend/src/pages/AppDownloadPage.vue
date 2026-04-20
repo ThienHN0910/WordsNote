@@ -1,69 +1,123 @@
 <template>
   <section class="download-wrap">
-    <article class="hero">
-      <p class="eyebrow">Desktop App</p>
-      <h1>{{ displayTitle }}</h1>
-      <p class="summary">{{ displaySummary }}</p>
-
-      <div class="meta-row">
-        <span v-if="displayVersion">Version: {{ displayVersion }}</span>
-        <span v-if="displayPublishedAt">Published: {{ displayPublishedAt }}</span>
+    <header class="hero-shell">
+      <div class="hero-main">
+        <p class="eyebrow">Desktop Distribution</p>
+        <h1>{{ displayTitle }}</h1>
+        <p class="summary">{{ displaySummary }}</p>
       </div>
 
-      <div class="actions">
-        <a
-          v-if="displayDownloadUrl"
-          class="cta primary"
-          :href="displayDownloadUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Download for Windows
-        </a>
-        <a
-          v-if="displayReleaseNotesUrl"
-          class="cta ghost"
-          :href="displayReleaseNotesUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Release details
-        </a>
-        <a
-          v-if="displayChecksumUrl"
-          class="cta ghost"
-          :href="displayChecksumUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Checksums
-        </a>
+      <div class="hero-meta">
+        <div class="meta-item">
+          <span class="meta-label">Repository</span>
+          <strong>{{ sourceRepo }}</strong>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Versions loaded</span>
+          <strong>{{ visibleReleases.length }}</strong>
+        </div>
+        <div class="meta-item" v-if="selectedRelease">
+          <span class="meta-label">Selected</span>
+          <strong>{{ selectedRelease.tagName || selectedRelease.name }}</strong>
+        </div>
       </div>
+    </header>
 
-      <p v-if="displayAssetName" class="asset-name">Primary package: {{ displayAssetName }}</p>
-      <p v-if="loadError" class="error">{{ loadError }}</p>
-      <p v-if="isLoading" class="hint">Loading latest release data...</p>
-    </article>
+    <p v-if="loadError" class="error-banner">{{ loadError }}</p>
+    <p v-if="isLoading" class="loading-banner">Loading release versions from GitHub...</p>
 
-    <article class="asset-list" v-if="releaseSnapshot?.assets.length">
-      <h2>Release assets</h2>
-      <ul>
-        <li v-for="asset in releaseSnapshot.assets" :key="asset.name">
-          <a :href="asset.browserDownloadUrl" target="_blank" rel="noopener noreferrer">{{ asset.name }}</a>
-          <span>{{ formatFileSize(asset.size) }}</span>
-          <span>{{ asset.downloadCount }} downloads</span>
-        </li>
-      </ul>
-    </article>
+    <section class="workspace" v-if="visibleReleases.length">
+      <aside class="version-rail">
+        <h2>Versions</h2>
+        <ul>
+          <li v-for="release in visibleReleases" :key="release.tagName || release.name">
+            <button
+              type="button"
+              class="version-button"
+              :class="{ active: isSelectedRelease(release.tagName) }"
+              @click="selectRelease(release.tagName)"
+            >
+              <span class="version-name">{{ release.tagName || release.name }}</span>
+              <span class="version-date">{{ formatPublishedAt(release.publishedAt) }}</span>
+              <span class="version-links">{{ getReleaseLinkCount(release.tagName) }} links</span>
+            </button>
+          </li>
+        </ul>
+      </aside>
+
+      <article class="release-panel" v-if="selectedRelease">
+        <header class="release-header">
+          <div>
+            <p class="release-kicker">Selected version</p>
+            <h2>{{ selectedRelease.name || selectedRelease.tagName }}</h2>
+            <p class="release-sub">
+              {{ selectedRelease.tagName }} • {{ formatPublishedAt(selectedRelease.publishedAt) }}
+            </p>
+          </div>
+
+          <a
+            v-if="selectedRelease.htmlUrl"
+            class="release-link"
+            :href="selectedRelease.htmlUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open release page
+          </a>
+        </header>
+
+        <div class="link-grid" v-if="selectedReleaseLinks.length">
+          <a
+            v-for="link in selectedReleaseLinks"
+            :key="link.url"
+            class="download-link-card"
+            :href="link.url"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div class="link-top">
+              <span class="kind" :data-kind="link.kind">{{ kindLabel(link.kind) }}</span>
+              <span class="downloads">{{ link.downloadCount }} downloads</span>
+            </div>
+            <strong class="link-name">{{ link.name }}</strong>
+            <span class="link-size">{{ formatFileSize(link.size) }}</span>
+          </a>
+        </div>
+
+        <p v-else class="empty-state">No downloadable assets found for this version.</p>
+      </article>
+    </section>
+
+    <section class="catalog" v-if="releaseCards.length">
+      <h2>All versions and links</h2>
+      <div class="catalog-grid">
+        <article class="catalog-card" v-for="item in releaseCards" :key="item.release.tagName || item.release.name">
+          <header>
+            <h3>{{ item.release.tagName || item.release.name }}</h3>
+            <p>{{ formatPublishedAt(item.release.publishedAt) }}</p>
+          </header>
+
+          <ul>
+            <li v-for="link in item.links" :key="link.url">
+              <a :href="link.url" target="_blank" rel="noopener noreferrer">{{ link.name }}</a>
+              <span>{{ formatFileSize(link.size) }}</span>
+            </li>
+          </ul>
+        </article>
+      </div>
+    </section>
 
     <article class="editor" v-if="canEdit">
-      <h2>Edit download page data</h2>
-      <p class="hint">Signed in as {{ editorEmail }}. Changes are saved to this browser.</p>
+      <h2>Edit download page settings</h2>
+      <p class="hint">Signed in as {{ editorEmail }}. Settings are shared from backend for all devices.</p>
+
+      <p v-if="saveMessage" class="success-banner">{{ saveMessage }}</p>
+      <p v-if="saveError" class="error-banner">{{ saveError }}</p>
 
       <form class="editor-grid" @submit.prevent="saveOverrides">
         <label>
-          Title
-          <input v-model="overrideForm.title" type="text" placeholder="Words note desktop download" />
+          Page title
+          <input v-model="overrideForm.title" type="text" placeholder="Words note desktop downloads" />
         </label>
 
         <label>
@@ -71,42 +125,84 @@
           <textarea
             v-model="overrideForm.summary"
             rows="3"
-            placeholder="Download the latest installer and start learning on Windows."
+            placeholder="Choose any version and download the installer package you need."
           ></textarea>
         </label>
 
         <label>
-          Primary download URL
-          <input v-model="overrideForm.primaryDownloadUrl" type="url" placeholder="https://.../WordsNote.msixbundle" />
+          GitHub repository
+          <input v-model="overrideForm.repo" type="text" placeholder="ThinHN/WordsNote" />
         </label>
 
         <label>
-          Primary asset name
-          <input v-model="overrideForm.primaryAssetName" type="text" placeholder="WordsNote.Package_1.1.2.0_x64_arm64.msixbundle" />
+          Max visible versions
+          <input v-model.number="overrideForm.maxVisibleVersions" type="number" min="1" max="30" />
         </label>
 
         <label>
-          Version label
-          <input v-model="overrideForm.versionLabel" type="text" placeholder="1.1.2" />
+          Featured version tag (optional)
+          <input v-model="overrideForm.featuredTag" type="text" placeholder="v1.1.2" />
         </label>
 
-        <label>
-          Published date text
-          <input v-model="overrideForm.publishedAt" type="text" placeholder="20 Apr 2026" />
-        </label>
+        <fieldset class="manual-section">
+          <legend>Custom links per version</legend>
 
-        <label>
-          Release notes URL
-          <input v-model="overrideForm.releaseNotesUrl" type="url" placeholder="https://github.com/.../releases/tag/v1.1.2" />
-        </label>
+          <div class="manual-input-grid">
+            <label>
+              Version tag
+              <input v-model="manualLinkDraft.tagName" type="text" placeholder="v1.1.2" />
+            </label>
 
-        <label>
-          Checksum URL
-          <input v-model="overrideForm.checksumUrl" type="url" placeholder="https://github.com/.../SHA256SUMS.txt" />
-        </label>
+            <label>
+              Link name
+              <input v-model="manualLinkDraft.name" type="text" placeholder="Desktop installer mirror" />
+            </label>
+
+            <label>
+              Link URL
+              <input v-model="manualLinkDraft.url" type="url" placeholder="https://example.com/download" />
+            </label>
+
+            <label>
+              Type
+              <select v-model="manualLinkDraft.kind">
+                <option value="installer">Installer</option>
+                <option value="archive">Archive</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+
+            <button class="btn-add" type="button" @click="addManualLink">Add custom link</button>
+          </div>
+
+          <div class="manual-list" v-if="manualLinkGroups.length">
+            <article class="manual-group" v-for="group in manualLinkGroups" :key="group.tagName">
+              <header>
+                <h3>{{ group.tagName }}</h3>
+                <span>{{ group.links.length }} links</span>
+              </header>
+
+              <ul>
+                <li v-for="(link, linkIndex) in group.links" :key="`${group.tagName}-${link.url}-${linkIndex}`">
+                  <div class="manual-link-body">
+                    <strong>{{ link.name }}</strong>
+                    <a :href="link.url" target="_blank" rel="noopener noreferrer">{{ link.url }}</a>
+                  </div>
+
+                  <span class="kind" :data-kind="link.kind">{{ kindLabel(link.kind) }}</span>
+                  <button type="button" class="btn-remove" @click="removeManualLink(group.tagName, linkIndex)">
+                    Remove
+                  </button>
+                </li>
+              </ul>
+            </article>
+          </div>
+
+          <p v-else class="hint">No custom links yet.</p>
+        </fieldset>
 
         <div class="editor-actions">
-          <button class="btn-save" type="submit">Save</button>
+          <button class="btn-save" type="submit">Save settings</button>
           <button class="btn-clear" type="button" @click="clearOverrides">Reset</button>
         </div>
       </form>
@@ -119,150 +215,254 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/AS/AuthStore'
 import { AppDownloadService } from '@/services/FFP/AppDownloadService'
 import { UserService } from '@/services/AS/UserService'
-import type { DownloadPageOverride, GithubReleaseSnapshot } from '@/types/FFP/AppDownload'
+import type {
+  DownloadPageOverride,
+  GithubReleaseSnapshot,
+  ManualReleaseDownloadLink,
+  ManualReleaseLinksByVersion,
+  ReleaseDownloadKind,
+  ReleaseDownloadLink,
+} from '@/types/FFP/AppDownload'
+
+interface ReleaseCard {
+  release: GithubReleaseSnapshot
+  links: ReleaseDownloadLink[]
+}
+
+interface ManualLinkDraft {
+  tagName: string
+  name: string
+  url: string
+  kind: ReleaseDownloadKind
+}
 
 const authStore = useAuthStore()
 
-const releaseSnapshot = ref<GithubReleaseSnapshot | null>(null)
+const releaseSnapshots = ref<GithubReleaseSnapshot[]>([])
 const isLoading = ref(false)
 const loadError = ref('')
+const saveMessage = ref('')
+const saveError = ref('')
 const editorEmail = ref('')
+const editorRole = ref('')
+const selectedTag = ref('')
+const lastLoadedRepo = ref('')
 
-const githubRepo = (import.meta.env.VITE_GITHUB_REPO || 'ThinHN/WordsNote').trim()
-const configuredEditorEmail = (import.meta.env.VITE_DOWNLOAD_EDITOR_EMAIL || '').trim().toLowerCase()
+const fallbackRepo = 'ThinHN/WordsNote'
+const allowedAdminEmail = (import.meta.env.VITE_GOOGLE_ALLOWED_EMAIL || '').trim().toLowerCase()
 
 const overrideForm = reactive<DownloadPageOverride>({
-  ...AppDownloadService.loadOverride(),
+  title: '',
+  summary: '',
+  repo: '',
+  maxVisibleVersions: 8,
+  featuredTag: '',
+  manualLinksByVersion: [],
+})
+
+const manualLinkDraft = reactive<ManualLinkDraft>({
+  tagName: '',
+  name: '',
+  url: '',
+  kind: 'installer',
 })
 
 const hasAuthSession = computed(() => authStore.hasAuthSession)
+const sourceRepo = computed(() => {
+  const candidate = String(overrideForm.repo || '').trim()
+  return candidate || fallbackRepo
+})
+
+const maxVisibleVersions = computed(() => {
+  const numeric = Number(overrideForm.maxVisibleVersions)
+  if (!Number.isFinite(numeric)) {
+    return 8
+  }
+
+  return Math.min(30, Math.max(1, Math.trunc(numeric)))
+})
+
 const canEdit = computed(() => {
+  if (!hasAuthSession.value) {
+    return false
+  }
+
   const email = editorEmail.value.trim().toLowerCase()
   if (!email) {
     return false
   }
 
-  if (!configuredEditorEmail) {
+  const role = editorRole.value.trim().toLowerCase()
+  if (role === 'admin') {
     return true
   }
 
-  return email === configuredEditorEmail
+  if (!allowedAdminEmail) {
+    return false
+  }
+
+  return email === allowedAdminEmail
 })
 
-const preferredAsset = computed(() => {
-  const assets = releaseSnapshot.value?.assets ?? []
-  return AppDownloadService.findPreferredInstallerAsset(assets)
+const visibleReleases = computed(() => releaseSnapshots.value.slice(0, maxVisibleVersions.value))
+
+const releaseCards = computed<ReleaseCard[]>(() => {
+  return visibleReleases.value.map((release) => ({
+    release,
+    links: AppDownloadService.buildReleaseLinks(
+      release.assets,
+      AppDownloadService.getManualLinksForTag(overrideForm, release.tagName),
+    ),
+  }))
+})
+
+const manualLinkGroups = computed(() => {
+  return sanitizeManualLinksByVersion(overrideForm.manualLinksByVersion)
+    .sort((a, b) => b.tagName.localeCompare(a.tagName, undefined, { numeric: true, sensitivity: 'base' }))
+})
+
+const selectedRelease = computed(() => {
+  if (!visibleReleases.value.length) {
+    return null
+  }
+
+  const featuredTag = String(overrideForm.featuredTag || '').trim()
+  if (featuredTag) {
+    const featured = visibleReleases.value.find((release) => release.tagName === featuredTag)
+    if (featured) {
+      return featured
+    }
+  }
+
+  if (selectedTag.value) {
+    const active = visibleReleases.value.find((release) => release.tagName === selectedTag.value)
+    if (active) {
+      return active
+    }
+  }
+
+  return visibleReleases.value[0]
+})
+
+const selectedReleaseLinks = computed(() => {
+  if (!selectedRelease.value) {
+    return [] as ReleaseDownloadLink[]
+  }
+
+  return AppDownloadService.buildReleaseLinks(
+    selectedRelease.value.assets,
+    AppDownloadService.getManualLinksForTag(overrideForm, selectedRelease.value.tagName),
+  )
 })
 
 const displayTitle = computed(() => {
   if (overrideForm.title) {
-    return overrideForm.title
+    return String(overrideForm.title).trim()
   }
 
-  const fallbackName = releaseSnapshot.value?.name || releaseSnapshot.value?.tagName
-  return fallbackName ? `Words note ${fallbackName}` : 'Words note desktop download'
+  return 'Words note desktop downloads'
 })
 
 const displaySummary = computed(() => {
   if (overrideForm.summary) {
-    return overrideForm.summary
+    return String(overrideForm.summary).trim()
   }
 
-  return 'Download the latest Windows installer for Words note and continue learning with Flashcards, Learn, and Practice modes.'
+  return 'Browse multiple versions and choose the installer package that matches your setup.'
 })
 
-const displayVersion = computed(() => {
-  if (overrideForm.versionLabel) {
-    return overrideForm.versionLabel
-  }
-
-  const tag = releaseSnapshot.value?.tagName || ''
-  return tag.replace(/^v/i, '')
-})
-
-const displayPublishedAt = computed(() => {
-  if (overrideForm.publishedAt) {
-    return overrideForm.publishedAt
-  }
-
-  const publishedAt = releaseSnapshot.value?.publishedAt
-  if (!publishedAt) {
-    return ''
-  }
-
-  const date = new Date(publishedAt)
-  return Number.isNaN(date.getTime()) ? publishedAt : date.toLocaleDateString()
-})
-
-const displayDownloadUrl = computed(() => {
-  if (overrideForm.primaryDownloadUrl) {
-    return overrideForm.primaryDownloadUrl
-  }
-
-  return preferredAsset.value?.browserDownloadUrl || ''
-})
-
-const displayAssetName = computed(() => {
-  if (overrideForm.primaryAssetName) {
-    return overrideForm.primaryAssetName
-  }
-
-  return preferredAsset.value?.name || ''
-})
-
-const displayReleaseNotesUrl = computed(() => {
-  if (overrideForm.releaseNotesUrl) {
-    return overrideForm.releaseNotesUrl
-  }
-
-  return releaseSnapshot.value?.htmlUrl || ''
-})
-
-const displayChecksumUrl = computed(() => overrideForm.checksumUrl || '')
-
-async function loadLatestRelease() {
-  isLoading.value = true
-  loadError.value = ''
-
-  try {
-    releaseSnapshot.value = await AppDownloadService.fetchLatestRelease(githubRepo)
-  } catch (error) {
-    loadError.value = error instanceof Error ? error.message : 'Failed to load release data.'
-  } finally {
-    isLoading.value = false
-  }
+function isSelectedRelease(tagName: string) {
+  const selected = selectedRelease.value?.tagName || ''
+  return selected === tagName
 }
 
-async function loadEditorIdentity() {
-  if (!hasAuthSession.value) {
-    editorEmail.value = ''
+function getReleaseLinkCount(tagName: string) {
+  const matched = releaseCards.value.find((entry) => entry.release.tagName === tagName)
+  return matched ? matched.links.length : 0
+}
+
+function selectRelease(tagName: string) {
+  selectedTag.value = tagName
+}
+
+function addManualLink() {
+  const nextTag = normalizeText(manualLinkDraft.tagName)
+  const nextName = normalizeText(manualLinkDraft.name)
+  const nextUrl = normalizeText(manualLinkDraft.url)
+
+  if (!nextTag || !nextName || !nextUrl) {
+    saveError.value = 'Version tag, link name, and URL are required before adding.'
+    saveMessage.value = ''
     return
   }
 
-  try {
-    const response = await UserService.getMyProfile()
-    const payload = (response.data ?? {}) as Record<string, unknown>
-    editorEmail.value = String(payload.email ?? payload.Email ?? '').trim()
-  } catch {
-    editorEmail.value = ''
+  const normalizedKind = normalizeKind(manualLinkDraft.kind)
+  const nextGroups = sanitizeManualLinksByVersion(overrideForm.manualLinksByVersion)
+  const normalizedTag = nextTag.toLowerCase()
+
+  let targetGroup = nextGroups.find((group) => group.tagName.toLowerCase() === normalizedTag)
+  if (!targetGroup) {
+    targetGroup = { tagName: nextTag, links: [] }
+    nextGroups.unshift(targetGroup)
+  }
+
+  targetGroup.links.unshift({
+    name: nextName,
+    url: nextUrl,
+    kind: normalizedKind,
+  })
+
+  overrideForm.manualLinksByVersion = nextGroups
+
+  manualLinkDraft.name = ''
+  manualLinkDraft.url = ''
+  saveError.value = ''
+  saveMessage.value = ''
+}
+
+function removeManualLink(tagName: string, linkIndex: number) {
+  const normalizedTag = normalizeText(tagName).toLowerCase()
+  const nextGroups = sanitizeManualLinksByVersion(overrideForm.manualLinksByVersion)
+  const groupIndex = nextGroups.findIndex((group) => group.tagName.toLowerCase() === normalizedTag)
+  if (groupIndex < 0) {
+    return
+  }
+
+  const nextLinks = [...nextGroups[groupIndex].links]
+  nextLinks.splice(linkIndex, 1)
+
+  if (!nextLinks.length) {
+    nextGroups.splice(groupIndex, 1)
+  } else {
+    nextGroups[groupIndex] = {
+      ...nextGroups[groupIndex],
+      links: nextLinks,
+    }
+  }
+
+  overrideForm.manualLinksByVersion = nextGroups
+  saveError.value = ''
+  saveMessage.value = ''
+}
+
+function kindLabel(kind: ReleaseDownloadKind) {
+  switch (kind) {
+    case 'installer':
+      return 'Installer'
+    case 'archive':
+      return 'Archive'
+    default:
+      return 'Asset'
   }
 }
 
-function saveOverrides() {
-  AppDownloadService.saveOverride(overrideForm)
-}
+function formatPublishedAt(rawValue: string) {
+  if (!rawValue) {
+    return 'Unknown date'
+  }
 
-function clearOverrides() {
-  AppDownloadService.clearOverride()
-  const cleared = AppDownloadService.loadOverride()
-  overrideForm.title = cleared.title
-  overrideForm.summary = cleared.summary
-  overrideForm.primaryDownloadUrl = cleared.primaryDownloadUrl
-  overrideForm.primaryAssetName = cleared.primaryAssetName
-  overrideForm.checksumUrl = cleared.checksumUrl
-  overrideForm.releaseNotesUrl = cleared.releaseNotesUrl
-  overrideForm.versionLabel = cleared.versionLabel
-  overrideForm.publishedAt = cleared.publishedAt
+  const date = new Date(rawValue)
+  return Number.isNaN(date.getTime()) ? rawValue : date.toLocaleDateString()
 }
 
 function formatFileSize(bytes: number) {
@@ -279,9 +479,141 @@ function formatFileSize(bytes: number) {
     unitIndex += 1
   }
 
-  const rounded = unitIndex === 0 ? size.toFixed(0) : size.toFixed(2)
-  return `${rounded} ${units[unitIndex]}`
+  return `${size.toFixed(unitIndex === 0 ? 0 : 2)} ${units[unitIndex]}`
 }
+
+async function loadReleases() {
+  isLoading.value = true
+  loadError.value = ''
+
+  try {
+    const snapshots = await AppDownloadService.fetchReleases(sourceRepo.value, 30)
+    releaseSnapshots.value = snapshots
+    lastLoadedRepo.value = sourceRepo.value
+
+    if (!selectedRelease.value && snapshots.length > 0) {
+      selectedTag.value = snapshots[0].tagName
+    }
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : 'Failed to load release data.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function loadEditorIdentity() {
+  if (!hasAuthSession.value) {
+    editorEmail.value = ''
+    editorRole.value = ''
+    return
+  }
+
+  try {
+    const response = await UserService.getMyProfile()
+    const payload = (response.data ?? {}) as Record<string, unknown>
+    editorEmail.value = String(payload.email ?? payload.Email ?? '').trim()
+    editorRole.value = String(payload.role ?? payload.Role ?? '').trim()
+  } catch {
+    editorEmail.value = ''
+    editorRole.value = ''
+  }
+}
+
+function applyOverrideToForm(nextOverride: DownloadPageOverride) {
+  overrideForm.title = nextOverride.title || ''
+  overrideForm.summary = nextOverride.summary || ''
+  overrideForm.repo = nextOverride.repo || ''
+  overrideForm.maxVisibleVersions = Number(nextOverride.maxVisibleVersions || 8)
+  overrideForm.featuredTag = nextOverride.featuredTag || ''
+  overrideForm.manualLinksByVersion = sanitizeManualLinksByVersion(nextOverride.manualLinksByVersion)
+}
+
+async function saveOverrides() {
+  saveError.value = ''
+  saveMessage.value = ''
+
+  try {
+    const persisted = await AppDownloadService.saveOverride(overrideForm)
+    applyOverrideToForm(persisted)
+    saveMessage.value = 'Saved shared settings to backend.'
+
+    if (sourceRepo.value !== lastLoadedRepo.value) {
+      await loadReleases()
+    }
+  } catch (error) {
+    saveError.value = error instanceof Error ? error.message : 'Failed to save shared settings.'
+  }
+}
+
+async function clearOverrides() {
+  saveError.value = ''
+  saveMessage.value = ''
+
+  try {
+    await AppDownloadService.clearOverride()
+    applyOverrideToForm({ maxVisibleVersions: 8, manualLinksByVersion: [] })
+    saveMessage.value = 'Reset shared settings on backend.'
+
+    if (sourceRepo.value !== lastLoadedRepo.value) {
+      await loadReleases()
+    }
+  } catch (error) {
+    saveError.value = error instanceof Error ? error.message : 'Failed to reset shared settings.'
+  }
+}
+
+function sanitizeManualLinksByVersion(rawValue: unknown): ManualReleaseLinksByVersion[] {
+  const groups = Array.isArray(rawValue) ? rawValue : []
+
+  return groups
+    .map((rawGroup) => {
+      const group = (rawGroup || {}) as ManualReleaseLinksByVersion
+      const links = Array.isArray(group.links) ? group.links : []
+
+      return {
+        tagName: normalizeText(group.tagName),
+        links: links
+          .map((rawLink) => {
+            const link = (rawLink || {}) as ManualReleaseDownloadLink
+            return {
+              name: normalizeText(link.name),
+              url: normalizeText(link.url),
+              kind: normalizeKind(link.kind),
+            } as ManualReleaseDownloadLink
+          })
+          .filter((link) => Boolean(link.name && link.url)),
+      } as ManualReleaseLinksByVersion
+    })
+    .filter((group) => Boolean(group.tagName && group.links.length > 0))
+}
+
+function normalizeText(rawValue: unknown) {
+  return typeof rawValue === 'string' ? rawValue.trim() : ''
+}
+
+function normalizeKind(rawValue: unknown): ReleaseDownloadKind {
+  const kind = normalizeText(rawValue).toLowerCase()
+  if (kind === 'installer') {
+    return 'installer'
+  }
+
+  if (kind === 'archive') {
+    return 'archive'
+  }
+
+  return 'other'
+}
+
+watch(visibleReleases, (nextReleases) => {
+  if (!nextReleases.length) {
+    selectedTag.value = ''
+    return
+  }
+
+  if (!nextReleases.some((release) => release.tagName === selectedTag.value)) {
+    selectedTag.value = nextReleases[0].tagName
+  }
+})
 
 watch(hasAuthSession, () => {
   void loadEditorIdentity()
@@ -289,151 +621,419 @@ watch(hasAuthSession, () => {
 
 onMounted(() => {
   authStore.rehydrateFromPersistedState()
-  void loadLatestRelease()
+
+  void (async () => {
+    const remoteOverride = await AppDownloadService.loadOverride()
+    applyOverrideToForm(remoteOverride)
+    await loadReleases()
+  })()
 })
 </script>
 
 <style scoped>
 .download-wrap {
-  max-width: 1120px;
+  max-width: 1160px;
   margin: 0 auto;
   padding: 2rem 1rem 3rem;
   display: grid;
   gap: 1rem;
 }
 
-.hero,
-.asset-list,
-.editor {
+.hero-shell {
   border: 1px solid var(--wn-border);
-  border-radius: 18px;
-  background: var(--wn-surface);
-  box-shadow: var(--wn-shadow-soft);
-  padding: 1.2rem;
-}
-
-.hero {
+  border-radius: 22px;
   background:
-    radial-gradient(110% 130% at 0% 0%, color-mix(in srgb, var(--wn-primary) 14%, transparent), transparent 52%),
+    radial-gradient(120% 130% at 0% 0%, color-mix(in srgb, var(--wn-primary) 17%, transparent), transparent 58%),
+    radial-gradient(120% 130% at 100% 100%, color-mix(in srgb, var(--wn-link) 12%, transparent), transparent 58%),
     var(--wn-surface-soft);
+  box-shadow: var(--wn-shadow-soft);
+  padding: 1.25rem;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(320px, 2fr) minmax(220px, 1fr);
 }
 
 .eyebrow {
-  margin: 0 0 0.45rem;
+  margin: 0 0 0.42rem;
   text-transform: uppercase;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   font-size: 0.72rem;
   color: var(--wn-muted);
 }
 
 h1 {
   margin: 0;
-  font-size: clamp(1.65rem, 2.8vw, 2.3rem);
-}
-
-h2 {
-  margin: 0 0 0.7rem;
+  font-size: clamp(1.75rem, 3vw, 2.45rem);
 }
 
 .summary {
-  margin-top: 0.8rem;
+  margin: 0.82rem 0 0;
   color: var(--wn-muted);
-  max-width: 70ch;
+  max-width: 72ch;
 }
 
-.meta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  margin-top: 0.7rem;
-  color: var(--wn-muted);
-  font-size: 0.93rem;
+.hero-meta {
+  display: grid;
+  gap: 0.6rem;
 }
 
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  margin-top: 1rem;
-}
-
-.cta {
-  text-decoration: none;
-  padding: 0.6rem 0.95rem;
+.meta-item {
+  border: 1px solid var(--wn-border);
   border-radius: 12px;
-  border: 1px solid transparent;
-  font-weight: 600;
+  background: var(--wn-surface);
+  padding: 0.55rem 0.72rem;
 }
 
-.cta.primary {
-  background: var(--wn-primary);
-  color: var(--wn-on-primary);
+.meta-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--wn-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.18rem;
 }
 
-.cta.ghost {
-  border-color: var(--wn-border);
-  color: var(--wn-ink);
+.loading-banner,
+.error-banner {
+  border-radius: 12px;
+  padding: 0.6rem 0.82rem;
+  margin: 0;
+}
+
+.success-banner {
+  border-radius: 12px;
+  padding: 0.6rem 0.82rem;
+  margin: 0;
+  border: 1px solid color-mix(in srgb, #22a06b 42%, var(--wn-border));
+  color: #1b7e54;
+  background: color-mix(in srgb, #22a06b 8%, var(--wn-surface));
+}
+
+.loading-banner {
+  border: 1px solid var(--wn-border);
+  color: var(--wn-muted);
   background: var(--wn-surface);
 }
 
-.asset-name {
-  margin-top: 0.8rem;
-  color: var(--wn-muted);
-  font-size: 0.93rem;
+.error-banner {
+  border: 1px solid color-mix(in srgb, #d64545 35%, var(--wn-border));
+  color: #b83838;
+  background: color-mix(in srgb, #d64545 7%, var(--wn-surface));
 }
 
-.hint {
-  margin-top: 0.8rem;
-  color: var(--wn-muted);
+.workspace {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
 }
 
-.error {
-  margin-top: 0.8rem;
-  color: #c0392b;
+.version-rail,
+.release-panel,
+.catalog,
+.editor {
+  border: 1px solid var(--wn-border);
+  border-radius: 18px;
+  background: var(--wn-surface);
+  box-shadow: var(--wn-shadow-soft);
+  padding: 1rem;
 }
 
-.asset-list ul {
-  list-style: none;
+.version-rail h2,
+.catalog h2,
+.editor h2 {
+  margin: 0 0 0.72rem;
+}
+
+.version-rail ul {
   margin: 0;
   padding: 0;
+  list-style: none;
   display: grid;
-  gap: 0.5rem;
+  gap: 0.52rem;
 }
 
-.asset-list li {
-  display: grid;
-  grid-template-columns: minmax(220px, 1fr) auto auto;
-  gap: 0.5rem;
-  align-items: center;
+.version-button {
+  width: 100%;
+  text-align: left;
   border: 1px solid var(--wn-border);
-  border-radius: 10px;
-  padding: 0.5rem 0.7rem;
+  border-radius: 12px;
+  background: var(--wn-surface-soft);
+  color: var(--wn-ink);
+  padding: 0.55rem 0.68rem;
+  display: grid;
+  gap: 0.2rem;
 }
 
-.asset-list a {
+.version-button.active {
+  border-color: var(--wn-primary);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--wn-primary) 45%, transparent);
+}
+
+.version-name {
+  font-weight: 700;
+}
+
+.version-date,
+.version-links {
+  font-size: 0.82rem;
+  color: var(--wn-muted);
+}
+
+.release-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.9rem;
+}
+
+.release-kicker {
+  margin: 0;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: var(--wn-muted);
+}
+
+.release-header h2 {
+  margin: 0.2rem 0;
+}
+
+.release-sub {
+  margin: 0;
+  color: var(--wn-muted);
+}
+
+.release-link {
+  text-decoration: none;
+  border: 1px solid var(--wn-border);
+  border-radius: 12px;
+  padding: 0.52rem 0.78rem;
+  color: var(--wn-ink);
+  background: var(--wn-surface-soft);
+}
+
+.link-grid {
+  display: grid;
+  gap: 0.72rem;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.download-link-card {
+  text-decoration: none;
+  color: var(--wn-ink);
+  border: 1px solid var(--wn-border);
+  border-radius: 14px;
+  background: var(--wn-surface-soft);
+  padding: 0.7rem;
+  display: grid;
+  gap: 0.38rem;
+}
+
+.download-link-card:hover {
+  border-color: color-mix(in srgb, var(--wn-primary) 45%, var(--wn-border));
+}
+
+.link-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.kind {
+  font-size: 0.74rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.48rem;
+  border: 1px solid var(--wn-border);
+  background: var(--wn-surface);
+}
+
+.kind[data-kind='installer'] {
+  border-color: color-mix(in srgb, #22a06b 55%, var(--wn-border));
+}
+
+.kind[data-kind='archive'] {
+  border-color: color-mix(in srgb, #3a89e5 55%, var(--wn-border));
+}
+
+.downloads,
+.link-size {
+  font-size: 0.8rem;
+  color: var(--wn-muted);
+}
+
+.link-name {
+  overflow-wrap: anywhere;
+}
+
+.catalog-grid {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.catalog-card {
+  border: 1px solid var(--wn-border);
+  border-radius: 14px;
+  padding: 0.75rem;
+  background: var(--wn-surface-soft);
+}
+
+.catalog-card h3 {
+  margin: 0;
+}
+
+.catalog-card p {
+  margin: 0.2rem 0 0.6rem;
+  color: var(--wn-muted);
+  font-size: 0.86rem;
+}
+
+.catalog-card ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.36rem;
+}
+
+.catalog-card li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.catalog-card a {
   color: var(--wn-link);
   text-decoration: none;
   overflow-wrap: anywhere;
 }
 
+.hint,
+.empty-state {
+  margin: 0;
+  color: var(--wn-muted);
+}
+
 .editor-grid {
   display: grid;
-  gap: 0.65rem;
+  gap: 0.62rem;
 }
 
 .editor-grid label {
   display: grid;
-  gap: 0.28rem;
+  gap: 0.26rem;
   font-size: 0.92rem;
 }
 
 .editor-grid input,
-.editor-grid textarea {
+.editor-grid textarea,
+.editor-grid select {
   border: 1px solid var(--wn-border);
   background: var(--wn-surface-soft);
   color: var(--wn-ink);
   border-radius: 10px;
-  padding: 0.55rem 0.65rem;
+  padding: 0.55rem 0.64rem;
+}
+
+.manual-section {
+  border: 1px solid var(--wn-border);
+  border-radius: 12px;
+  padding: 0.72rem;
+  display: grid;
+  gap: 0.72rem;
+  background: var(--wn-surface-soft);
+}
+
+.manual-section legend {
+  padding: 0 0.3rem;
+  color: var(--wn-muted);
+  font-size: 0.86rem;
+}
+
+.manual-input-grid {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.btn-add {
+  align-self: end;
+  height: 2.35rem;
+  border: 1px dashed var(--wn-primary);
+  border-radius: 10px;
+  color: var(--wn-primary);
+  background: color-mix(in srgb, var(--wn-primary) 10%, transparent);
+}
+
+.manual-list {
+  display: grid;
+  gap: 0.62rem;
+}
+
+.manual-group {
+  border: 1px solid var(--wn-border);
+  border-radius: 10px;
+  background: var(--wn-surface);
+  padding: 0.62rem;
+}
+
+.manual-group header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.55rem;
+}
+
+.manual-group h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.manual-group header span {
+  color: var(--wn-muted);
+  font-size: 0.82rem;
+}
+
+.manual-group ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.manual-group li {
+  border: 1px solid var(--wn-border);
+  border-radius: 10px;
+  background: var(--wn-surface-soft);
+  padding: 0.52rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.manual-link-body {
+  display: grid;
+  gap: 0.24rem;
+}
+
+.manual-link-body a {
+  color: var(--wn-link);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  font-size: 0.84rem;
+}
+
+.btn-remove {
+  justify-self: start;
+  border: 1px solid color-mix(in srgb, #d64545 35%, var(--wn-border));
+  border-radius: 8px;
+  background: color-mix(in srgb, #d64545 8%, var(--wn-surface));
+  color: #b83838;
+  padding: 0.3rem 0.6rem;
 }
 
 .editor-actions {
@@ -446,19 +1046,20 @@ h2 {
 .btn-clear {
   border: 1px solid var(--wn-border);
   border-radius: 10px;
-  padding: 0.5rem 0.9rem;
+  padding: 0.5rem 0.85rem;
   background: var(--wn-surface);
   color: var(--wn-ink);
 }
 
 .btn-save {
-  background: var(--wn-primary);
   border-color: var(--wn-primary);
+  background: var(--wn-primary);
   color: var(--wn-on-primary);
 }
 
-@media (max-width: 820px) {
-  .asset-list li {
+@media (max-width: 980px) {
+  .hero-shell,
+  .workspace {
     grid-template-columns: 1fr;
   }
 }

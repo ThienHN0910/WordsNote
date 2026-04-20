@@ -1,46 +1,73 @@
 # WordsNote Release Notes
 
-## WordsNote v1.1.2 - Dynamic Download Page and Extension Version Sync
+## WordsNote v1.1.2 - Multi-Version Download Center and Shared Config Sync
 
 Release date: 20/04/2026
 
+Baseline compared: `v1.1.0` -> `v1.1.2`
+
 Scope summary:
-- Extension version synchronized to `1.1.2`
-- Added dynamic web download page for desktop app distribution
-- Added authenticated email-based edit mode for download metadata
+- Added backend download-config API for shared editor persistence
+- Added per-version manual custom links in download editor
+- Download page now supports multiple versions and multiple links per version
+- Extension metadata synchronized to `1.1.2`
 
 ### Highlights
 
-New in this release:
-- Extension version bump:
+Added features include:
+- Introduced dynamic desktop download page on web:
+  - Route: `/download`
+  - Page: `src/frontend/src/pages/AppDownloadPage.vue`
+  - Pulls release metadata and assets from GitHub Releases API
+  - Supports selecting among multiple release versions
+  - Displays multiple download links per version
+- Added authenticated email-based edit mode for download metadata and links:
+  - Loads signed-in profile from `/api/user/me`
+  - Keeps download page public for anonymous users
+  - Enables edit controls for admin account only
+  - Supports custom manual links per version (outside GitHub assets)
+- Added shared backend persistence for download page config:
+  - Public read endpoint: `GET /api/download-config`
+  - Authenticated write endpoint: `PUT /api/download-config`
+  - Authenticated reset endpoint: `DELETE /api/download-config`
+  - Uses Mongo collection `wordsnote_download_page_configs` so all devices see the same config
+- Synced extension release version to `1.1.2`:
   - Updated `src/extension/package.json` to `1.1.2`
   - Updated `src/extension/public/manifest.json` to `1.1.2`
   - Synced `src/extension/package-lock.json` version metadata
-- Added a new frontend download route:
-  - Route: `/download`
-  - Page: `src/frontend/src/pages/AppDownloadPage.vue`
-  - Navigation links added in top bar and landing quick actions
-- Download page now loads data dynamically from GitHub Releases API:
-  - Pulls latest release metadata and assets
-  - Selects preferred installer asset (priority: `.msixbundle` -> `.msix` -> `.exe` -> `.zip`)
-  - Displays release assets list with file size and download count
-- Added authenticated edit mode based on signed-in user email:
-  - Loads profile from `/api/user/me`
-  - Enables edit controls only when a signed-in profile has an email
-  - Optional restriction via `VITE_DOWNLOAD_EDITOR_EMAIL`
-  - Editable values are persisted in browser local storage for quick admin updates
+
+Improved web behavior includes:
+- Added direct navigation to download experience from top bar and landing quick actions.
+- Kept download page public for readers while restricting edit/reset controls to admin.
+
+Documentation updates include:
+- Updated release notes with a unified release-note structure aligned to previous release format.
+
+### Breaking/Behavior Notes
+
+- Download page metadata overrides are now backend-shared (Mongo), not local-browser scoped.
+- GitHub Releases API availability affects dynamic metadata loading on `/download`.
+- Download config write/reset APIs require admin privileges.
+- For distribution, `.msixbundle` is end-user installer artifact while `.msixupload` remains Partner Center submission artifact.
 
 ### Build Validation
 
-Verified in current cycle:
+Verified build commands in current cycle:
 - Frontend: `cd src/frontend && npm run build`
+- Backend: `cd src/backend && dotnet build FeatureFusion.sln`
 - Extension: `cd src/extension && npm run build`
 
-### Notes
+### Release Assets (Suggested Packaging)
 
-- The `/download` page is public for viewing and uses dynamic release data from GitHub.
-- Edit mode is hidden for anonymous users.
-- For desktop installer distribution on GitHub Release, upload `.msixbundle` for end users and keep `.msixupload` for Partner Center submission only.
+Suggested artifacts:
+- `release/v1.1.2/wordsnote-extension-v1.1.2.zip`
+- `release/v1.1.2/WordsNote.Package_1.1.2.0_x64_arm64.msixbundle`
+- `release/v1.1.2/SHA256SUMS.txt`
+- `release/v1.1.2/RELEASE_NOTES.md`
+
+### Full Commit List (since v1.1.0)
+
+- (Fill this section after creating commits/tag for v1.1.2)
 
 ## WordsNote v1.1.0 - Desktop Parity, Local-First Manage, Web Auth/Learn Stabilization
 

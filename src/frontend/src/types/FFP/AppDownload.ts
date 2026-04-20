@@ -6,6 +6,27 @@ export interface GithubReleaseAsset {
   contentType: string
 }
 
+export type ReleaseDownloadKind = 'installer' | 'archive' | 'other'
+
+export interface ReleaseDownloadLink {
+  name: string
+  url: string
+  size: number
+  downloadCount: number
+  kind: ReleaseDownloadKind
+}
+
+export interface ManualReleaseDownloadLink {
+  name: string
+  url: string
+  kind: ReleaseDownloadKind
+}
+
+export interface ManualReleaseLinksByVersion {
+  tagName: string
+  links: ManualReleaseDownloadLink[]
+}
+
 export interface GithubReleaseSnapshot {
   repo: string
   tagName: string
@@ -20,10 +41,10 @@ export interface GithubReleaseSnapshot {
 export interface DownloadPageOverride {
   title?: string
   summary?: string
-  primaryDownloadUrl?: string
-  primaryAssetName?: string
-  checksumUrl?: string
-  releaseNotesUrl?: string
-  versionLabel?: string
-  publishedAt?: string
+  repo?: string
+  maxVisibleVersions?: number
+  featuredTag?: string
+  manualLinksByVersion?: ManualReleaseLinksByVersion[]
+  updatedByEmail?: string
+  updatedAt?: string
 }

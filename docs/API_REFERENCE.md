@@ -60,6 +60,41 @@ Behavior:
 - `GET /api/user/me`
 - `PUT /api/user/me`
 
+## Download Config
+
+- `GET /api/download-config` (public)
+- `PUT /api/download-config` (requires admin JWT)
+- `DELETE /api/download-config` (requires admin JWT)
+
+Purpose:
+
+- Shared configuration for web route `/download`.
+- Stores editor-managed values in Mongo so all devices receive the same data.
+- Anonymous users can still open `/download` and download assets via public read config + GitHub release links.
+
+`GET /api/download-config` response shape:
+
+- `title`: string (optional)
+- `summary`: string (optional)
+- `repo`: string (optional), GitHub repository in owner/name format
+- `maxVisibleVersions`: int (1..30)
+- `featuredTag`: string (optional)
+- `manualLinksByVersion`: array (optional)
+	- `tagName`: string (required when item exists)
+	- `links`: array
+		- `name`: string (required)
+		- `url`: string (required)
+		- `kind`: `installer | archive | other`
+- `updatedByEmail`: string (optional)
+- `updatedAt`: ISO datetime (optional)
+
+`PUT /api/download-config` request body:
+
+- Same structure as `GET` response fields above.
+- Empty or invalid manual links are filtered by backend sanitizer.
+- `maxVisibleVersions` is normalized to range 1..30.
+- Caller must be admin (user role `Admin` or configured admin email).
+
 ## Collections
 
 - `GET /api/collections` (public)
@@ -164,6 +199,7 @@ Written submit payload:
 ## Error Semantics
 
 - `401 Unauthorized`: missing/invalid token on protected write/management endpoints.
+- `403 Forbidden`: authenticated but not allowed for admin-only endpoints (for example `PUT/DELETE /api/download-config`).
 - `503 Service Unavailable`: backend dependent data service unavailable (commonly MongoDB connectivity/runtime configuration issue).
 
 When troubleshooting `503` in deployment:

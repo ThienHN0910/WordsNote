@@ -6,6 +6,10 @@ public class DownloadPageConfigDTO
 
     public string? Summary { get; set; }
 
+    public string? AppStoreUrl { get; set; }
+
+    public string? EdgeAddonsUrl { get; set; }
+
     public string? Repo { get; set; }
 
     public int MaxVisibleVersions { get; set; } = 8;

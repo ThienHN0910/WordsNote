@@ -26,9 +26,53 @@
     <p v-if="loadError" class="error-banner">{{ loadError }}</p>
     <p v-if="isLoading" class="loading-banner">Loading release versions from GitHub...</p>
 
+    <section class="channels" v-if="quickAccessLinks.length || manualLinkGroups.length">
+      <header class="channels-header">
+        <h2>Get App or Extension</h2>
+        <p>Store links and custom links are displayed separately from GitHub release assets.</p>
+      </header>
+
+      <div class="channels-cta-grid" v-if="quickAccessLinks.length">
+        <a
+          v-for="item in quickAccessLinks"
+          :key="item.url"
+          class="channels-cta"
+          :href="item.url"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span class="channels-cta-kicker">{{ item.kicker }}</span>
+          <strong>{{ item.title }}</strong>
+          <span class="channels-cta-url">{{ item.url }}</span>
+        </a>
+      </div>
+
+      <p v-else class="hint">No store CTA links configured yet.</p>
+
+      <div class="channels-groups" v-if="manualLinkGroups.length">
+        <article class="channel-group" v-for="group in manualLinkGroups" :key="group.tagName">
+          <header>
+            <h3>{{ group.tagName }}</h3>
+            <span>{{ group.links.length }} links</span>
+          </header>
+
+          <ul>
+            <li v-for="link in group.links" :key="`${group.tagName}-${link.url}-${link.name}`">
+              <div class="manual-link-body">
+                <strong>{{ link.name }}</strong>
+                <a :href="link.url" target="_blank" rel="noopener noreferrer">{{ link.url }}</a>
+              </div>
+
+              <span class="kind" :data-kind="link.kind">{{ kindLabel(link.kind) }}</span>
+            </li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
     <section class="workspace" v-if="visibleReleases.length">
       <aside class="version-rail">
-        <h2>Versions</h2>
+        <h2>GitHub Versions</h2>
         <ul>
           <li v-for="release in visibleReleases" :key="release.tagName || release.name">
             <button
@@ -39,7 +83,7 @@
             >
               <span class="version-name">{{ release.tagName || release.name }}</span>
               <span class="version-date">{{ formatPublishedAt(release.publishedAt) }}</span>
-              <span class="version-links">{{ getReleaseLinkCount(release.tagName) }} links</span>
+              <span class="version-links">{{ getGithubReleaseLinkCount(release.tagName) }} assets</span>
             </button>
           </li>
         </ul>
@@ -48,7 +92,7 @@
       <article class="release-panel" v-if="selectedRelease">
         <header class="release-header">
           <div>
-            <p class="release-kicker">Selected version</p>
+            <p class="release-kicker">Selected GitHub version</p>
             <h2>{{ selectedRelease.name || selectedRelease.tagName }}</h2>
             <p class="release-sub">
               {{ selectedRelease.tagName }} • {{ formatPublishedAt(selectedRelease.publishedAt) }}
@@ -84,12 +128,12 @@
           </a>
         </div>
 
-        <p v-else class="empty-state">No downloadable assets found for this version.</p>
+        <p v-else class="empty-state">No downloadable GitHub assets found for this version.</p>
       </article>
     </section>
 
     <section class="catalog" v-if="releaseCards.length">
-      <h2>All versions and links</h2>
+      <h2>All GitHub versions and assets</h2>
       <div class="catalog-grid">
         <article class="catalog-card" v-for="item in releaseCards" :key="item.release.tagName || item.release.name">
           <header>
@@ -127,6 +171,16 @@
             rows="3"
             placeholder="Choose any version and download the installer package you need."
           ></textarea>
+        </label>
+
+        <label>
+          App Store URL
+          <input v-model="overrideForm.appStoreUrl" type="url" placeholder="https://apps.microsoft.com/..." />
+        </label>
+
+        <label>
+          Edge Add-ons URL
+          <input v-model="overrideForm.edgeAddonsUrl" type="url" placeholder="https://microsoftedge.microsoft.com/addons/..." />
         </label>
 
         <label>
@@ -202,8 +256,12 @@
         </fieldset>
 
         <div class="editor-actions">
-          <button class="btn-save" type="submit">Save settings</button>
-          <button class="btn-clear" type="button" @click="clearOverrides">Reset</button>
+          <button class="btn-save" type="submit" :disabled="isSavingSettings || isResettingSettings">
+            {{ isSavingSettings ? 'Saving...' : 'Save settings' }}
+          </button>
+          <button class="btn-clear" type="button" :disabled="isSavingSettings || isResettingSettings" @click="clearOverrides">
+            {{ isResettingSettings ? 'Resetting...' : 'Reset' }}
+          </button>
         </div>
       </form>
     </article>
@@ -229,6 +287,12 @@ interface ReleaseCard {
   links: ReleaseDownloadLink[]
 }
 
+interface QuickAccessLink {
+  title: string
+  kicker: string
+  url: string
+}
+
 interface ManualLinkDraft {
   tagName: string
   name: string
@@ -243,6 +307,8 @@ const isLoading = ref(false)
 const loadError = ref('')
 const saveMessage = ref('')
 const saveError = ref('')
+const isSavingSettings = ref(false)
+const isResettingSettings = ref(false)
 const editorEmail = ref('')
 const editorRole = ref('')
 const selectedTag = ref('')
@@ -254,6 +320,8 @@ const allowedAdminEmail = (import.meta.env.VITE_GOOGLE_ALLOWED_EMAIL || '').trim
 const overrideForm = reactive<DownloadPageOverride>({
   title: '',
   summary: '',
+  appStoreUrl: '',
+  edgeAddonsUrl: '',
   repo: '',
   maxVisibleVersions: 8,
   featuredTag: '',
@@ -309,16 +377,37 @@ const visibleReleases = computed(() => releaseSnapshots.value.slice(0, maxVisibl
 const releaseCards = computed<ReleaseCard[]>(() => {
   return visibleReleases.value.map((release) => ({
     release,
-    links: AppDownloadService.buildReleaseLinks(
-      release.assets,
-      AppDownloadService.getManualLinksForTag(overrideForm, release.tagName),
-    ),
+    links: AppDownloadService.buildReleaseLinks(release.assets),
   }))
 })
 
 const manualLinkGroups = computed(() => {
   return sanitizeManualLinksByVersion(overrideForm.manualLinksByVersion)
     .sort((a, b) => b.tagName.localeCompare(a.tagName, undefined, { numeric: true, sensitivity: 'base' }))
+})
+
+const quickAccessLinks = computed<QuickAccessLink[]>(() => {
+  const result: QuickAccessLink[] = []
+  const appStoreUrl = normalizeText(overrideForm.appStoreUrl)
+  const edgeAddonsUrl = normalizeText(overrideForm.edgeAddonsUrl)
+
+  if (appStoreUrl) {
+    result.push({
+      title: 'Get App',
+      kicker: 'Microsoft Store',
+      url: appStoreUrl,
+    })
+  }
+
+  if (edgeAddonsUrl) {
+    result.push({
+      title: 'Get Extension',
+      kicker: 'Microsoft Edge Add-ons',
+      url: edgeAddonsUrl,
+    })
+  }
+
+  return result
 })
 
 const selectedRelease = computed(() => {
@@ -349,10 +438,7 @@ const selectedReleaseLinks = computed(() => {
     return [] as ReleaseDownloadLink[]
   }
 
-  return AppDownloadService.buildReleaseLinks(
-    selectedRelease.value.assets,
-    AppDownloadService.getManualLinksForTag(overrideForm, selectedRelease.value.tagName),
-  )
+  return AppDownloadService.buildReleaseLinks(selectedRelease.value.assets)
 })
 
 const displayTitle = computed(() => {
@@ -376,9 +462,13 @@ function isSelectedRelease(tagName: string) {
   return selected === tagName
 }
 
-function getReleaseLinkCount(tagName: string) {
-  const matched = releaseCards.value.find((entry) => entry.release.tagName === tagName)
-  return matched ? matched.links.length : 0
+function getGithubReleaseLinkCount(tagName: string) {
+  const matched = visibleReleases.value.find((entry) => entry.tagName === tagName)
+  if (!matched) {
+    return 0
+  }
+
+  return AppDownloadService.buildReleaseLinks(matched.assets).length
 }
 
 function selectRelease(tagName: string) {
@@ -522,6 +612,8 @@ async function loadEditorIdentity() {
 function applyOverrideToForm(nextOverride: DownloadPageOverride) {
   overrideForm.title = nextOverride.title || ''
   overrideForm.summary = nextOverride.summary || ''
+  overrideForm.appStoreUrl = nextOverride.appStoreUrl || ''
+  overrideForm.edgeAddonsUrl = nextOverride.edgeAddonsUrl || ''
   overrideForm.repo = nextOverride.repo || ''
   overrideForm.maxVisibleVersions = Number(nextOverride.maxVisibleVersions || 8)
   overrideForm.featuredTag = nextOverride.featuredTag || ''
@@ -529,6 +621,11 @@ function applyOverrideToForm(nextOverride: DownloadPageOverride) {
 }
 
 async function saveOverrides() {
+  if (isSavingSettings.value || isResettingSettings.value) {
+    return
+  }
+
+  isSavingSettings.value = true
   saveError.value = ''
   saveMessage.value = ''
 
@@ -542,10 +639,17 @@ async function saveOverrides() {
     }
   } catch (error) {
     saveError.value = error instanceof Error ? error.message : 'Failed to save shared settings.'
+  } finally {
+    isSavingSettings.value = false
   }
 }
 
 async function clearOverrides() {
+  if (isSavingSettings.value || isResettingSettings.value) {
+    return
+  }
+
+  isResettingSettings.value = true
   saveError.value = ''
   saveMessage.value = ''
 
@@ -559,6 +663,8 @@ async function clearOverrides() {
     }
   } catch (error) {
     saveError.value = error instanceof Error ? error.message : 'Failed to reset shared settings.'
+  } finally {
+    isResettingSettings.value = false
   }
 }
 
@@ -727,6 +833,7 @@ h1 {
   grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
 }
 
+.channels,
 .version-rail,
 .release-panel,
 .catalog,
@@ -736,6 +843,101 @@ h1 {
   background: var(--wn-surface);
   box-shadow: var(--wn-shadow-soft);
   padding: 1rem;
+}
+
+.channels {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.channels-header h2 {
+  margin: 0;
+}
+
+.channels-header p {
+  margin: 0.3rem 0 0;
+  color: var(--wn-muted);
+}
+
+.channels-cta-grid {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.channels-cta {
+  border: 1px solid var(--wn-border);
+  border-radius: 14px;
+  background: var(--wn-surface-soft);
+  padding: 0.72rem;
+  text-decoration: none;
+  color: var(--wn-ink);
+  display: grid;
+  gap: 0.24rem;
+}
+
+.channels-cta:hover {
+  border-color: color-mix(in srgb, var(--wn-primary) 45%, var(--wn-border));
+}
+
+.channels-cta-kicker {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--wn-muted);
+}
+
+.channels-cta-url {
+  font-size: 0.82rem;
+  color: var(--wn-link);
+  overflow-wrap: anywhere;
+}
+
+.channels-groups {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.channel-group {
+  border: 1px solid var(--wn-border);
+  border-radius: 12px;
+  background: var(--wn-surface-soft);
+  padding: 0.68rem;
+}
+
+.channel-group header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.55rem;
+}
+
+.channel-group h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.channel-group header span {
+  font-size: 0.8rem;
+  color: var(--wn-muted);
+}
+
+.channel-group ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.channel-group li {
+  border: 1px solid var(--wn-border);
+  border-radius: 10px;
+  background: var(--wn-surface);
+  padding: 0.52rem;
+  display: grid;
+  gap: 0.42rem;
 }
 
 .version-rail h2,

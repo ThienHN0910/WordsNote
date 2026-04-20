@@ -204,6 +204,8 @@ function sanitizeOverride(override: DownloadPageOverride) {
   return {
     title: normalizeText(override.title),
     summary: normalizeText(override.summary),
+    appStoreUrl: normalizeText(override.appStoreUrl),
+    edgeAddonsUrl: normalizeText(override.edgeAddonsUrl),
     repo: normalizeText(override.repo),
     maxVisibleVersions: normalizeCount(override.maxVisibleVersions),
     featuredTag: normalizeText(override.featuredTag),
@@ -217,6 +219,8 @@ function sanitizeOverrideForSave(override: DownloadPageOverride) {
   return {
     title: normalizeText(override.title),
     summary: normalizeText(override.summary),
+    appStoreUrl: normalizeText(override.appStoreUrl),
+    edgeAddonsUrl: normalizeText(override.edgeAddonsUrl),
     repo: normalizeText(override.repo),
     maxVisibleVersions: normalizeCount(override.maxVisibleVersions),
     featuredTag: normalizeText(override.featuredTag),

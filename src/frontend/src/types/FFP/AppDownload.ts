@@ -41,6 +41,8 @@ export interface GithubReleaseSnapshot {
 export interface DownloadPageOverride {
   title?: string
   summary?: string
+  appStoreUrl?: string
+  edgeAddonsUrl?: string
   repo?: string
   maxVisibleVersions?: number
   featuredTag?: string

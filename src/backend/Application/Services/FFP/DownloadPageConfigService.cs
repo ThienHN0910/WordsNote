@@ -28,6 +28,8 @@ public class DownloadPageConfigService : IDownloadPageConfigService
             Key = DownloadPageConfigKeys.Page,
             Title = sanitized.Title,
             Summary = sanitized.Summary,
+            AppStoreUrl = sanitized.AppStoreUrl,
+            EdgeAddonsUrl = sanitized.EdgeAddonsUrl,
             Repo = sanitized.Repo,
             MaxVisibleVersions = sanitized.MaxVisibleVersions,
             FeaturedTag = sanitized.FeaturedTag,
@@ -64,6 +66,8 @@ public class DownloadPageConfigService : IDownloadPageConfigService
         {
             Title = NormalizeText(document.Title),
             Summary = NormalizeText(document.Summary),
+            AppStoreUrl = NormalizeText(document.AppStoreUrl),
+            EdgeAddonsUrl = NormalizeText(document.EdgeAddonsUrl),
             Repo = NormalizeText(document.Repo),
             MaxVisibleVersions = NormalizeCount(document.MaxVisibleVersions),
             FeaturedTag = NormalizeText(document.FeaturedTag),
@@ -142,6 +146,8 @@ public class DownloadPageConfigService : IDownloadPageConfigService
         {
             Title = NormalizeText(source.Title),
             Summary = NormalizeText(source.Summary),
+            AppStoreUrl = NormalizeText(source.AppStoreUrl),
+            EdgeAddonsUrl = NormalizeText(source.EdgeAddonsUrl),
             Repo = NormalizeText(source.Repo),
             MaxVisibleVersions = NormalizeCount(source.MaxVisibleVersions),
             FeaturedTag = NormalizeText(source.FeaturedTag),

@@ -87,7 +87,9 @@
             placeholder="Short description"
             rows="3"
           />
-          <button class="btn btn-primary" type="submit">Create</button>
+          <button class="btn btn-primary" type="submit" :disabled="isCreatingDeck || isManageLoading">
+            {{ isCreatingDeck ? 'Creating...' : 'Create' }}
+          </button>
         </form>
 
         <hr />
@@ -131,8 +133,17 @@
               <p v-else class="text-muted">Editing collection details</p>
             </div>
             <div class="actions-row">
-              <button v-if="!isEditingDeck" class="btn btn-outline-primary btn-sm" @click="startEditDeck">Edit collection</button>
-              <button class="btn btn-outline-danger btn-sm" @click="handleDeleteDeck">Delete</button>
+              <button
+                v-if="!isEditingDeck"
+                class="btn btn-outline-primary btn-sm"
+                :disabled="isDeckMutating"
+                @click="startEditDeck"
+              >
+                Edit collection
+              </button>
+              <button class="btn btn-outline-danger btn-sm" :disabled="isDeckMutating" @click="handleDeleteDeck">
+                {{ isDeletingDeck ? 'Deleting...' : 'Delete' }}
+              </button>
                 <button v-if="isAuthenticated" class="btn btn-success btn-sm" @click="goToSession">Open Session</button>
                 <RouterLink v-else class="btn btn-outline-secondary btn-sm" :to="{ name: 'login', query: { redirect: '/manage' } }">
                   Login for Session
@@ -155,8 +166,10 @@
               placeholder="Short description"
             />
             <div class="actions-row">
-              <button class="btn btn-primary btn-sm" type="submit">Save collection</button>
-              <button class="btn btn-outline-secondary btn-sm" type="button" @click="cancelEditDeck">Cancel</button>
+              <button class="btn btn-primary btn-sm" type="submit" :disabled="isUpdatingDeck">
+                {{ isUpdatingDeck ? 'Saving...' : 'Save collection' }}
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" type="button" :disabled="isUpdatingDeck" @click="cancelEditDeck">Cancel</button>
             </div>
           </form>
 
@@ -187,8 +200,10 @@
               placeholder="Tags, comma separated"
             />
             <div class="actions-row">
-              <button class="btn btn-primary" type="submit">Add card</button>
-              <button class="btn btn-outline-secondary" type="button" @click="clearCreateCardForm">Clear</button>
+              <button class="btn btn-primary" type="submit" :disabled="isCreatingCard">
+                {{ isCreatingCard ? 'Adding...' : 'Add card' }}
+              </button>
+              <button class="btn btn-outline-secondary" type="button" :disabled="isCreatingCard" @click="clearCreateCardForm">Clear</button>
             </div>
           </form>
 
@@ -200,7 +215,9 @@
             placeholder="Example:\ndeadline:a date when work must finish"
           />
           <div class="actions-row">
-            <button class="btn btn-outline-primary" @click="handleImportCards">Import lines</button>
+            <button class="btn btn-outline-primary" :disabled="isImportingCards" @click="handleImportCards">
+              {{ isImportingCards ? 'Importing...' : 'Import lines' }}
+            </button>
             <span v-if="importResult" class="text-muted small">{{ importResult }}</span>
           </div>
           <p class="small text-muted">Use one card per line. Front and back are separated by colon.</p>
@@ -239,8 +256,10 @@
                 </div>
               </div>
               <div class="actions-col">
-                <button class="btn btn-outline-primary btn-sm" @click="openEditCardModal(card.id)">Edit</button>
-                <button class="btn btn-outline-danger btn-sm" @click="removeCard(card.id)">Delete</button>
+                <button class="btn btn-outline-primary btn-sm" :disabled="isCardBusy(card.id)" @click="openEditCardModal(card.id)">Edit</button>
+                <button class="btn btn-outline-danger btn-sm" :disabled="isCardBusy(card.id)" @click="removeCard(card.id)">
+                  {{ deletingCardIds.has(card.id) ? 'Deleting...' : 'Delete' }}
+                </button>
               </div>
             </article>
           </div>
@@ -250,7 +269,7 @@
               <section class="modal-card" role="dialog" aria-modal="true" aria-label="Edit card">
                 <div class="modal-head">
                   <h3>Edit card</h3>
-                  <button class="btn btn-outline-secondary btn-sm" type="button" @click="closeEditCardModal">Close</button>
+                  <button class="btn btn-outline-secondary btn-sm" type="button" :disabled="isSavingEditCard" @click="closeEditCardModal">Close</button>
                 </div>
                 <form class="modal-form" @submit.prevent="submitEditCard">
                   <input v-model="editCardModal.front" class="form-control" type="text" placeholder="Front text" required />
@@ -263,8 +282,10 @@
                     placeholder="Tags, comma separated"
                   />
                   <div class="actions-row">
-                    <button class="btn btn-primary" type="submit">Save changes</button>
-                    <button class="btn btn-outline-secondary" type="button" @click="closeEditCardModal">Cancel</button>
+                    <button class="btn btn-primary" type="submit" :disabled="isSavingEditCard">
+                      {{ isSavingEditCard ? 'Saving...' : 'Save changes' }}
+                    </button>
+                    <button class="btn btn-outline-secondary" type="button" :disabled="isSavingEditCard" @click="closeEditCardModal">Cancel</button>
                   </div>
                 </form>
               </section>
@@ -329,9 +350,17 @@ const isSyncing = ref(false)
 const syncMessage = ref('')
 const syncError = ref('')
 const isManageLoading = ref(true)
+const isCreatingDeck = ref(false)
+const isUpdatingDeck = ref(false)
+const isDeletingDeck = ref(false)
+const isCreatingCard = ref(false)
+const isImportingCards = ref(false)
+const isSavingEditCard = ref(false)
+const deletingCardIds = ref(new Set<string>())
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const canSyncLocalToCloud = computed(() => isAuthenticated.value && !isSyncing.value && !isManageLoading.value)
+const isDeckMutating = computed(() => isCreatingDeck.value || isUpdatingDeck.value || isDeletingDeck.value)
 
 const deckList = computed(() => studyStore.deckList)
 const filteredDeckList = computed(() => {
@@ -432,26 +461,40 @@ function cancelEditDeck() {
 }
 
 async function handleUpdateDeck() {
-  if (!selectedDeckId.value) return
+  if (!selectedDeckId.value || isUpdatingDeck.value || isDeletingDeck.value) return
 
   const title = deckEditForm.title.trim()
   if (!title) return
 
   const description = deckEditForm.description.trim()
-  const updated = await studyStore.updateDeck(selectedDeckId.value, title, description)
-  if (!updated) return
+  isUpdatingDeck.value = true
 
-  cancelEditDeck()
+  try {
+    const updated = await studyStore.updateDeck(selectedDeckId.value, title, description)
+    if (!updated) return
+
+    cancelEditDeck()
+  } finally {
+    isUpdatingDeck.value = false
+  }
 }
 
 async function handleCreateDeck() {
+  if (isCreatingDeck.value || isManageLoading.value) return
+
   const title = newDeck.title.trim()
   if (!title) return
 
-  const deck = await studyStore.createDeck(title, newDeck.description)
-  selectedDeckId.value = deck.id
-  newDeck.title = ''
-  newDeck.description = ''
+  isCreatingDeck.value = true
+
+  try {
+    const deck = await studyStore.createDeck(title, newDeck.description)
+    selectedDeckId.value = deck.id
+    newDeck.title = ''
+    newDeck.description = ''
+  } finally {
+    isCreatingDeck.value = false
+  }
 }
 
 function parseTags(tagsText: string) {
@@ -462,27 +505,38 @@ function parseTags(tagsText: string) {
 }
 
 async function handleSubmitCard() {
-  if (!selectedDeckId.value) return
+  if (!selectedDeckId.value || isCreatingCard.value) return
 
   const front = createCardForm.front.trim()
   const back = createCardForm.back.trim()
   if (!front || !back) return
 
   const tags = parseTags(createCardForm.tagsText)
-  await studyStore.createCard(selectedDeckId.value, front, back, createCardForm.hint.trim(), tags)
+  isCreatingCard.value = true
 
-  clearCreateCardForm()
+  try {
+    await studyStore.createCard(selectedDeckId.value, front, back, createCardForm.hint.trim(), tags)
+    clearCreateCardForm()
+  } finally {
+    isCreatingCard.value = false
+  }
 }
 
 async function handleImportCards() {
-  if (!selectedDeckId.value) return
+  if (!selectedDeckId.value || isImportingCards.value) return
   if (!importText.value.trim()) return
 
-  const result = await studyStore.importCardsFromText(selectedDeckId.value, importText.value)
-  importResult.value = `Imported ${result.imported} card(s), skipped ${result.skipped} invalid line(s).`
+  isImportingCards.value = true
 
-  if (result.imported > 0) {
-    importText.value = ''
+  try {
+    const result = await studyStore.importCardsFromText(selectedDeckId.value, importText.value)
+    importResult.value = `Imported ${result.imported} card(s), skipped ${result.skipped} invalid line(s).`
+
+    if (result.imported > 0) {
+      importText.value = ''
+    }
+  } finally {
+    isImportingCards.value = false
   }
 }
 
@@ -561,35 +615,61 @@ function closeEditCardModal() {
 }
 
 async function submitEditCard() {
-  if (!selectedDeckId.value || !editCardModal.cardId) return
+  if (!selectedDeckId.value || !editCardModal.cardId || isSavingEditCard.value) return
 
   const front = editCardModal.front.trim()
   const back = editCardModal.back.trim()
   if (!front || !back) return
 
   const tags = parseTags(editCardModal.tagsText)
-  await studyStore.updateCard(editCardModal.cardId, front, back, editCardModal.hint.trim(), tags)
-  closeEditCardModal()
+  isSavingEditCard.value = true
+
+  try {
+    await studyStore.updateCard(editCardModal.cardId, front, back, editCardModal.hint.trim(), tags)
+    closeEditCardModal()
+  } finally {
+    isSavingEditCard.value = false
+  }
 }
 
 async function removeCard(cardId: string) {
-  await studyStore.removeCard(cardId)
-  if (editCardModal.cardId === cardId) {
-    closeEditCardModal()
+  if (deletingCardIds.value.has(cardId)) {
+    return
+  }
+
+  deletingCardIds.value.add(cardId)
+
+  try {
+    await studyStore.removeCard(cardId)
+    if (editCardModal.cardId === cardId) {
+      closeEditCardModal()
+    }
+  } finally {
+    deletingCardIds.value.delete(cardId)
   }
 }
 
 async function handleDeleteDeck() {
-  if (!selectedDeckId.value) return
+  if (!selectedDeckId.value || isDeletingDeck.value || isUpdatingDeck.value) return
 
   const deletingDeckId = selectedDeckId.value
-  await studyStore.removeDeck(deletingDeckId)
+  isDeletingDeck.value = true
 
-  const nextDeck = studyStore.deckList[0]
-  selectedDeckId.value = nextDeck?.id ?? ''
-  clearCreateCardForm()
-  closeEditCardModal()
-  cancelEditDeck()
+  try {
+    await studyStore.removeDeck(deletingDeckId)
+
+    const nextDeck = studyStore.deckList[0]
+    selectedDeckId.value = nextDeck?.id ?? ''
+    clearCreateCardForm()
+    closeEditCardModal()
+    cancelEditDeck()
+  } finally {
+    isDeletingDeck.value = false
+  }
+}
+
+function isCardBusy(cardId: string) {
+  return isSavingEditCard.value || deletingCardIds.value.has(cardId)
 }
 
 function goToSession() {

@@ -71,3 +71,18 @@ src/extension/dist/
 PublishProfiles/
 appsettings.json
 appsettings.Development.json
+
+# Desktop Store packaging artifacts and credentials
+src/desktop/WordsNote.Package/AppPackages/
+src/desktop/WordsNote.Package/BundleArtifacts/
+src/desktop/WordsNote.Package/InspectUpload/
+src/desktop/UpgradeLog*.htm
+*.msixupload
+*.appxupload
+*.msixbundle
+*.appxbundle
+*.appx
+*.msix
+*.appxsym
+*.pfx
+*.cer

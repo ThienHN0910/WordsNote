@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
@@ -7,13 +7,13 @@
   IgnorableNamespaces="uap mp rescap">
 
   <Identity
-    Name="com.yourcompany.wordsnote"
-    Publisher="CN=YOUR_TEST_CERTIFICATE"
-    Version="1.1.0.0" />
+    Name="ThinHN.Wordsnote"
+    Publisher="CN=91F3D8EE-3807-4BAE-B3BB-27029782F978"
+    Version="1.1.2.0" />
 
   <Properties>
-    <DisplayName>WordsNote</DisplayName>
-    <PublisherDisplayName>YOUR_PUBLISHER_NAME</PublisherDisplayName>
+    <DisplayName>Words note</DisplayName>
+    <PublisherDisplayName>ThiệnHN</PublisherDisplayName>
     <Description>TODO: Replace with Microsoft Store short description.</Description>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -29,7 +29,7 @@
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
-        DisplayName="WordsNote"
+        DisplayName="Words note"
         Description="TODO: Replace with Store listing description"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
@@ -37,7 +37,7 @@
         <uap:DefaultTile
           Wide310x150Logo="Assets\Wide310x150Logo.png"
           Square310x310Logo="Assets\Square310x310Logo.png"
-          ShortName="WordsNote" />
+          ShortName="Words note" />
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
     </Application>

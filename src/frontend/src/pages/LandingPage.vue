@@ -21,6 +21,7 @@
       <div class="quick-start-actions">
         <RouterLink class="cta primary" to="/learn">Open Learn</RouterLink>
         <RouterLink class="cta ghost" to="/manage">Open Manage</RouterLink>
+        <RouterLink class="cta ghost" to="/download">Download App</RouterLink>
         <RouterLink class="cta ghost" to="/privacy-policy">Privacy Policy</RouterLink>
       </div>
     </section>

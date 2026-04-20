@@ -1,5 +1,47 @@
 # WordsNote Release Notes
 
+## WordsNote v1.1.2 - Dynamic Download Page and Extension Version Sync
+
+Release date: 20/04/2026
+
+Scope summary:
+- Extension version synchronized to `1.1.2`
+- Added dynamic web download page for desktop app distribution
+- Added authenticated email-based edit mode for download metadata
+
+### Highlights
+
+New in this release:
+- Extension version bump:
+  - Updated `src/extension/package.json` to `1.1.2`
+  - Updated `src/extension/public/manifest.json` to `1.1.2`
+  - Synced `src/extension/package-lock.json` version metadata
+- Added a new frontend download route:
+  - Route: `/download`
+  - Page: `src/frontend/src/pages/AppDownloadPage.vue`
+  - Navigation links added in top bar and landing quick actions
+- Download page now loads data dynamically from GitHub Releases API:
+  - Pulls latest release metadata and assets
+  - Selects preferred installer asset (priority: `.msixbundle` -> `.msix` -> `.exe` -> `.zip`)
+  - Displays release assets list with file size and download count
+- Added authenticated edit mode based on signed-in user email:
+  - Loads profile from `/api/user/me`
+  - Enables edit controls only when a signed-in profile has an email
+  - Optional restriction via `VITE_DOWNLOAD_EDITOR_EMAIL`
+  - Editable values are persisted in browser local storage for quick admin updates
+
+### Build Validation
+
+Verified in current cycle:
+- Frontend: `cd src/frontend && npm run build`
+- Extension: `cd src/extension && npm run build`
+
+### Notes
+
+- The `/download` page is public for viewing and uses dynamic release data from GitHub.
+- Edit mode is hidden for anonymous users.
+- For desktop installer distribution on GitHub Release, upload `.msixbundle` for end users and keep `.msixupload` for Partner Center submission only.
+
 ## WordsNote v1.1.0 - Desktop Parity, Local-First Manage, Web Auth/Learn Stabilization
 
 Release date: 19/04/2026

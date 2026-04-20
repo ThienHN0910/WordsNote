@@ -17,6 +17,11 @@ const routesFFP: Array<RouteRecordRaw> = [
     component: () => import('@/pages/PrivacyPolicyPage.vue'),
   },
   {
+    path: '/download',
+    name: 'downloadApp',
+    component: () => import('@/pages/AppDownloadPage.vue'),
+  },
+  {
     path: '/manage',
     name: 'manageCollections',
     component: () => import('@/pages/WordsNote/StudyHubPage.vue'),

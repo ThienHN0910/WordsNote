@@ -9,6 +9,7 @@
       <nav class="links">
         <RouterLink to="/" class="pill">Home</RouterLink>
         <RouterLink to="/learn" class="pill">Learn</RouterLink>
+        <RouterLink to="/download" class="pill">Download</RouterLink>
         <RouterLink to="/manage" class="pill">Manage</RouterLink>
       </nav>
 

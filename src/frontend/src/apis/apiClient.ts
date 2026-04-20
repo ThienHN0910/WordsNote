@@ -12,6 +12,24 @@ const apiClient = axios.create({
   }
 });
 
+function hasAuthorizationHeader(config: { headers?: unknown } | undefined) {
+  const headers = config?.headers as
+    | { Authorization?: unknown; authorization?: unknown; get?: (name: string) => unknown }
+    | undefined;
+
+  if (!headers) {
+    return false;
+  }
+
+  if (typeof headers.get === 'function') {
+    const candidate = headers.get('Authorization') ?? headers.get('authorization');
+    return Boolean(typeof candidate === 'string' ? candidate.trim() : candidate);
+  }
+
+  const candidate = headers.Authorization ?? headers.authorization;
+  return Boolean(typeof candidate === 'string' ? candidate.trim() : candidate);
+}
+
 function getRequestPath(rawUrl: string | undefined) {
   if (!rawUrl) {
     return '';
@@ -50,6 +68,8 @@ function isProtectedApiRequest(config: { url?: string; method?: string } | undef
 }
 
 apiClient.interceptors.request.use(config => {
+  authStore.rehydrateFromPersistedState();
+
   const token = authStore.auth_token;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -63,15 +83,16 @@ apiClient.interceptors.response.use(
   response => response,
   error => {
     if (error.response && error.response.status === 401) {
+      const hadAuthorization = hasAuthorizationHeader(error.config);
       const shouldHandleAuthFailure =
         isProtectedApiRequest(error.config) ||
         router.currentRoute.value.matched.some(record => record.meta.requiresAuth);
 
-      if (shouldHandleAuthFailure) {
+      if (shouldHandleAuthFailure && hadAuthorization) {
         authStore.clearAuthToken();
       }
 
-      if (shouldHandleAuthFailure && router.currentRoute.value.name !== 'login') {
+      if (shouldHandleAuthFailure && hadAuthorization && router.currentRoute.value.name !== 'login') {
         router.push({
           name: 'login',
           query: {

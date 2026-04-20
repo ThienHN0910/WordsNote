@@ -39,6 +39,7 @@ Added features include:
 Improved web behavior includes:
 - Added direct navigation to download experience from top bar and landing quick actions.
 - Kept download page public for readers while restricting edit/reset controls to admin.
+- Fixed web auth persistence flow so refresh does not unexpectedly clear valid login session.
 
 Documentation updates include:
 - Updated release notes with a unified release-note structure aligned to previous release format.

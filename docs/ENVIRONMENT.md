@@ -115,6 +115,7 @@ Notes:
 - Backend enforces the real allowlist via `AuthProviders:Google:AdminEmail`.
 - Download page route `/download` reads shared config from backend endpoint `GET /api/download-config`.
 - Download page keeps public download access for anonymous users; only authenticated admin can edit/reset config.
+- Frontend auth token is persisted across refresh; store rehydrate reads persisted state and fallback key `wordsnote_auth_token`.
 
 ### Download Page Config Persistence
 

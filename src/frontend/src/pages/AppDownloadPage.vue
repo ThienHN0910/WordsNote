@@ -248,7 +248,7 @@ const editorRole = ref('')
 const selectedTag = ref('')
 const lastLoadedRepo = ref('')
 
-const fallbackRepo = 'ThinHN/WordsNote'
+const fallbackRepo = 'ThienHN0910/WordsNote'
 const allowedAdminEmail = (import.meta.env.VITE_GOOGLE_ALLOWED_EMAIL || '').trim().toLowerCase()
 
 const overrideForm = reactive<DownloadPageOverride>({

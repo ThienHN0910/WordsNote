@@ -287,10 +287,10 @@
                         <Border Margin="0,20,0,0" Padding="16" CornerRadius="10" Background="{DynamicResource WnInfoBg}" BorderBrush="{DynamicResource WnInfoBorder}" BorderThickness="1">
                             <StackPanel>
                                 <TextBlock FontSize="20" FontWeight="SemiBold" Text="Quick Start" />
-                                <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" Text="1. Open Settings and save API Base URL + Google Client ID." />
-                                <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Text="2. In Settings, use Cloud/Sync quick actions (Sync Cloud -> Local, Login, Sync Local -> Cloud)." />
+                                <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" Text="1. Open Settings and save API Base URL (required). Google Client ID is already preconfigured for optional cloud login." />
+                                <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Text="2. Use Manage immediately in local mode (no account required)." />
                                 <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Text="3. Use Learn for public study modes (Flashcards, Learn, Practice)." />
-                                <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Text="4. Use Manage for collection/card CRUD (local-first, cloud when logged in)." />
+                                <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Text="4. Optional cloud sync: login with Google and use Sync Local -> Cloud." />
                                 <WrapPanel Margin="0,12,0,0" ItemHeight="34" ItemWidth="170">
                                     <Button Margin="0,0,8,8" Content="Open Settings" Click="OpenSettingsFromLanding_Click" />
                                     <Button Margin="0,0,8,8" Content="Open Learn" Click="OpenLearnFromLanding_Click" />
@@ -730,7 +730,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="20">
                         <TextBlock FontSize="28" FontWeight="Bold" Text="Desktop Settings" />
-                        <TextBlock Margin="0,6,0,14" Foreground="{DynamicResource WnMuted}" TextWrapping="Wrap" Text="Save API Base URL and Google Client ID once. The app will load these settings automatically on next run." />
+                        <TextBlock Margin="0,6,0,14" Foreground="{DynamicResource WnMuted}" TextWrapping="Wrap" Text="Save API Base URL once. Google login client ID is preconfigured in app runtime settings." />
 
                         <TextBlock FontWeight="SemiBold" Text="API Base URL" />
                         <Grid Margin="0,6,0,12">
@@ -749,22 +749,7 @@
                             </TextBlock>
                         </Grid>
 
-                        <TextBlock FontWeight="SemiBold" Text="Google OAuth Client ID" />
-                        <Grid Margin="0,6,0,12">
-                            <TextBox x:Name="SettingsGoogleClientIdTextBox" Height="36" VerticalContentAlignment="Center" Text="{Binding GoogleClientId, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBlock Text="Google OAuth Client ID">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock" BasedOn="{StaticResource PlaceholderTextStyle}">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Text, ElementName=SettingsGoogleClientIdTextBox}" Value="">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </Grid>
+                        <TextBlock Margin="0,0,0,12" Foreground="{DynamicResource WnMuted}" TextWrapping="Wrap" Text="Google OAuth Client ID is preconfigured in app runtime settings for optional cloud login." />
 
                         <TextBlock FontWeight="SemiBold" Text="Theme" />
                         <StackPanel Margin="0,6,0,12" Orientation="Horizontal" VerticalAlignment="Center">
@@ -813,32 +798,28 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="20">
                         <TextBlock FontSize="28" FontWeight="Bold" Text="Login" />
-                        <TextBlock Margin="0,6,0,14" Foreground="{DynamicResource WnMuted}" TextWrapping="Wrap" Text="Use Google login for cloud mode. Local mode in Manage works without authentication." />
+                        <TextBlock Margin="0,6,0,8" Foreground="{DynamicResource WnMuted}" TextWrapping="Wrap" Text="Google login is optional for cloud mode. Local mode in Manage and Learn works without authentication." />
+                        <Border Margin="0,0,0,12" Padding="10" CornerRadius="8" BorderBrush="{DynamicResource WnInfoBorder}" BorderThickness="1" Background="{DynamicResource WnInfoBg}">
+                            <StackPanel>
+                                <TextBlock FontWeight="SemiBold" Text="Certification test path (no account required)" />
+                                <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Text="Open Manage to create/edit local collections/cards and open Learn to test Flashcards/Learn/Practice." />
+                            </StackPanel>
+                        </Border>
 
                         <StackPanel Visibility="{Binding IsNotAuthenticated, Converter={StaticResource BoolToVis}}">
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <Button Padding="14,6" Content="Login Google (Browser)" Click="LoginWithGoogleBrowser_Click" />
-                                <TextBlock VerticalAlignment="Center" Margin="8,0,0,0" Foreground="{DynamicResource WnMuted}" Text="Uses Google Client ID saved in Settings" />
+                                <Button Padding="14,6" Content="Login Google (Browser)" Click="LoginWithGoogleBrowser_Click" IsEnabled="{Binding HasGoogleClientId}" />
+                                <TextBlock VerticalAlignment="Center" Margin="8,0,0,0" Foreground="{DynamicResource WnMuted}" Text="Uses built-in Google Client ID (optional cloud login)" />
                             </StackPanel>
 
-                            <StackPanel Orientation="Horizontal">
-                                <Grid Width="520" Margin="0,0,8,0">
-                                    <TextBox x:Name="GoogleIdTokenTextBox" Height="36" VerticalContentAlignment="Center" Text="{Binding GoogleIdToken, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBlock Text="Paste Google ID Token (optional fallback)">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock" BasedOn="{StaticResource PlaceholderTextStyle}">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Text, ElementName=GoogleIdTokenTextBox}" Value="">
-                                                        <Setter Property="Visibility" Value="Visible" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </Grid>
-                                <Button Padding="14,6" Content="Login Google (ID Token)" Click="LoginWithGoogleToken_Click" />
+                            <TextBlock Margin="0,0,0,10" Foreground="{DynamicResource WnMuted}" TextWrapping="Wrap" Visibility="{Binding HasGoogleClientId, Converter={StaticResource InverseBool}}" Text="Google Client ID is not configured. This only affects optional cloud login. You can continue with Local mode now." />
+
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <Button Padding="14,6" Margin="0,0,8,0" Content="Continue in Local Mode" Click="ContinueLocalMode_Click" />
+                                <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource WnMuted}" Text="Go to Manage without login" />
                             </StackPanel>
+
+                            <TextBlock Foreground="{DynamicResource WnMuted}" TextWrapping="Wrap" Text="ID token manual login is removed from end-user UI to keep certification test path simple and local-first." />
                         </StackPanel>
 
                         <StackPanel Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVis}}">

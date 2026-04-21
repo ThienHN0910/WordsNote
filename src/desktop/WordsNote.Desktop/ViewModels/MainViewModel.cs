@@ -147,8 +147,19 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public string GoogleClientId
     {
         get => _googleClientId;
-        set => SetProperty(ref _googleClientId, value);
+        set
+        {
+            var normalized = value?.Trim() ?? string.Empty;
+            if (!SetProperty(ref _googleClientId, normalized))
+            {
+                return;
+            }
+
+            OnPropertyChanged(nameof(HasGoogleClientId));
+        }
     }
+
+    public bool HasGoogleClientId => !string.IsNullOrWhiteSpace(GoogleClientId);
 
     public string GoogleIdToken
     {
@@ -563,6 +574,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         await RunBusyAsync(async () =>
         {
             ApplyApiBaseUrl();
+            var localStarterSeeded = false;
             if (IsAuthenticated)
             {
                 _apiClient.SetToken(AuthToken);
@@ -577,6 +589,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
             {
                 _apiClient.SetToken(null);
                 var localSnapshot = await _localManageStorage.LoadAsync();
+                if (localSnapshot.Decks.Count == 0 && localSnapshot.Cards.Count == 0)
+                {
+                    localSnapshot = CreateStarterLocalSnapshot();
+                    await _localManageStorage.SaveAsync(localSnapshot.Decks, localSnapshot.Cards);
+                    localStarterSeeded = true;
+                }
+
                 ReplaceCollection(Decks, localSnapshot.Decks);
                 ReplaceCollection(Cards, localSnapshot.Cards);
             }
@@ -587,7 +606,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
             RefreshLearnComputed();
             StatusMessage = IsAuthenticated
                 ? $"Loaded {Decks.Count} cloud collection(s), {Cards.Count} cloud card(s)."
-                : $"Loaded {Decks.Count} local collection(s), {Cards.Count} local card(s).";
+                : localStarterSeeded
+                    ? $"Loaded {Decks.Count} local collection(s), {Cards.Count} local card(s). Starter data is ready and no login is required."
+                    : $"Loaded {Decks.Count} local collection(s), {Cards.Count} local card(s).";
         }, "Failed to load collections/cards.");
     }
 
@@ -609,19 +630,44 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public async Task LoginWithGoogleBrowserAsync()
     {
+        if (!HasGoogleClientId)
+        {
+            StatusMessage = "Google login is temporarily unavailable. Cloud login is optional; continue with Local mode in Manage.";
+            return;
+        }
+
         await RunBusyAsync(async () =>
         {
             var idToken = await _googleBrowserAuthService.AcquireIdTokenAsync(GoogleClientId);
             GoogleIdToken = idToken;
             ApplyApiBaseUrl();
-            var token = await _apiClient.LoginWithGoogleTokenAsync(idToken);
-            AuthToken = token;
-            IsAuthenticated = true;
-            _apiClient.SetToken(token);
-            await PersistCurrentSettingsAsync();
-            StatusMessage = "Google browser login succeeded.";
+
+            try
+            {
+                var token = await _apiClient.LoginWithGoogleTokenAsync(idToken);
+                AuthToken = token;
+                IsAuthenticated = true;
+                _apiClient.SetToken(token);
+                await PersistCurrentSettingsAsync();
+                StatusMessage = "Google browser login succeeded. Cloud mode enabled.";
+            }
+            catch (Exception ex) when (IsLocalOnlyGoogleLoginFallback(ex))
+            {
+                AuthToken = string.Empty;
+                IsAuthenticated = false;
+                _apiClient.SetToken(null);
+                await PersistCurrentSettingsAsync();
+                StatusMessage = "Google login succeeded, but this account has no cloud permission. App continues in local mode.";
+            }
+
             await ReloadDataAsync();
         }, "Google browser login failed.");
+    }
+
+    public void ContinueWithLocalMode()
+    {
+        StatusMessage = "Local mode is active. You can use Manage and Learn without login.";
+        OpenManagePage();
     }
 
     public async Task LogoutAsync()
@@ -1375,6 +1421,85 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         return $"{fallbackError} {detail}";
+    }
+
+    private static bool IsLocalOnlyGoogleLoginFallback(Exception ex)
+    {
+        var message = ex.Message?.Trim().ToLowerInvariant() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return false;
+        }
+
+        return message.Contains("not allowed", StringComparison.Ordinal)
+            || message.Contains("forbidden", StringComparison.Ordinal)
+            || message.Contains("invalid google token", StringComparison.Ordinal)
+            || message.Contains("unauthorized", StringComparison.Ordinal)
+            || message.Contains("google account", StringComparison.Ordinal);
+    }
+
+    private static (List<StudyDeck> Decks, List<StudyCard> Cards) CreateStarterLocalSnapshot()
+    {
+        var now = DateTime.UtcNow;
+        var nowIso = now.ToString("O");
+        var deckId = "local-starter-core";
+
+        var decks = new List<StudyDeck>
+        {
+            new()
+            {
+                Id = deckId,
+                Title = "Starter Collection",
+                Description = "Local sample data for quick testing without login.",
+                CreatedAt = nowIso,
+                UpdatedAt = nowIso,
+            },
+        };
+
+        var cards = new List<StudyCard>
+        {
+            new()
+            {
+                Id = "local-starter-card-1",
+                CollectionId = deckId,
+                DeckId = deckId,
+                Front = "deadline",
+                Back = "a date when work must finish",
+                Hint = "project planning",
+                Tags = ["starter", "work"],
+                DueAt = now.AddMinutes(-10).ToString("O"),
+                LastReviewedAt = null,
+                Streak = 0,
+            },
+            new()
+            {
+                Id = "local-starter-card-2",
+                CollectionId = deckId,
+                DeckId = deckId,
+                Front = "collaborate",
+                Back = "to work together with others",
+                Hint = "team activity",
+                Tags = ["starter", "verb"],
+                DueAt = now.AddMinutes(-5).ToString("O"),
+                LastReviewedAt = now.AddDays(-1).ToString("O"),
+                Streak = 1,
+            },
+            new()
+            {
+                Id = "local-starter-card-3",
+                CollectionId = deckId,
+                DeckId = deckId,
+                Front = "resilient",
+                Back = "able to recover quickly from difficulties",
+                Hint = "mindset",
+                Tags = ["starter", "adjective"],
+                DueAt = now.AddHours(4).ToString("O"),
+                LastReviewedAt = now.AddDays(-2).ToString("O"),
+                Streak = 2,
+            },
+        };
+
+        return (decks, cards);
     }
 
     private void EnsureSelectedDecks()

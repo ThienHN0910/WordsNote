@@ -29,6 +29,9 @@ Desktop config section is `Desktop`:
 - `ThemeMode`
 - `LocalDataFolderName`
 
+Current repository default preconfigures `Desktop:GoogleClientId` in desktop appsettings for optional browser login.
+Desktop Settings UI intentionally does not require end users to manually set Google Client ID.
+
 Environment variable prefix is `WORDSNOTE_`.
 
 Examples:
@@ -213,7 +216,7 @@ Set-Location e:\workspace\srcPrj\WordsNote\src\desktop\WordsNote.Package
 
 Expected output artifact:
 
-- `src/desktop/WordsNote.Package/AppPackages/WordsNote.Package_1.1.2.0_x64_arm64_bundle.msixupload`
+- `src/desktop/WordsNote.Package/AppPackages/WordsNote.Package_1.1.3.0_x64_arm64_bundle.msixupload`
 
 ## 12. Partner Center validation pitfalls (already hit)
 
@@ -396,6 +399,24 @@ Core validation path:
 4. Optional: sign in with Google to validate cloud sync actions.
 
 If Google sign-in is not used, local-first learning and management flows remain fully testable.
+
+### Notes for certification (10.3.1 remediation template)
+
+Use this template when Partner Center reports `10.3.1 App Is Testable - Test Account`:
+
+Product ID: <YOUR_PRODUCT_ID>
+
+Core app functionality does not require account creation or sign-in.
+
+Primary no-account test path:
+1. Launch app and open `Manage`.
+2. Create/edit/delete collections and cards in local mode.
+3. Open `Learn` and verify Flashcards, Learn (typed answer), and Practice modes.
+
+Google login is optional and only required for cloud sync features.
+Even when cloud login is unavailable, local mode remains fully usable and testable.
+
+No test account credentials are required for certification of core functionality.
 
 ### Restricted capability approval: runFullTrust (required)
 

@@ -80,6 +80,11 @@ public partial class MainWindow : Window
         _viewModel.OpenManagePage();
     }
 
+    private void ContinueLocalMode_Click(object sender, RoutedEventArgs e)
+    {
+        _viewModel.ContinueWithLocalMode();
+    }
+
     private void LearnFlashMode_Click(object sender, RoutedEventArgs e)
     {
         _viewModel.SetLearnMode("flash");

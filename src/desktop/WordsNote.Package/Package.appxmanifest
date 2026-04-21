@@ -9,7 +9,7 @@
   <Identity
     Name="ThinHN.Wordsnote"
     Publisher="CN=91F3D8EE-3807-4BAE-B3BB-27029782F978"
-    Version="1.1.2.0" />
+    Version="1.1.3.0" />
 
   <Properties>
     <DisplayName>Words note</DisplayName>

@@ -142,6 +142,9 @@ Config section:
 - `Desktop:ThemeMode`
 - `Desktop:LocalDataFolderName`
 
+Desktop runtime defaults in this repository include a preconfigured `Desktop:GoogleClientId` for optional browser login.
+End users are not required to manually input Google Client ID in desktop Settings UI.
+
 Environment variable examples:
 
 - `WORDSNOTE_Desktop__ApiBaseUrl=https://api.example.com`

@@ -1,5 +1,22 @@
 # WordsNote Release Notes
 
+## WordsNote v1.1.3 - Desktop Certification Hardening (10.3.1)
+
+Release date: 21/04/2026
+
+Baseline compared: `v1.1.2` -> `v1.1.3`
+
+Scope summary:
+- Preconfigured desktop Google OAuth Client ID in appsettings (no end-user manual setup required)
+- Removed Google Client ID input from desktop Settings UI
+- Removed manual ID-token login from desktop Login UI
+- Added local-mode-first certification guidance in desktop Login/Landing UI
+- Non-admin Google browser login now gracefully falls back to local mode (no cloud permission)
+- Desktop package manifest version bumped to `1.1.3.0`
+
+Build validation:
+- `dotnet build src/desktop/WordsNote.Desktop.sln`
+
 ## WordsNote v1.1.2 - Multi-Version Download Center and Shared Config Sync
 
 Release date: 20/04/2026
@@ -12,6 +29,7 @@ Scope summary:
 - Download page now supports multiple versions and multiple links per version
 - Added explicit download CTA fields (Microsoft Store + Edge Add-ons)
 - Hardened save/reset and manage mutations against duplicate submit clicks
+- Hardened desktop local-first certification path (10.3.1 testability)
 - Extension metadata synchronized to `1.1.2`
 
 ### Highlights
@@ -53,6 +71,11 @@ Improved web behavior includes:
 - Added lazy-load for the heavy download catalog section using async component loading with shared `AppLoading` fallback UI.
 - Added expand/collapse toggles for `Create collection`, `Create card`, and `Quick import` in web manage page.
 - Added cards pagination in web manage page to keep large card lists easier to navigate.
+
+Desktop certification hardening includes:
+- Clarified in-app messaging that Google login is optional and local mode is fully testable without account.
+- Disabled browser-login action when Google Client ID is missing and added local-mode CTA from Login tab.
+- Added starter local sample dataset on first run so certification can validate core flows immediately.
 
 Documentation updates include:
 - Updated release notes with a unified release-note structure aligned to previous release format.

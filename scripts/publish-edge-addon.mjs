@@ -62,7 +62,21 @@ if (!productId) {
   process.exit(0)
 }
 
-const packageZipPath = path.join(rootDir, 'release', 'microsoft-edge-addon', 'WordsNote-Edge-Addon-v1.1.2.zip')
+const addonReleaseDir = path.join(rootDir, 'release', 'microsoft-edge-addon')
+let packageZipPath = path.join(addonReleaseDir, 'WordsNote-Edge-Addon-v1.2.0.zip')
+
+if (!fs.existsSync(packageZipPath) && fs.existsSync(addonReleaseDir)) {
+  const zips = fs.readdirSync(addonReleaseDir).filter((f) => f.endsWith('.zip'))
+  if (zips.length > 0) {
+    // Pick newest file
+    const sorted = zips.sort((a, b) => {
+      const statA = fs.statSync(path.join(addonReleaseDir, a)).mtimeMs
+      const statB = fs.statSync(path.join(addonReleaseDir, b)).mtimeMs
+      return statB - statA
+    })
+    packageZipPath = path.join(addonReleaseDir, sorted[0])
+  }
+}
 
 if (!fs.existsSync(packageZipPath)) {
   console.error(`❌ Error: Package zip file not found at: ${packageZipPath}`)
@@ -70,7 +84,9 @@ if (!fs.existsSync(packageZipPath)) {
   process.exit(1)
 }
 
-const BASE_URL = 'https://api.addons.microsoftedge.microsoft.com/v1.1'
+console.log(`📦 Using package artifact: ${path.basename(packageZipPath)}`)
+
+const BASE_URL = 'https://api.addons.microsoftedge.microsoft.com/v1'
 
 async function uploadPackage() {
   console.log(`📦 Uploading package to Edge Add-ons (Product ID: ${productId})...`)
@@ -97,13 +113,19 @@ async function uploadPackage() {
   return operationLocation
 }
 
-async function waitForOperation(operationUrl) {
-  if (!operationUrl) return
+async function waitForOperation(operationLocation) {
+  if (!operationLocation) return
   console.log('⏳ Checking package processing status...')
+
+  let checkUrl = operationLocation.startsWith('http')
+    ? operationLocation.replace('/v1.1/', '/v1/')
+    : `${BASE_URL}/products/${productId}/submissions/draft/package/operations/${operationLocation}`
+
+  console.log(`   Operation endpoint: ${checkUrl}`)
 
   for (let i = 0; i < 30; i++) {
     await new Promise((r) => setTimeout(r, 4000))
-    const res = await fetch(operationUrl, {
+    const res = await fetch(checkUrl, {
       method: 'GET',
       headers: {
         Authorization: `ApiKey ${apiKey}`,
@@ -132,6 +154,45 @@ async function waitForOperation(operationUrl) {
   throw new Error('Timeout waiting for package processing.')
 }
 
+async function waitForSubmission(operationLocation) {
+  if (!operationLocation) return
+  console.log('⏳ Waiting for submission to finalize...')
+
+  let checkUrl = operationLocation.startsWith('http')
+    ? operationLocation.replace('/v1.1/', '/v1/')
+    : `${BASE_URL}/products/${productId}/submissions/operations/${operationLocation}`
+
+  for (let i = 0; i < 30; i++) {
+    await new Promise((r) => setTimeout(r, 4000))
+    const res = await fetch(checkUrl, {
+      method: 'GET',
+      headers: {
+        Authorization: `ApiKey ${apiKey}`,
+        'X-ClientID': clientId,
+      },
+    })
+
+    if (!res.ok) {
+      console.warn(`Submission check returned ${res.status}, retrying...`)
+      continue
+    }
+
+    const data = await res.json()
+    console.log(`   Submission Status: ${data.status || 'InProgress'}`)
+
+    if (data.status === 'Succeeded') {
+      console.log(`🎉 Submission succeeded! ${data.message || ''}`)
+      return
+    }
+
+    if (data.status === 'Failed') {
+      throw new Error(`Submission failed: ${JSON.stringify(data.errors || data)}`)
+    }
+  }
+
+  console.log('Submission is still finalizing in background. Check Edge Partner Dashboard.')
+}
+
 async function publishSubmission() {
   console.log('🚀 Triggering publication on Microsoft Edge Add-ons...')
   const publishUrl = `${BASE_URL}/products/${productId}/submissions`
@@ -153,7 +214,9 @@ async function publishSubmission() {
     throw new Error(`Publish trigger failed (${res.status} ${res.statusText}): ${errorText}`)
   }
 
-  console.log('🎉 Submission published successfully! The extension is now in Microsoft review queue.')
+  const subLocation = res.headers.get('Location')
+  console.log(`✅ Submission created! Operation: ${subLocation || 'Pending'}`)
+  return subLocation
 }
 
 async function run() {
@@ -162,7 +225,11 @@ async function run() {
     if (opUrl) {
       await waitForOperation(opUrl)
     }
-    await publishSubmission()
+    const subUrl = await publishSubmission()
+    if (subUrl) {
+      await waitForSubmission(subUrl)
+    }
+    console.log('🚀 All done! The extension is in Microsoft review queue.')
   } catch (err) {
     console.error(`\n❌ Failed: ${err.message}`)
     process.exit(1)

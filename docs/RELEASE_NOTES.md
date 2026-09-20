@@ -1,5 +1,27 @@
 # WordsNote Release Notes
 
+## WordsNote v1.2.0 - Hybrid Quiz Platform & Automated Multi-Store Deployment
+
+Release date: 20/09/2026
+
+Baseline compared: `v1.1.3` -> `v1.2.0`
+
+Project Showcase: [https://thienhn0910.vercel.app/projects/words-note](https://thienhn0910.vercel.app/projects/words-note)
+
+Scope summary:
+- Integrated Hybrid Quiz Platform with 2,254 verified MLN122 questions across philosophical and socio-political themes
+- Practice Mode: instant feedback, detailed explanations, and randomized choices
+- Exam Simulation: timed quiz environment with comprehensive score breakdowns
+- One-click Vocabulary Capture: save unfamiliar words directly from quiz questions into the Flashcard Desk
+- Automated Microsoft Edge Add-ons publishing script using Microsoft Publish API v1.1
+- Upgraded Desktop Store packaging to Windows 11 SDK (10.0.22621.0) and synchronized Visual Studio Packaging Wizard
+- Extension and Desktop Package manifests synchronized to version `1.2.0`
+
+Build validation:
+- `dotnet test src/backend/FeatureFusion.sln`
+- `npm run build` (in `src/frontend` and `src/extension`)
+- `dotnet build src/desktop/WordsNote.Desktop.sln`
+
 ## WordsNote v1.1.3 - Desktop Certification Hardening (10.3.1)
 
 Release date: 21/04/2026

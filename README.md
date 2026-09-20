@@ -1,11 +1,13 @@
 # WordsNote
 
-WordsNote is a learning platform for vocabulary and flashcards, delivered as:
+> 🌐 **Project Showcase & Portfolio:** [https://thienhn0910.vercel.app/projects/words-note](https://thienhn0910.vercel.app/projects/words-note)
 
-- ASP.NET Core backend API
-- Vue 3 web app
-- WPF desktop app
-- Browser extension popup for quick review
+WordsNote is a modern, high-performance learning platform for vocabulary, flashcards, and quiz examination, delivered across multiple platforms:
+
+- **ASP.NET Core Backend API**: High-throughput REST API with MongoDB persistence
+- **Vue 3 Web App**: Interactive learning desk with quiz bank & test simulator
+- **WPF Desktop App**: Native Windows desktop experience (.NET 8) with Windows Store packaging
+- **Browser Extension**: Edge & Chrome MV3 popup for quick review & instant vocabulary capture
 
 ## Project Layout
 
@@ -39,6 +41,15 @@ WordsNote is a learning platform for vocabulary and flashcards, delivered as:
   - Caller must be admin (role Admin or configured admin email)
 - Auth-required focused session route: /manage/:deckId/session
 - Google sign-in is optional and used for cloud-backed session/deep-study actions
+
+### Quiz Platform (Web & Desktop)
+
+- Public quiz routes: `/quizzes`, `/quizzes/:bankId`
+- Curated MLN122 question bank with 2,254 verified questions across philosophical & socio-political topics
+- **Practice Mode**: Instant feedback, explanations, and randomized choices
+- **Exam Simulation**: Timed quiz sessions with detailed scoring breakdown
+- **Vocabulary Capture**: One-click capture of new words from questions directly into the Flashcard Desk
+- **Local-First Architecture**: Seamless offline support with automatic caching and zero latency
 
 ### Browser Extension
 
@@ -158,10 +169,14 @@ Detailed contracts are documented in docs/API_REFERENCE.md.
 
 ## Latest Release
 
-- Current: WordsNote v1.1.0 (19/04/2026)
-- Previous: WordsNote v1.0.1 (17/04/2026)
-- See docs/RELEASE_NOTES.md for full release details and commit list.
-- Local packaged assets are available under `release/v1.1.0/`.
+- **Current: WordsNote v1.2.0 (20/09/2026)**
+  - ✨ **Hybrid Quiz Platform**: Integrated 2,254 MLN122 questions with practice, mock exam, and instant word-capture to flashcards.
+  - 🚀 **Automated Edge Add-on Publishing**: Direct store deployment via Microsoft Edge Add-ons Publish API v1.1.
+  - 📦 **Desktop Store Packaging**: Windows 11 SDK 10.0.22621.0 support and Visual Studio Packaging Wizard alignment.
+  - 🌐 **Showcase & Portfolio**: Featured at [https://thienhn0910.vercel.app/projects/words-note](https://thienhn0910.vercel.app/projects/words-note).
+- Previous: WordsNote v1.1.3 (21/04/2026)
+- See [docs/RELEASE_NOTES.md](file:///E:/workspace/srcPrj/WordsNote/docs/RELEASE_NOTES.md) for full release details.
+- Local packaged assets: `release/microsoft-edge-addon/WordsNote-Edge-Addon-v1.2.0.zip` & `src/desktop/WordsNote.Package/AppPackages/`.
 
 ## Build Status (Latest)
 
@@ -176,6 +191,12 @@ Recent builds executed successfully for:
 - Frontend can be deployed with Vercel or equivalent static hosting.
 - Backend should be deployed with secure runtime secrets and MongoDB connectivity.
 - Extension package can be published to Edge Add-ons and Chrome Web Store.
+
+## Featured Links & Portfolio
+ 
+- 🌐 **Project Showcase & Portfolio**: [https://thienhn0910.vercel.app/projects/words-note](https://thienhn0910.vercel.app/projects/words-note)
+- 🛒 **Microsoft Edge Add-on**: [WordsNote on Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/wordsnote/clocbppplpjhgkhcjhggljebocijhkpk)
+- 💻 **Desktop App**: Packaged via MSIX for Microsoft Store
 
 ## License
 

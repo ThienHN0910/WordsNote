@@ -17,5 +17,7 @@ public class QuizSetDocument
 
     public int TotalQuestions { get; set; }
 
+    public bool IsRestricted { get; set; } = false;
+
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

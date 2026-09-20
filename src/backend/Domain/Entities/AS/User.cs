@@ -34,4 +34,6 @@ public class User
 
     [MaxLength(50)]
     public string? Role { get; set; } = "User";
+
+    public List<string> UnlockedSubjects { get; set; } = new();
 }

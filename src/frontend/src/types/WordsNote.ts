@@ -49,9 +49,14 @@ export interface QuizSet {
   id: string
   code: string
   title: string
-  description: string
-  color: string
-  totalQuestions: number
+  name?: string
+  description?: string
+  color?: string
+  totalQuestions?: number
+  total?: number
+  isRestricted?: boolean
+  unlocked?: boolean
+  isUnlocked?: boolean
 }
 
 export interface QuizQuestion {
@@ -81,4 +86,37 @@ export interface QuizSubmitResult {
     explanation?: string
   }>
 }
+
+export interface QuizUser {
+  id?: string
+  email: string
+  name: string
+  picture?: string
+  unlockedSubjects: string[]
+  isAdmin: boolean
+}
+
+export interface UnlockKeyItem {
+  id: string
+  _id?: string
+  code: string
+  isUsed: boolean
+  usedAt?: string
+  usedByEmail?: string
+  targetSubjects: string[]
+  createdAt: string
+}
+
+export interface AdminUserItem {
+  id: string
+  _id?: string
+  email: string
+  name?: string
+  picture?: string
+  avatarUrl?: string
+  unlockedSubjects: string[]
+  isAdmin: boolean
+  createdAt?: string
+}
+
 

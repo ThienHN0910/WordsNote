@@ -36,13 +36,18 @@ const routesFFP: Array<RouteRecordRaw> = [
   },
   {
     path: '/quiz',
-    name: 'quizList',
-    component: () => import('@/pages/WordsNote/QuizListPage.vue'),
+    name: 'quizWorkspace',
+    component: () => import('@/views/Quiz/QuizWorkspacePage.vue'),
+  },
+  {
+    path: '/quiz/:id',
+    name: 'quizSubject',
+    component: () => import('@/views/Quiz/QuizWorkspacePage.vue'),
   },
   {
     path: '/quiz/:id/practice',
     name: 'quizPractice',
-    component: () => import('@/pages/WordsNote/QuizPracticePage.vue'),
+    component: () => import('@/views/Quiz/QuizWorkspacePage.vue'),
   },
 ]
 

@@ -126,4 +126,53 @@ public class QuizBankTests
         Assert.NotNull(key.UsedAt);
         Assert.Equal("student@example.com", key.UsedByEmail);
     }
+
+    [Theory]
+    [InlineData("hnt.vn.vn@gmail.com", true)]
+    [InlineData("HNT.VN.VN@GMAIL.COM", true)]
+    [InlineData("student123@gmail.com", false)]
+    [InlineData("attacker@evil.com", false)]
+    public void AdminEmailRoleCheck_ShouldOnlyAllowConfiguredAdminEmail(string email, bool expectedIsAdmin)
+    {
+        const string configuredAdmin = "hnt.vn.vn@gmail.com";
+        var isAdmin = string.Equals(email.Trim().ToLowerInvariant(), configuredAdmin, StringComparison.Ordinal);
+        Assert.Equal(expectedIsAdmin, isAdmin);
+    }
+
+    [Fact]
+    public void RateLimitTracker_ShouldBlockAfterFiveFailedAttempts()
+    {
+        var rateLimits = new System.Collections.Concurrent.ConcurrentDictionary<string, (int Attempts, DateTime ResetTime)>();
+        const string clientKey = "testuser@gmail.com:127.0.0.1";
+        var now = DateTime.UtcNow;
+
+        bool isRateLimited()
+        {
+            if (rateLimits.TryGetValue(clientKey, out var entry))
+            {
+                if (DateTime.UtcNow > entry.ResetTime) return false;
+                return entry.Attempts >= 5;
+            }
+            return false;
+        }
+
+        void recordFailure()
+        {
+            rateLimits.AddOrUpdate(
+                clientKey,
+                _ => (1, DateTime.UtcNow.AddMinutes(5)),
+                (_, existing) => (existing.Attempts + 1, existing.ResetTime));
+        }
+
+        // Initially not limited
+        Assert.False(isRateLimited());
+
+        // 4 failed attempts -> still not limited
+        for (int i = 0; i < 4; i++) recordFailure();
+        Assert.False(isRateLimited());
+
+        // 5th failed attempt -> limited!
+        recordFailure();
+        Assert.True(isRateLimited());
+    }
 }

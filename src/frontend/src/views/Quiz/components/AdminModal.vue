@@ -9,23 +9,26 @@
         <button class="close-btn" @click="$emit('close')">&times;</button>
       </div>
 
-      <!-- Password Auth Section (For non-admin session) -->
-      <div v-if="!isAuthenticated" class="modal-body">
-        <p class="modal-desc">Nhập mật khẩu Admin hoặc đăng nhập bằng tài khoản Admin để truy cập.</p>
-        <div class="input-group-custom">
-          <input
-            v-model="adminSecret"
-            type="password"
-            placeholder="Nhập mật khẩu Admin (mặc định: jitjfe2026)..."
-            class="code-input"
-            @keydown.enter="onAdminAuth"
-          />
-          <button class="submit-btn" :disabled="loading" @click="onAdminAuth">Xác nhận</button>
+      <!-- Password Auth Section Replaced by Google Admin Role Gate -->
+      <div v-if="!user || !user.isAdmin" class="modal-body auth-notice-body">
+        <div class="lock-shield-icon">🛡️</div>
+        <h4 class="auth-notice-title">Khu Vực Dành Riêng Cho Admin</h4>
+        <p v-if="!user" class="modal-desc">
+          Vui lòng đăng nhập bằng tài khoản Google Quản trị viên (Admin) để truy cập hệ thống quản lý mã mở khóa và học viên.
+        </p>
+        <p v-else class="modal-desc error-text">
+          Tài khoản <strong>{{ user.email }}</strong> không có quyền Quản trị viên. Chỉ tài khoản Admin hệ thống mới có thể truy cập khu vực này.
+        </p>
+
+        <div class="auth-actions">
+          <button type="button" class="google-login-btn" @click="$emit('open-login')">
+            <i class="fa-brands fa-google me-2"></i>
+            {{ !user ? 'Đăng nhập Google Admin' : 'Đổi tài khoản Google' }}
+          </button>
         </div>
-        <p v-if="authError" class="error-msg">⚠️ {{ authError }}</p>
       </div>
 
-      <!-- Main Admin Panel (When Authenticated) -->
+      <!-- Main Admin Panel (When Authenticated as Admin) -->
       <div v-else class="modal-body admin-panel">
         <!-- Navigation Tabs -->
         <div class="admin-tabs">
@@ -213,13 +216,11 @@ const props = withDefaults(
   }
 )
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'close'): void
+  (e: 'open-login'): void
 }>()
 
-const adminSecret = ref('')
-const isAuthenticated = ref(false)
-const authError = ref('')
 const activeTab = ref<'keys' | 'users'>('keys')
 const keys = ref<UnlockKeyItem[]>([])
 const users = ref<AdminUserItem[]>([])
@@ -231,20 +232,15 @@ const loading = ref(false)
 const genStatus = ref('')
 
 watch(
-  () => props.show,
-  (newVal) => {
-    if (newVal) {
+  () => [props.show, props.user?.isAdmin],
+  ([newShow, isAdmin]) => {
+    if (newShow && isAdmin) {
       genStatus.value = ''
-      authError.value = ''
-      if (props.user?.isAdmin) {
-        isAuthenticated.value = true
-        fetchKeys()
-        fetchUsers()
-      } else {
-        adminSecret.value = ''
-      }
+      fetchKeys()
+      fetchUsers()
     }
-  }
+  },
+  { immediate: true }
 )
 
 function switchTab(tab: 'keys' | 'users') {
@@ -253,25 +249,10 @@ function switchTab(tab: 'keys' | 'users') {
   if (tab === 'users') fetchUsers()
 }
 
-async function onAdminAuth() {
-  if (!adminSecret.value.trim() && !props.user?.isAdmin) return
-  authError.value = ''
-  loading.value = true
-  try {
-    const res = await QuizAPI.getAdminKeys(adminSecret.value.trim())
-    keys.value = res.data?.keys || []
-    isAuthenticated.value = true
-    fetchUsers()
-  } catch (err: any) {
-    authError.value = err?.response?.data?.message || 'Mật khẩu Admin không đúng.'
-  } finally {
-    loading.value = false
-  }
-}
-
 async function fetchKeys() {
+  if (!props.user?.isAdmin) return
   try {
-    const res = await QuizAPI.getAdminKeys(adminSecret.value.trim())
+    const res = await QuizAPI.getAdminKeys()
     keys.value = res.data?.keys || []
   } catch (err) {
     console.error('Failed to fetch keys:', err)
@@ -279,8 +260,9 @@ async function fetchKeys() {
 }
 
 async function fetchUsers() {
+  if (!props.user?.isAdmin) return
   try {
-    const res = await QuizAPI.getAdminUsers(adminSecret.value.trim())
+    const res = await QuizAPI.getAdminUsers()
     users.value = res.data?.users || []
   } catch (err) {
     console.error('Failed to fetch users:', err)
@@ -288,6 +270,7 @@ async function fetchUsers() {
 }
 
 async function onGenerateKeys() {
+  if (!props.user?.isAdmin) return
   loading.value = true
   genStatus.value = ''
   try {
@@ -298,14 +281,11 @@ async function onGenerateKeys() {
       targets = [targetOption.value]
     }
 
-    const res = await QuizAPI.generateAdminKeys(
-      {
-        customCode: customCode.value.trim() || undefined,
-        count: batchCount.value,
-        targetSubjects: targets
-      },
-      adminSecret.value.trim()
-    )
+    const res = await QuizAPI.generateAdminKeys({
+      customCode: customCode.value.trim() || undefined,
+      count: batchCount.value,
+      targetSubjects: targets
+    })
 
     genStatus.value = res.data?.message || 'Đã tạo mã thành công!'
     customCode.value = ''
@@ -318,9 +298,10 @@ async function onGenerateKeys() {
 }
 
 async function onDeleteKey(codeOrId: string) {
+  if (!props.user?.isAdmin) return
   if (!confirm(`Bạn có chắc muốn xóa mã ${codeOrId}?`)) return
   try {
-    await QuizAPI.deleteAdminKey(codeOrId, adminSecret.value.trim())
+    await QuizAPI.deleteAdminKey(codeOrId)
     await fetchKeys()
   } catch (err: any) {
     alert(err?.response?.data?.message || 'Xóa mã thất bại.')
@@ -328,8 +309,9 @@ async function onDeleteKey(codeOrId: string) {
 }
 
 async function onGrantUser(email: string, subjects: string[]) {
+  if (!props.user?.isAdmin) return
   try {
-    await QuizAPI.grantUserAccess({ email, subjects }, adminSecret.value.trim())
+    await QuizAPI.grantUserAccess({ email, subjects })
     alert(`Đã cấp quyền mở khóa môn cho ${email}!`)
     await fetchUsers()
   } catch (err: any) {
@@ -440,8 +422,52 @@ function formatDate(isoStr: string) {
   cursor: pointer;
 }
 
-.submit-btn:hover:not(:disabled) {
-  background: #1d4ed8;
+.auth-notice-body {
+  text-align: center;
+  padding: 40px 24px;
+}
+
+.lock-shield-icon {
+  font-size: 3.5rem;
+  margin-bottom: 12px;
+}
+
+.auth-notice-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--wn-ink, #0f172a);
+}
+
+.error-text {
+  color: #ef4444;
+}
+
+.auth-actions {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.google-login-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 24px;
+  border-radius: 999px;
+  border: 1.5px solid var(--wn-card-border, #e2e8f0);
+  background: var(--wn-card-bg, #ffffff);
+  color: var(--wn-ink, #0f172a);
+  font-weight: 600;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.google-login-btn:hover {
+  background: var(--wn-border-subtle, #f8fafc);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .admin-tabs {

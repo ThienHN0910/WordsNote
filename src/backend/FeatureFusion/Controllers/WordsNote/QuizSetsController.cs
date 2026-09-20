@@ -551,9 +551,14 @@ public class QuizSetsController : ControllerBase
     }
 
     [HttpPost("seed")]
-    [Authorize]
+    [AllowAnonymous]
     public async Task<ActionResult> ForceSeedAsync()
     {
+        var (email, isAdmin, _) = await GetCurrentUserContextAsync();
+        if (!isAdmin)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { Error = "Admin access required." });
+        }
         var count = await SeedFromFilesAsync(force: true);
         return Ok(new { Message = $"Quiz banks successfully seeded with {count} questions." });
     }
@@ -608,12 +613,54 @@ public class QuizSetsController : ControllerBase
         return (email, isAdmin, unlockedSubjects);
     }
 
+    private static bool _metadataSynced = false;
+
     private async Task EnsureSeededAsync()
     {
         var count = await _quizSets.CountDocumentsAsync(FilterDefinition<QuizSetDocument>.Empty);
         if (count == 0)
         {
             await SeedFromFilesAsync(force: false);
+            _metadataSynced = true;
+        }
+        else if (!_metadataSynced)
+        {
+            await SyncCatalogMetadataAsync();
+            _metadataSynced = true;
+        }
+    }
+
+    private async Task SyncCatalogMetadataAsync()
+    {
+        try
+        {
+            var dataDirectory = Path.Combine(_env.ContentRootPath, "Data", "QuizBanks");
+            var catalogFile = Path.Combine(dataDirectory, "catalog.json");
+            if (!System.IO.File.Exists(catalogFile))
+            {
+                return;
+            }
+
+            var catalogJson = await System.IO.File.ReadAllTextAsync(catalogFile);
+            var catalog = JsonSerializer.Deserialize<CatalogJsonModel>(catalogJson, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (catalog?.Subjects == null) return;
+
+            foreach (var sub in catalog.Subjects)
+            {
+                var update = Builders<QuizSetDocument>.Update
+                    .Set(s => s.IsRestricted, sub.IsRestricted)
+                    .Set(s => s.UpdatedAt, DateTime.UtcNow);
+
+                await _quizSets.UpdateOneAsync(s => s.Id == sub.Id, update);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error syncing catalog metadata from catalog.json");
         }
     }
 

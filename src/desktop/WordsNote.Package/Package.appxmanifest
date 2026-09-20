@@ -12,7 +12,7 @@
     Version="1.2.0.0" />
 
   <Properties>
-    <DisplayName>WordsNote</DisplayName>
+    <DisplayName>Words note</DisplayName>
     <PublisherDisplayName>ThiệnHN</PublisherDisplayName>
     <Description>Smart vocabulary learning assistant with Spaced Repetition (SRS) flashcards and university exam quiz banks (MLN122, PRM393, JFE301, JIT401).</Description>
     <Logo>Assets\StoreLogo.png</Logo>
@@ -29,7 +29,7 @@
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
-        DisplayName="WordsNote"
+        DisplayName="Words note"
         Description="Smart vocabulary learning assistant with Spaced Repetition (SRS) flashcards and university exam quiz banks."
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"

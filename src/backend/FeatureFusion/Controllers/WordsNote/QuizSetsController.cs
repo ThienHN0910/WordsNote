@@ -553,9 +553,196 @@ public class QuizSetsController : ControllerBase
         });
     }
 
+    [HttpGet("admin/all")]
+    [HttpGet("/api/admin/quiz-sets")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetAdminQuizSetsAsync()
+    {
+        var (_, isAdmin, _) = await GetCurrentUserContextAsync();
+        if (!isAdmin)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "ADMIN_UNAUTHORIZED", message = "Bạn không có quyền Admin. Yêu cầu đăng nhập tài khoản Google Admin." });
+        }
+
+        await EnsureSeededAsync();
+
+        var sets = await _quizSets.Find(FilterDefinition<QuizSetDocument>.Empty)
+            .SortBy(s => s.Code)
+            .ToListAsync();
+
+        return Ok(new { sets });
+    }
+
+    [HttpPost("admin/create")]
+    [HttpPost("/api/admin/quiz-sets")]
+    [AllowAnonymous]
+    public async Task<IActionResult> CreateQuizSetAsync([FromBody] CreateQuizSetRequestDTO request)
+    {
+        var (_, isAdmin, _) = await GetCurrentUserContextAsync();
+        if (!isAdmin)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "ADMIN_UNAUTHORIZED", message = "Bạn không có quyền Admin. Yêu cầu đăng nhập tài khoản Google Admin." });
+        }
+
+        if (request == null || string.IsNullOrWhiteSpace(request.Id) || string.IsNullOrWhiteSpace(request.Code) || string.IsNullOrWhiteSpace(request.Title))
+        {
+            return BadRequest(new { error = "INVALID_PAYLOAD", message = "Id, Code và Title là bắt buộc." });
+        }
+
+        var cleanId = request.Id.Trim().ToLowerInvariant();
+        var cleanCode = request.Code.Trim().ToUpperInvariant();
+        var cleanTitle = request.Title.Trim();
+
+        var existing = await _quizSets.Find(s => s.Id == cleanId).FirstOrDefaultAsync();
+        if (existing != null)
+        {
+            return Conflict(new { error = "SET_EXISTS", message = $"Bộ câu hỏi với ID '{cleanId}' đã tồn tại." });
+        }
+
+        var newSet = new QuizSetDocument
+        {
+            Id = cleanId,
+            Code = cleanCode,
+            Title = cleanTitle,
+            Description = request.Description?.Trim() ?? string.Empty,
+            Color = !string.IsNullOrWhiteSpace(request.Color) ? request.Color.Trim() : "#2563eb",
+            TotalQuestions = 0,
+            IsRestricted = request.IsRestricted,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        await _quizSets.InsertOneAsync(newSet);
+
+        return Ok(new
+        {
+            success = true,
+            message = $"Đã tạo thành công bộ câu hỏi {newSet.Code} - {newSet.Title}.",
+            set = newSet
+        });
+    }
+
+    [HttpPut("admin/{id}")]
+    [HttpPut("/api/admin/quiz-sets/{id}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> UpdateQuizSetAsync(string id, [FromBody] UpdateQuizSetRequestDTO request)
+    {
+        var (_, isAdmin, _) = await GetCurrentUserContextAsync();
+        if (!isAdmin)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "ADMIN_UNAUTHORIZED", message = "Bạn không có quyền Admin. Yêu cầu đăng nhập tài khoản Google Admin." });
+        }
+
+        var cleanId = id.Trim().ToLowerInvariant();
+        var existing = await _quizSets.Find(s => s.Id == cleanId).FirstOrDefaultAsync();
+        if (existing == null)
+        {
+            return NotFound(new { error = "SET_NOT_FOUND", message = $"Không tìm thấy bộ câu hỏi '{cleanId}'." });
+        }
+
+        var updateDef = Builders<QuizSetDocument>.Update.Set(s => s.UpdatedAt, DateTime.UtcNow);
+
+        if (!string.IsNullOrWhiteSpace(request.Code))
+        {
+            updateDef = updateDef.Set(s => s.Code, request.Code.Trim().ToUpperInvariant());
+        }
+        if (!string.IsNullOrWhiteSpace(request.Title))
+        {
+            updateDef = updateDef.Set(s => s.Title, request.Title.Trim());
+        }
+        if (request.Description != null)
+        {
+            updateDef = updateDef.Set(s => s.Description, request.Description.Trim());
+        }
+        if (!string.IsNullOrWhiteSpace(request.Color))
+        {
+            updateDef = updateDef.Set(s => s.Color, request.Color.Trim());
+        }
+        if (request.IsRestricted.HasValue)
+        {
+            updateDef = updateDef.Set(s => s.IsRestricted, request.IsRestricted.Value);
+        }
+
+        var updated = await _quizSets.FindOneAndUpdateAsync(
+            s => s.Id == cleanId,
+            updateDef,
+            new FindOneAndUpdateOptions<QuizSetDocument> { ReturnDocument = ReturnDocument.After });
+
+        return Ok(new
+        {
+            success = true,
+            message = $"Đã cập nhật thông tin bộ môn {updated.Code}.",
+            set = updated
+        });
+    }
+
+    [HttpPatch("admin/{id}/restriction")]
+    [HttpPatch("/api/admin/quiz-sets/{id}/restriction")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ToggleQuizSetRestrictionAsync(string id, [FromBody] ToggleRestrictionRequestDTO request)
+    {
+        var (_, isAdmin, _) = await GetCurrentUserContextAsync();
+        if (!isAdmin)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "ADMIN_UNAUTHORIZED", message = "Bạn không có quyền Admin. Yêu cầu đăng nhập tài khoản Google Admin." });
+        }
+
+        var cleanId = id.Trim().ToLowerInvariant();
+        var existing = await _quizSets.Find(s => s.Id == cleanId).FirstOrDefaultAsync();
+        if (existing == null)
+        {
+            return NotFound(new { error = "SET_NOT_FOUND", message = $"Không tìm thấy bộ câu hỏi '{cleanId}'." });
+        }
+
+        var update = Builders<QuizSetDocument>.Update
+            .Set(s => s.IsRestricted, request.IsRestricted)
+            .Set(s => s.UpdatedAt, DateTime.UtcNow);
+
+        var updated = await _quizSets.FindOneAndUpdateAsync(
+            s => s.Id == cleanId,
+            update,
+            new FindOneAndUpdateOptions<QuizSetDocument> { ReturnDocument = ReturnDocument.After });
+
+        var statusText = request.IsRestricted ? "KHÓA VIP" : "MỞ TỰ DO";
+        return Ok(new
+        {
+            success = true,
+            message = $"Đã chuyển trạng thái môn {updated.Code} sang [{statusText}].",
+            set = updated
+        });
+    }
+
+    [HttpDelete("admin/{id}")]
+    [HttpDelete("/api/admin/quiz-sets/{id}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> DeleteQuizSetAsync(string id)
+    {
+        var (_, isAdmin, _) = await GetCurrentUserContextAsync();
+        if (!isAdmin)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "ADMIN_UNAUTHORIZED", message = "Bạn không có quyền Admin. Yêu cầu đăng nhập tài khoản Google Admin." });
+        }
+
+        var cleanId = id.Trim().ToLowerInvariant();
+        var existing = await _quizSets.Find(s => s.Id == cleanId).FirstOrDefaultAsync();
+        if (existing == null)
+        {
+            return NotFound(new { error = "SET_NOT_FOUND", message = $"Không tìm thấy bộ câu hỏi '{cleanId}'." });
+        }
+
+        await _quizSets.DeleteOneAsync(s => s.Id == cleanId);
+        var questionsDeleted = await _questions.DeleteManyAsync(q => q.SubjectId == cleanId);
+
+        return Ok(new
+        {
+            success = true,
+            message = $"Đã xóa bộ môn {existing.Code} và {questionsDeleted.DeletedCount} câu hỏi liên quan."
+        });
+    }
+
     [HttpPost("{id}/submit")]
     [AllowAnonymous]
     public async Task<ActionResult<QuizSubmitResultDTO>> SubmitQuizAsync(
+
         string id,
         [FromBody] QuizSubmitRequestDTO request)
     {
@@ -709,11 +896,95 @@ public class QuizSetsController : ControllerBase
 
             foreach (var sub in catalog.Subjects)
             {
-                var update = Builders<QuizSetDocument>.Update
-                    .Set(s => s.IsRestricted, sub.IsRestricted)
-                    .Set(s => s.UpdatedAt, DateTime.UtcNow);
+                var existingSet = await _quizSets.Find(s => s.Id == sub.Id).FirstOrDefaultAsync();
+                if (existingSet == null)
+                {
+                    // New subject added in catalog.json! Insert QuizSet and load its questions
+                    var subjectFile = Path.Combine(dataDirectory, $"{sub.Id}.json");
+                    int totalQ = 0;
+                    if (System.IO.File.Exists(subjectFile))
+                    {
+                        var subjectJson = await System.IO.File.ReadAllTextAsync(subjectFile);
+                        var subjectData = JsonSerializer.Deserialize<SubjectFileJsonModel>(subjectJson, new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+                        if (subjectData?.Questions != null && subjectData.Questions.Count > 0)
+                        {
+                            totalQ = subjectData.Questions.Count;
+                            var questionDocs = subjectData.Questions.Select(q => new QuestionDocument
+                            {
+                                Id = $"{sub.Id}-{q.Id}",
+                                SubjectId = sub.Id,
+                                QuestionNumber = q.Id,
+                                Question = q.Question ?? string.Empty,
+                                Options = q.Options ?? new Dictionary<string, string>(),
+                                Answers = q.Answers ?? new List<string>(),
+                                Choose = q.Choose > 0 ? q.Choose : 1,
+                                Explanation = q.Explanation,
+                                Note = q.Note,
+                                Source = q.Source,
+                                Exam = q.Exam
+                            }).ToList();
 
-                await _quizSets.UpdateOneAsync(s => s.Id == sub.Id, update);
+                            await _questions.InsertManyAsync(questionDocs, new InsertManyOptions { IsOrdered = false });
+                        }
+                    }
+
+                    var quizSetDoc = new QuizSetDocument
+                    {
+                        Id = sub.Id,
+                        Code = sub.Code,
+                        Title = sub.Name,
+                        Color = sub.Color ?? "#2563eb",
+                        TotalQuestions = totalQ > 0 ? totalQ : sub.Total,
+                        IsRestricted = sub.IsRestricted,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    await _quizSets.InsertOneAsync(quizSetDoc);
+                }
+                else
+                {
+                    // Existing subject: populate questions if they were missing
+                    var qCount = await _questions.CountDocumentsAsync(q => q.SubjectId == sub.Id);
+                    if (qCount == 0)
+                    {
+                        var subjectFile = Path.Combine(dataDirectory, $"{sub.Id}.json");
+                        if (System.IO.File.Exists(subjectFile))
+                        {
+                            var subjectJson = await System.IO.File.ReadAllTextAsync(subjectFile);
+                            var subjectData = JsonSerializer.Deserialize<SubjectFileJsonModel>(subjectJson, new JsonSerializerOptions
+                            {
+                                PropertyNameCaseInsensitive = true
+                            });
+                            if (subjectData?.Questions != null && subjectData.Questions.Count > 0)
+                            {
+                                var questionDocs = subjectData.Questions.Select(q => new QuestionDocument
+                                {
+                                    Id = $"{sub.Id}-{q.Id}",
+                                    SubjectId = sub.Id,
+                                    QuestionNumber = q.Id,
+                                    Question = q.Question ?? string.Empty,
+                                    Options = q.Options ?? new Dictionary<string, string>(),
+                                    Answers = q.Answers ?? new List<string>(),
+                                    Choose = q.Choose > 0 ? q.Choose : 1,
+                                    Explanation = q.Explanation,
+                                    Note = q.Note,
+                                    Source = q.Source,
+                                    Exam = q.Exam
+                                }).ToList();
+
+                                await _questions.InsertManyAsync(questionDocs, new InsertManyOptions { IsOrdered = false });
+                                await _quizSets.UpdateOneAsync(
+                                    s => s.Id == sub.Id,
+                                    Builders<QuizSetDocument>.Update
+                                        .Set(s => s.TotalQuestions, questionDocs.Count)
+                                        .Set(s => s.UpdatedAt, DateTime.UtcNow));
+                            }
+                        }
+                    }
+                    // Admin restriction and title settings in DB are preserved
+                }
             }
         }
         catch (Exception ex)

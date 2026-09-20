@@ -104,5 +104,43 @@ export const QuizAPI = {
   grantUserAccess(payload: GrantUserPayload) {
     const headers = getAuthHeaders()
     return apiClient.post<{ success: boolean; message: string; user: AdminUserItem }>('/api/admin/users/grant', payload, { headers })
+  },
+
+  getAdminQuizSets() {
+    const headers = getAuthHeaders()
+    return apiClient.get<{ sets: QuizSet[] }>('/api/admin/quiz-sets', { headers })
+  },
+
+  createQuizSet(data: {
+    id: string
+    code: string
+    title: string
+    description?: string
+    color?: string
+    isRestricted: boolean
+  }) {
+    const headers = getAuthHeaders()
+    return apiClient.post<{ success: boolean; message: string; set: QuizSet }>('/api/admin/quiz-sets', data, { headers })
+  },
+
+  updateQuizSet(id: string, data: {
+    code?: string
+    title?: string
+    description?: string
+    color?: string
+    isRestricted?: boolean
+  }) {
+    const headers = getAuthHeaders()
+    return apiClient.put<{ success: boolean; message: string; set: QuizSet }>(`/api/admin/quiz-sets/${id}`, data, { headers })
+  },
+
+  toggleQuizSetRestriction(id: string, isRestricted: boolean) {
+    const headers = getAuthHeaders()
+    return apiClient.patch<{ success: boolean; message: string; set: QuizSet }>(`/api/admin/quiz-sets/${id}/restriction`, { isRestricted }, { headers })
+  },
+
+  deleteQuizSet(id: string) {
+    const headers = getAuthHeaders()
+    return apiClient.delete<{ success: boolean; message: string }>(`/api/admin/quiz-sets/${id}`, { headers })
   }
 }

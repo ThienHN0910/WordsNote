@@ -71,6 +71,8 @@ src/extension/dist/
 PublishProfiles/
 appsettings.json
 appsettings.Development.json
+*.user
+*.userosv
 
 # Desktop Store packaging artifacts and credentials
 src/desktop/WordsNote.Package/AppPackages/

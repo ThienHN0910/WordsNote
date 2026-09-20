@@ -1,0 +1,45 @@
+{
+  "title": "Ôn tập FE – FuExam",
+  "subjects": [
+    {
+      "id": "mln122",
+      "code": "MLN122",
+      "name": "Kinh tế chính trị Mác–Lênin",
+      "file": "data/mln122.json",
+      "total": 598,
+      "color": "#2563eb"
+    },
+    {
+      "id": "prm393",
+      "code": "PRM393",
+      "name": "Flutter / Mobile (2 đề FE + 12 slide)",
+      "file": "data/prm393.json",
+      "total": 224,
+      "color": "#7c3aed"
+    },
+    {
+      "id": "jfe301",
+      "code": "JFE301",
+      "name": "IT Fundamentals (FE + textbook + ôn thêm)",
+      "file": "data/jfe301.json",
+      "total": 726,
+      "color": "#059669"
+    },
+    {
+      "id": "jit401",
+      "code": "JIT401",
+      "name": "JIT401 (FE + slide + Quiz on Thao + albazzz PT)",
+      "file": "data/jit401.json",
+      "total": 706,
+      "color": "#dc2626"
+    }
+  ],
+  "sources": [
+    "https://fuexam.me/forums/mln122.168/",
+    "https://fuexam.me/forums/prm393.174/",
+    "https://fuexam.me/forums/jfe301.221/",
+    "https://fuexam.me/forums/jit401.222/",
+    "https://albazzz.github.io/FPT/"
+  ],
+  "note": "Đáp án PRM/JFE/JIT và giải thích do hệ thống biên soạn theo kiến thức chuyên môn; MLN122 ưu tiên ngân hàng 526 đã có key. Bank ôn thêm JFE/JIT gộp từ albazzz/FPT (dedupe stem). Đề chỉ có ảnh (C1/C2/FE-RE image-only, PRM FE image-only) chưa OCR được sẽ bổ sung sau."
+}

@@ -44,3 +44,41 @@ export interface DeepStudyAnswerResult {
   submittedAnswer: string
   recommendedDifficulty: CardDifficulty
 }
+
+export interface QuizSet {
+  id: string
+  code: string
+  title: string
+  description: string
+  color: string
+  totalQuestions: number
+}
+
+export interface QuizQuestion {
+  id: string
+  subjectId: string
+  questionNumber: number
+  question: string
+  options: Record<string, string>
+  answers: string[]
+  choose: number
+  explanation?: string
+  note?: string
+  source?: string
+  exam?: string
+}
+
+export interface QuizSubmitResult {
+  totalQuestions: number
+  correctCount: number
+  incorrectCount: number
+  scorePercentage: number
+  details: Array<{
+    questionId: string
+    userAnswers: string[]
+    correctAnswers: string[]
+    isCorrect: boolean
+    explanation?: string
+  }>
+}
+

@@ -34,6 +34,16 @@ const routesFFP: Array<RouteRecordRaw> = [
       requiresAuth: true,
     },
   },
+  {
+    path: '/quiz',
+    name: 'quizList',
+    component: () => import('@/pages/WordsNote/QuizListPage.vue'),
+  },
+  {
+    path: '/quiz/:id/practice',
+    name: 'quizPractice',
+    component: () => import('@/pages/WordsNote/QuizPracticePage.vue'),
+  },
 ]
 
 export default routesFFP

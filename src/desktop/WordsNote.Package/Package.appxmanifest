@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
@@ -9,17 +9,17 @@
   <Identity
     Name="ThinHN.Wordsnote"
     Publisher="CN=91F3D8EE-3807-4BAE-B3BB-27029782F978"
-    Version="1.1.3.0" />
+    Version="1.2.0.0" />
 
   <Properties>
     <DisplayName>Words note</DisplayName>
     <PublisherDisplayName>ThiệnHN</PublisherDisplayName>
-    <Description>TODO: Replace with Microsoft Store short description.</Description>
+    <Description>Smart vocabulary learning assistant with Spaced Repetition (SRS) flashcards and university exam quiz banks (MLN122, PRM393, JFE301, JIT401).</Description>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
   <Dependencies>
-    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19045.0" />
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22621.0" />
   </Dependencies>
 
   <Resources>
@@ -30,7 +30,7 @@
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
         DisplayName="Words note"
-        Description="TODO: Replace with Store listing description"
+        Description="Smart vocabulary learning assistant with Spaced Repetition (SRS) flashcards and university exam quiz banks."
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">

@@ -36,6 +36,33 @@
       "total": 706,
       "color": "#dc2626",
       "isRestricted": true
+    },
+    {
+      "id": "prn232",
+      "code": "PRN232",
+      "name": "Lập trình .NET & Web API (FE SP26, B5 FE, FA25 & PE)",
+      "file": "data/prn232.json",
+      "total": 150,
+      "color": "#0284c7",
+      "isRestricted": false
+    },
+    {
+      "id": "ite302c",
+      "code": "ITE302c",
+      "name": "Ethics in Information Technology (12 đề FE SP24-SP26)",
+      "file": "data/ite302c.json",
+      "total": 1060,
+      "color": "#e11d48",
+      "isRestricted": false
+    },
+    {
+      "id": "hcm202",
+      "code": "HCM202",
+      "name": "Tư tưởng Hồ Chí Minh (15 bộ đề FE SU24-SU26)",
+      "file": "data/hcm202.json",
+      "total": 900,
+      "color": "#d97706",
+      "isRestricted": false
     }
   ],
   "sources": [

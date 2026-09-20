@@ -47,11 +47,14 @@ WordsNote is a modern, high-performance learning platform for vocabulary, flashc
 Interactive study & test simulation platform with complete design and interaction parity with `MLN122_FE`:
 
 - **Workspace Routes**: `/quiz`, `/quiz/:subjectId`
-- **Multi-Subject Question Banks (2,254 verified questions)**:
-  - **MLN122**: Kinh tế chính trị Mác–Lênin (598 câu) — *Môn mở tự do*
-  - **PRM393**: Flutter / Mobile (2 đề FE + 12 slide - 224 câu) — *Môn mở tự do*
-  - **JFE301**: IT Fundamentals (FE + textbook + ôn thêm - 726 câu) — *Môn khóa, yêu cầu mã mở khóa 1 lần*
-  - **JIT401**: JIT401 (FE + slide + Quiz on Thao + albazzz PT - 706 câu) — *Môn khóa, yêu cầu mã mở khóa 1 lần*
+- **Multi-Subject Question Banks (4,364 verified questions across 7 subjects)**:
+  - **MLN122**: Kinh tế chính trị Mác–Lênin (598 câu) — *Mở tự do*
+  - **PRM393**: Flutter / Mobile (2 đề FE + 12 slide - 224 câu) — *Mở tự do*
+  - **PRN232**: Lập trình .NET & Web API (FE SP26, B5 FE, FA25 FE & PE - 150 câu) — *Mở tự do*
+  - **ITE302c**: Ethics in Information Technology (12 bộ đề FE SP24-SP26 - 1,060 câu) — *Mở tự do*
+  - **HCM202**: Tư tưởng Hồ Chí Minh (15 bộ đề FE SU24-SU26 - 900 câu) — *Mở tự do*
+  - **JFE301**: IT Fundamentals (FE + textbook + ôn thêm - 726 câu) — *Môn khóa VIP, yêu cầu mã mở khóa 1 lần*
+  - **JIT401**: JIT401 (FE + slide + Quiz on Thao + albazzz PT - 706 câu) — *Môn khóa VIP, yêu cầu mã mở khóa 1 lần*
 - **Study UX & Interaction Logic**:
   - **Immediate Evaluation**: Instant scoring for single-choice questions; dedicated "Kiểm tra" submission for multi-choice.
   - **Comprehensive Explanations**: Detailed explanation callout banners with specific styling for incorrect answers.
@@ -60,10 +63,13 @@ Interactive study & test simulation platform with complete design and interactio
   - **Keyboard Navigation**: Full shortcuts (`A`/`B`/`C`/`D` or `1`/`2`/`3`/`4` to answer, `←`/`A` for Previous, `→`/`D` for Next, `S` to Star).
   - **Search Drawer (`SearchDrawer`)**: Real-time fuzzy question search with instant jump.
   - **SRS Flashcard Capture**: One-click `+ Lưu từ` button to extract vocabulary/concepts into WordsNote study decks.
-- **Security & Single-Use Unlock Code Architecture**:
+- **Security & Admin Portal Management**:
   - **Zero-Trust Identity**: Role-based access control strictly enforced via Google OAuth (`ADMIN_EMAIL=hnt.vn.vn@gmail.com`).
   - **Zero Bypass Vulnerabilities**: Static passwords and header bypasses (`x-admin-secret`, `x-user-email`) completely eliminated.
-  - **Admin Console (`AdminModal`)**: Protected behind Google Admin authentication. Allows generating 16-character single-use unlock codes (`Convert.ToHexString(8 bytes)`), tracking redemption status, and managing student access.
+  - **Admin Console (`AdminModal`)**: Protected behind Google Admin authentication with 3 management modules:
+    - **Mã mở khóa**: Tạo mã 16 ký tự dùng 1 lần (`Convert.ToHexString(8 bytes)`), theo dõi lượt kích hoạt và người dùng.
+    - **Học viên**: Cấp quyền mở khóa trực tiếp theo tài khoản Google email.
+    - **Bộ môn (Quiz Sets)**: Thêm mới, chỉnh sửa thông tin, xóa bộ môn, và bật/tắt tức thì trạng thái Khóa VIP / Mở tự do (`isRestricted`).
   - **Atomic Key Redemption**: Concurrency-safe MongoDB atomic `FindOneAndUpdate` eliminates race conditions.
   - **Brute-Force Rate Limiting**: Automatic 5-minute IP/User throttle after 5 consecutive failed unlock attempts (HTTP 429).
 

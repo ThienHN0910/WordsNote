@@ -568,7 +568,7 @@ async function saveWordToDesk() {
 }
 
 .icon-btn {
-  background: none;
+  background: var(--wn-surface-soft, none);
   border: 1px solid var(--wn-card-border, #cbd5e1);
   border-radius: 8px;
   padding: 0.35rem 0.6rem;
@@ -583,7 +583,7 @@ async function saveWordToDesk() {
 }
 
 .quick-save-btn {
-  background: none;
+  background: var(--wn-surface-soft, none);
   border: 1px dashed var(--wn-card-border, #94a3b8);
   border-radius: 8px;
   padding: 0.35rem 0.65rem;
@@ -595,7 +595,7 @@ async function saveWordToDesk() {
 }
 
 .quick-save-btn:hover {
-  background: rgba(37, 99, 235, 0.05);
+  background: rgba(37, 99, 235, 0.1);
 }
 
 .question-text {
@@ -769,6 +769,8 @@ async function saveWordToDesk() {
 
 .grid-answered {
   background: var(--wn-badge-bg, #e2e8f0);
+  color: var(--wn-ink);
+  border-color: var(--wn-primary);
   font-weight: 700;
 }
 

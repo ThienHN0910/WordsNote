@@ -1,14 +1,16 @@
 @use 'variables' as v;
 
 body {
-  &[data-theme='dark'] {
-    background-color: v.$DARK_THEME_BG_COLOR;
-    color: v.$DARK_THEME_TEXT_COLOR;
+  &[data-theme='dark'],
+  &[data-bs-theme='dark'] {
+    background-color: var(--wn-bg, #101826);
+    color: var(--wn-ink, #e6ebff);
   }
 
-  &[data-theme='light'] {
-    background-color: v.$LIGHT_THEME_BG_COLOR;
-    color: v.$LIGHT_THEME_TEXT_COLOR;
+  &[data-theme='light'],
+  &[data-bs-theme='light'] {
+    background-color: var(--wn-bg, #f7f3ec);
+    color: var(--wn-ink, #1f2333);
   } 
 }
 

@@ -108,6 +108,7 @@
       :show="showAdminModal"
       :user="quizStore.user"
       @close="showAdminModal = false"
+      @open-login="showAdminModal = false; showLoginModal = true"
     />
 
     <SearchDrawer
@@ -283,39 +284,63 @@ async function onRedeemKey({ code, onSuccess, onError }: { code: string; onSucce
   }
 }
 
-function onGoogleLoginSuccess(credential: string) {
+async function onGoogleLoginSuccess(credential: string) {
   showLoginModal.value = false
-  // Decode JWT payload for basic user info
   try {
-    const base64Url = credential.split('.')[1]
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-    const jsonPayload = decodeURIComponent(
-      window
-        .atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    )
-    const payload = JSON.parse(jsonPayload)
+    // Authenticate with backend /api/auth/google
+    const res = await QuizAPI.loginWithGoogle(credential)
+    const backendToken = res.data?.token || res.data?.Token || credential
+    const backendUser = res.data?.user || (res.data as any)?.User
 
     const adminEmail = import.meta.env.VITE_GOOGLE_ALLOWED_EMAIL || 'hnt.vn.vn@gmail.com'
-    const isAdmin = payload.email?.toLowerCase() === adminEmail.toLowerCase()
+    const isAdmin = backendUser?.isAdmin || backendUser?.email?.toLowerCase() === adminEmail.toLowerCase()
 
     quizStore.setUser(
       {
-        email: payload.email,
-        name: payload.name || payload.email.split('@')[0],
-        picture: payload.picture,
+        email: backendUser?.email || '',
+        name: backendUser?.name || backendUser?.email?.split('@')[0] || 'User',
+        picture: backendUser?.picture,
         unlockedSubjects: isAdmin ? ['mln122', 'prm393', 'jfe301', 'jit401'] : [],
         isAdmin
       },
-      credential
+      backendToken
     )
 
-    quizStore.fetchCatalog()
-    quizStore.fetchQuestions(quizStore.activeSubjectId)
+    await quizStore.fetchCatalog()
+    await quizStore.fetchQuestions(quizStore.activeSubjectId)
   } catch (e) {
-    console.error('Failed to parse Google credential:', e)
+    console.error('Failed to authenticate with backend Google auth, falling back to local decode:', e)
+    try {
+      const base64Url = credential.split('.')[1]
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+      const jsonPayload = decodeURIComponent(
+        window
+          .atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      )
+      const payload = JSON.parse(jsonPayload)
+
+      const adminEmail = import.meta.env.VITE_GOOGLE_ALLOWED_EMAIL || 'hnt.vn.vn@gmail.com'
+      const isAdmin = payload.email?.toLowerCase() === adminEmail.toLowerCase()
+
+      quizStore.setUser(
+        {
+          email: payload.email,
+          name: payload.name || payload.email.split('@')[0],
+          picture: payload.picture,
+          unlockedSubjects: isAdmin ? ['mln122', 'prm393', 'jfe301', 'jit401'] : [],
+          isAdmin
+        },
+        credential
+      )
+
+      await quizStore.fetchCatalog()
+      await quizStore.fetchQuestions(quizStore.activeSubjectId)
+    } catch (fallbackErr) {
+      console.error('Failed to parse Google credential:', fallbackErr)
+    }
   }
 }
 

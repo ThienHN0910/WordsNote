@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -182,6 +183,44 @@ public class QuizSetsController : ControllerBase
         return Ok(dtos);
     }
 
+    private static readonly ConcurrentDictionary<string, (int Attempts, DateTime ResetTime)> _rateLimits = new();
+
+    private static bool IsRateLimited(string clientKey)
+    {
+        var now = DateTime.UtcNow;
+        if (_rateLimits.TryGetValue(clientKey, out var entry))
+        {
+            if (now > entry.ResetTime)
+            {
+                _rateLimits.TryRemove(clientKey, out _);
+                return false;
+            }
+            return entry.Attempts >= 5;
+        }
+        return false;
+    }
+
+    private static void RecordFailedAttempt(string clientKey)
+    {
+        var now = DateTime.UtcNow;
+        _rateLimits.AddOrUpdate(
+            clientKey,
+            _ => (1, now.AddMinutes(5)),
+            (_, existing) =>
+            {
+                if (now > existing.ResetTime)
+                {
+                    return (1, now.AddMinutes(5));
+                }
+                return (existing.Attempts + 1, existing.ResetTime);
+            });
+    }
+
+    private static void ClearRateLimit(string clientKey)
+    {
+        _rateLimits.TryRemove(clientKey, out _);
+    }
+
     [HttpPost("unlock")]
     [HttpPost("/api/unlock")]
     [AllowAnonymous]
@@ -200,26 +239,49 @@ public class QuizSetsController : ControllerBase
             return Unauthorized(new { error = "UNAUTHORIZED", message = "Vui lòng đăng nhập bằng Google trước khi mở khóa." });
         }
 
-        var keyRecord = await _unlockKeys.Find(k => k.Code == cleanCode).FirstOrDefaultAsync();
-        if (keyRecord == null)
-        {
-            return BadRequest(new { error = "INVALID_KEY", message = "Mã mở khóa không tồn tại hoặc sai ký tự." });
-        }
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var rateLimitKey = $"{email.ToLowerInvariant()}:{ip}";
 
-        if (keyRecord.IsUsed)
+        if (IsRateLimited(rateLimitKey))
         {
-            return BadRequest(new
+            return StatusCode(StatusCodes.Status429TooManyRequests, new
             {
-                error = "KEY_ALREADY_USED",
-                message = $"Mã này đã được sử dụng bởi {keyRecord.UsedByEmail ?? "người khác"} vào {keyRecord.UsedAt:dd/MM/yyyy HH:mm}."
+                error = "TOO_MANY_ATTEMPTS",
+                message = "Bạn đã nhập sai mã mở khóa quá nhiều lần. Vui lòng đợi 5 phút trước khi thử lại."
             });
         }
 
-        // Mark key used atomically
-        keyRecord.IsUsed = true;
-        keyRecord.UsedAt = DateTime.UtcNow;
-        keyRecord.UsedByEmail = email;
-        await _unlockKeys.ReplaceOneAsync(k => k.Id == keyRecord.Id, keyRecord);
+        // Atomic update: only update if matching code and NOT yet used (prevents race conditions)
+        var updateDef = Builders<UnlockKeyDocument>.Update
+            .Set(k => k.IsUsed, true)
+            .Set(k => k.UsedAt, DateTime.UtcNow)
+            .Set(k => k.UsedByEmail, email);
+
+        var keyRecord = await _unlockKeys.FindOneAndUpdateAsync(
+            k => k.Code == cleanCode && !k.IsUsed,
+            updateDef,
+            new FindOneAndUpdateOptions<UnlockKeyDocument> { ReturnDocument = ReturnDocument.After }
+        );
+
+        if (keyRecord == null)
+        {
+            RecordFailedAttempt(rateLimitKey);
+
+            var existingKey = await _unlockKeys.Find(k => k.Code == cleanCode).FirstOrDefaultAsync();
+            if (existingKey != null && existingKey.IsUsed)
+            {
+                return BadRequest(new
+                {
+                    error = "KEY_ALREADY_USED",
+                    message = $"Mã này đã được sử dụng bởi {existingKey.UsedByEmail ?? "người khác"} vào {existingKey.UsedAt:dd/MM/yyyy HH:mm}."
+                });
+            }
+
+            return BadRequest(new { error = "INVALID_KEY", message = "Mã mở khóa không tồn tại hoặc sai ký tự." });
+        }
+
+        // Successful redemption clears rate limit tracker
+        ClearRateLimit(rateLimitKey);
 
         // Update user's unlocked subjects
         var user = await _users.Find(u => u.Email != null && u.Email.ToLower() == email.ToLower()).FirstOrDefaultAsync();
@@ -245,23 +307,21 @@ public class QuizSetsController : ControllerBase
             ? keyRecord.TargetSubjects
             : new List<string> { "jfe301", "jit401" };
 
-        foreach (var t in targets)
-        {
-            var normalizedTarget = t.Trim().ToLowerInvariant();
-            if (!user.UnlockedSubjects.Contains(normalizedTarget))
-            {
-                user.UnlockedSubjects.Add(normalizedTarget);
-            }
-        }
+        var normalizedTargets = targets.Select(t => t.Trim().ToLowerInvariant()).ToList();
+        var userUpdate = Builders<User>.Update
+            .AddToSetEach(u => u.UnlockedSubjects, normalizedTargets)
+            .Set(u => u.UpdatedAt, DateTime.UtcNow);
 
-        await _users.ReplaceOneAsync(u => u.Id == user.Id, user);
+        await _users.UpdateOneAsync(u => u.Id == user.Id, userUpdate);
 
+        var updatedUser = await _users.Find(u => u.Id == user.Id).FirstOrDefaultAsync();
         var targetLabels = string.Join(", ", targets.Select(t => t.ToUpperInvariant()));
+
         return Ok(new RedeemKeyResponseDTO
         {
             Success = true,
             Message = $"Mở khóa thành công môn ({targetLabels})!",
-            UnlockedSubjects = user.UnlockedSubjects
+            UnlockedSubjects = updatedUser?.UnlockedSubjects ?? normalizedTargets
         });
     }
 
@@ -273,7 +333,7 @@ public class QuizSetsController : ControllerBase
         var (_, isAdmin, _) = await GetCurrentUserContextAsync();
         if (!isAdmin)
         {
-            return StatusCode(StatusCodes.Status403Forbidden, new { error = "ADMIN_UNAUTHORIZED", message = "Bạn không có quyền Admin hoặc mật khẩu Admin không đúng." });
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "ADMIN_UNAUTHORIZED", message = "Bạn không có quyền Admin. Yêu cầu đăng nhập tài khoản Google Admin." });
         }
 
         var keys = await _unlockKeys.Find(FilterDefinition<UnlockKeyDocument>.Empty)
@@ -303,7 +363,7 @@ public class QuizSetsController : ControllerBase
         var (_, isAdmin, _) = await GetCurrentUserContextAsync();
         if (!isAdmin)
         {
-            return StatusCode(StatusCodes.Status403Forbidden, new { error = "ADMIN_UNAUTHORIZED", message = "Bạn không có quyền Admin hoặc mật khẩu Admin không đúng." });
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "ADMIN_UNAUTHORIZED", message = "Bạn không có quyền Admin. Yêu cầu đăng nhập tài khoản Google Admin." });
         }
 
         var allSubjects = new List<string> { "mln122", "prm393", "jfe301", "jit401" };
@@ -382,7 +442,7 @@ public class QuizSetsController : ControllerBase
         var (_, isAdmin, _) = await GetCurrentUserContextAsync();
         if (!isAdmin)
         {
-            return StatusCode(StatusCodes.Status403Forbidden, new { error = "ADMIN_UNAUTHORIZED", message = "Bạn không có quyền Admin hoặc mật khẩu Admin không đúng." });
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "ADMIN_UNAUTHORIZED", message = "Bạn không có quyền Admin. Yêu cầu đăng nhập tài khoản Google Admin." });
         }
 
         var filter = Builders<UnlockKeyDocument>.Filter.Or(
@@ -407,7 +467,7 @@ public class QuizSetsController : ControllerBase
         var (_, isAdmin, _) = await GetCurrentUserContextAsync();
         if (!isAdmin)
         {
-            return StatusCode(StatusCodes.Status403Forbidden, new { error = "ADMIN_UNAUTHORIZED", message = "Bạn không có quyền Admin hoặc mật khẩu Admin không đúng." });
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "ADMIN_UNAUTHORIZED", message = "Bạn không có quyền Admin. Yêu cầu đăng nhập tài khoản Google Admin." });
         }
 
         var users = await _users.Find(FilterDefinition<User>.Empty)
@@ -437,7 +497,7 @@ public class QuizSetsController : ControllerBase
         var (_, isAdmin, _) = await GetCurrentUserContextAsync();
         if (!isAdmin)
         {
-            return StatusCode(StatusCodes.Status403Forbidden, new { error = "ADMIN_UNAUTHORIZED", message = "Bạn không có quyền Admin hoặc mật khẩu Admin không đúng." });
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "ADMIN_UNAUTHORIZED", message = "Bạn không có quyền Admin. Yêu cầu đăng nhập tài khoản Google Admin." });
         }
 
         if (string.IsNullOrWhiteSpace(request?.Email))
@@ -569,44 +629,42 @@ public class QuizSetsController : ControllerBase
         bool isAdmin = false;
         var unlockedSubjects = new List<string>();
 
-        // Check Admin Secret header
-        var adminSecretHeader = Request.Headers["x-admin-secret"].FirstOrDefault();
-        var configuredAdminSecret = _configuration["AdminSecret"] ?? "jitjfe2026";
-        if (!string.IsNullOrWhiteSpace(adminSecretHeader) && adminSecretHeader == configuredAdminSecret)
-        {
-            isAdmin = true;
-        }
-
-        // Check JWT or Claim
+        // Check JWT or Claim strictly (No header spoofing or secret bypass)
         if (User?.Identity?.IsAuthenticated == true)
         {
             email = User.FindFirst(ClaimTypes.Email)?.Value
                 ?? User.FindFirst("email")?.Value
                 ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        }
 
-        // Check fallback header for extension or local dev
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            var headerEmail = Request.Headers["x-user-email"].FirstOrDefault();
-            if (!string.IsNullOrWhiteSpace(headerEmail))
+            if (User.IsInRole("Admin"))
             {
-                email = headerEmail.Trim();
+                isAdmin = true;
             }
         }
 
         if (!string.IsNullOrWhiteSpace(email))
         {
-            var adminEmail = (_configuration["AuthProviders:Google:AdminEmail"] ?? "hnt.vn.vn@gmail.com").Trim().ToLowerInvariant();
+            var adminEmail = (_configuration["AuthProviders:Google:AdminEmail"]
+                ?? _configuration["ADMIN_EMAIL"]
+                ?? "hnt.vn.vn@gmail.com").Trim().ToLowerInvariant();
+
             if (string.Equals(email.Trim().ToLowerInvariant(), adminEmail, StringComparison.Ordinal))
             {
                 isAdmin = true;
             }
 
             var user = await _users.Find(u => u.Email != null && u.Email.ToLower() == email.Trim().ToLowerInvariant()).FirstOrDefaultAsync();
-            if (user?.UnlockedSubjects != null)
+            if (user != null)
             {
-                unlockedSubjects.AddRange(user.UnlockedSubjects.Select(s => s.ToLowerInvariant()));
+                if (string.Equals(user.Role, "Admin", StringComparison.OrdinalIgnoreCase))
+                {
+                    isAdmin = true;
+                }
+
+                if (user.UnlockedSubjects != null)
+                {
+                    unlockedSubjects.AddRange(user.UnlockedSubjects.Select(s => s.ToLowerInvariant()));
+                }
             }
         }
 

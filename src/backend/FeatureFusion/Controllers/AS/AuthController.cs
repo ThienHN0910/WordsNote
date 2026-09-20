@@ -70,11 +70,9 @@ namespace FeatureFusion.Controllers.AS
                 return StatusCode(StatusCodes.Status503ServiceUnavailable, new { Error = "Google login is not configured." });
             }
 
-            if (string.IsNullOrWhiteSpace(allowedEmail))
-            {
-                _logger.LogError("Google login is not configured. Missing AuthProviders:Google:AdminEmail");
-                return StatusCode(StatusCodes.Status503ServiceUnavailable, new { Error = "Allowed admin email is not configured." });
-            }
+            var adminEmail = (_configuration["AuthProviders:Google:AdminEmail"]
+                ?? _configuration["ADMIN_EMAIL"]
+                ?? "hnt.vn.vn@gmail.com").Trim().ToLowerInvariant();
 
             try
             {
@@ -90,16 +88,23 @@ namespace FeatureFusion.Controllers.AS
                     return Unauthorized(new { Error = "Google email is not verified." });
                 }
 
-                var normalizedAllowedEmail = allowedEmail.Trim().ToLowerInvariant();
                 var normalizedEmail = payload.Email.Trim().ToLowerInvariant();
-
-                if (!string.Equals(normalizedEmail, normalizedAllowedEmail, StringComparison.Ordinal))
-                {
-                    return Unauthorized(new { Error = "This Google account is not allowed." });
-                }
-
                 var token = await _authService.LoginWithGoogleAsync(normalizedEmail, payload.Name);
-                return Ok(token);
+                var isAdmin = string.Equals(normalizedEmail, adminEmail, StringComparison.Ordinal);
+
+                return Ok(new
+                {
+                    Token = token,
+                    token = token,
+                    User = new
+                    {
+                        Email = normalizedEmail,
+                        Name = payload.Name ?? normalizedEmail.Split('@')[0],
+                        Picture = payload.Picture,
+                        IsAdmin = isAdmin,
+                        Role = isAdmin ? "Admin" : "User"
+                    }
+                });
             }
             catch (InvalidJwtException ex)
             {

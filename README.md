@@ -42,14 +42,30 @@ WordsNote is a modern, high-performance learning platform for vocabulary, flashc
 - Auth-required focused session route: /manage/:deckId/session
 - Google sign-in is optional and used for cloud-backed session/deep-study actions
 
-### Quiz Platform (Web & Desktop)
+### Quiz & Examination Workspace (`/quiz`)
 
-- Public quiz routes: `/quizzes`, `/quizzes/:bankId`
-- Curated MLN122 question bank with 2,254 verified questions across philosophical & socio-political topics
-- **Practice Mode**: Instant feedback, explanations, and randomized choices
-- **Exam Simulation**: Timed quiz sessions with detailed scoring breakdown
-- **Vocabulary Capture**: One-click capture of new words from questions directly into the Flashcard Desk
-- **Local-First Architecture**: Seamless offline support with automatic caching and zero latency
+Interactive study & test simulation platform with complete design and interaction parity with `MLN122_FE`:
+
+- **Workspace Routes**: `/quiz`, `/quiz/:subjectId`
+- **Multi-Subject Question Banks (2,254 verified questions)**:
+  - **MLN122**: Kinh tế chính trị Mác–Lênin (598 câu) — *Môn mở tự do*
+  - **PRM393**: Flutter / Mobile (2 đề FE + 12 slide - 224 câu) — *Môn mở tự do*
+  - **JFE301**: IT Fundamentals (FE + textbook + ôn thêm - 726 câu) — *Môn khóa, yêu cầu mã mở khóa 1 lần*
+  - **JIT401**: JIT401 (FE + slide + Quiz on Thao + albazzz PT - 706 câu) — *Môn khóa, yêu cầu mã mở khóa 1 lần*
+- **Study UX & Interaction Logic**:
+  - **Immediate Evaluation**: Instant scoring for single-choice questions; dedicated "Kiểm tra" submission for multi-choice.
+  - **Comprehensive Explanations**: Detailed explanation callout banners with specific styling for incorrect answers.
+  - **Side Question Map (`SideQuestionMap`)**: Sticky 60fps grid visualizing question status (current, correct, wrong, unanswered) with star markers.
+  - **Mode & Source Filters**: Switch between All, Wrong only, Unanswered only, Starred (★), and Shuffle mode; filter by exam source (Đề FE, Ôn thêm, Quiz ôn).
+  - **Keyboard Navigation**: Full shortcuts (`A`/`B`/`C`/`D` or `1`/`2`/`3`/`4` to answer, `←`/`A` for Previous, `→`/`D` for Next, `S` to Star).
+  - **Search Drawer (`SearchDrawer`)**: Real-time fuzzy question search with instant jump.
+  - **SRS Flashcard Capture**: One-click `+ Lưu từ` button to extract vocabulary/concepts into WordsNote study decks.
+- **Security & Single-Use Unlock Code Architecture**:
+  - **Zero-Trust Identity**: Role-based access control strictly enforced via Google OAuth (`ADMIN_EMAIL=hnt.vn.vn@gmail.com`).
+  - **Zero Bypass Vulnerabilities**: Static passwords and header bypasses (`x-admin-secret`, `x-user-email`) completely eliminated.
+  - **Admin Console (`AdminModal`)**: Protected behind Google Admin authentication. Allows generating 16-character single-use unlock codes (`Convert.ToHexString(8 bytes)`), tracking redemption status, and managing student access.
+  - **Atomic Key Redemption**: Concurrency-safe MongoDB atomic `FindOneAndUpdate` eliminates race conditions.
+  - **Brute-Force Rate Limiting**: Automatic 5-minute IP/User throttle after 5 consecutive failed unlock attempts (HTTP 429).
 
 ### Browser Extension
 
@@ -147,12 +163,13 @@ Base path:
 
 Main resource groups:
 
-- Auth
-- Download Config
-- Collections
-- Cards
-- Study
-- Tests
+- Auth (`/api/auth`)
+- Download Config (`/api/download-config`)
+- Collections (`/api/collections`)
+- Cards (`/api/cards`)
+- Study (`/api/study`)
+- Tests (`/api/tests`)
+- Quiz Sets & Examination (`/api/quiz-sets`, `/api/catalog`, `/api/questions/{id}`, `/api/unlock`, `/api/admin/keys`, `/api/admin/users`)
 
 Detailed contracts are documented in docs/API_REFERENCE.md.
 
@@ -169,12 +186,14 @@ Detailed contracts are documented in docs/API_REFERENCE.md.
 
 ## Latest Release
 
-- **Current: WordsNote v1.2.0 (20/09/2026)**
-  - ✨ **Hybrid Quiz Platform**: Integrated 2,254 MLN122 questions with practice, mock exam, and instant word-capture to flashcards.
-  - 🚀 **Automated Edge Add-on Publishing**: Direct store deployment via Microsoft Edge Add-ons Publish API v1.1.
-  - 📦 **Desktop Store Packaging**: Windows 11 SDK 10.0.22621.0 support and Visual Studio Packaging Wizard alignment.
+- **Current: WordsNote v1.3.0 (20/09/2026)**
+  - 🎯 **Full Quiz Workspace Parity with MLN122_FE**: Complete port of responsive 2-column layout, sticky 60fps Question Map (`SideQuestionMap`), top subject navigation, practice controls (`QuizControls`), and real-time fuzzy search (`SearchDrawer`).
+  - 📚 **2,254 Questions Across 4 Subject Banks**: MLN122 (598), PRM393 (224), JFE301 (726), and JIT401 (706).
+  - 🔒 **Zero-Trust Access Control & Single-Use Unlock Keys**: Open subjects (MLN122, PRM393) vs restricted subjects (JFE301, JIT401). Single-use 16-character unlock code management via Admin Console.
+  - 🛡️ **Security Hardening**: Elimination of static password bypasses and header spoofing, atomic redemption via MongoDB `FindOneAndUpdate`, and anti-brute-force rate limiting.
+  - 💾 **Flashcard SRS Integration**: One-click `+ Lưu từ` to extract exam terms directly into WordsNote decks.
   - 🌐 **Showcase & Portfolio**: Featured at [https://thienhn0910.vercel.app/projects/words-note](https://thienhn0910.vercel.app/projects/words-note).
-- Previous: WordsNote v1.1.3 (21/04/2026)
+- Previous: WordsNote v1.2.0 (20/09/2026)
 - See [docs/RELEASE_NOTES.md](file:///E:/workspace/srcPrj/WordsNote/docs/RELEASE_NOTES.md) for full release details.
 - Local packaged assets: `release/microsoft-edge-addon/WordsNote-Edge-Addon-v1.2.0.zip` & `src/desktop/WordsNote.Package/AppPackages/`.
 

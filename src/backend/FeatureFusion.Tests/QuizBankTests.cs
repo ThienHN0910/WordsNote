@@ -80,4 +80,50 @@ public class QuizBankTests
         var isWrong = cleanWrongAnswers.SequenceEqual(cleanCorrectAnswers);
         Assert.False(isWrong);
     }
+
+    [Fact]
+    public void CatalogAndSubjectFiles_ShouldValidateRestrictionFlags()
+    {
+        var catalogPath = Path.Combine(QuizBanksDir, "catalog.json");
+        var catalogJson = File.ReadAllText(catalogPath);
+        using var catalogDoc = JsonDocument.Parse(catalogJson);
+        var subjects = catalogDoc.RootElement.GetProperty("subjects").EnumerateArray().ToList();
+
+        var mln = subjects.First(s => s.GetProperty("id").GetString() == "mln122");
+        var prm = subjects.First(s => s.GetProperty("id").GetString() == "prm393");
+        var jfe = subjects.First(s => s.GetProperty("id").GetString() == "jfe301");
+        var jit = subjects.First(s => s.GetProperty("id").GetString() == "jit401");
+
+        Assert.False(mln.GetProperty("isRestricted").GetBoolean());
+        Assert.False(prm.GetProperty("isRestricted").GetBoolean());
+        Assert.True(jfe.GetProperty("isRestricted").GetBoolean());
+        Assert.True(jit.GetProperty("isRestricted").GetBoolean());
+    }
+
+    [Fact]
+    public void UnlockKey_GenerationAndValidationLogic_ShouldProduceValidKeys()
+    {
+        var code = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(8)).ToUpperInvariant();
+        Assert.Equal(16, code.Length);
+        Assert.True(code.All(c => "0123456789ABCDEF".Contains(c)));
+
+        var key = new UnlockKeyDocument
+        {
+            Code = code,
+            IsUsed = false,
+            TargetSubjects = new List<string> { "jfe301", "jit401" }
+        };
+
+        Assert.False(key.IsUsed);
+        Assert.Null(key.UsedByEmail);
+
+        // Simulate redemption
+        key.IsUsed = true;
+        key.UsedAt = DateTime.UtcNow;
+        key.UsedByEmail = "student@example.com";
+
+        Assert.True(key.IsUsed);
+        Assert.NotNull(key.UsedAt);
+        Assert.Equal("student@example.com", key.UsedByEmail);
+    }
 }

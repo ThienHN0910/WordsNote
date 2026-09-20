@@ -137,3 +137,24 @@ html[data-bs-theme='dark'] .text-muted {
   border-color: var(--wn-border);
   color: var(--wn-ink);
 }
+
+.fade-in {
+  animation: wnFadeIn 0.2s ease-out forwards;
+}
+
+@keyframes wnFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.glass-panel {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+

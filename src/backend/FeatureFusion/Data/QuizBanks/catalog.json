@@ -7,7 +7,8 @@
       "name": "Kinh tế chính trị Mác–Lênin",
       "file": "data/mln122.json",
       "total": 598,
-      "color": "#2563eb"
+      "color": "#2563eb",
+      "isRestricted": false
     },
     {
       "id": "prm393",
@@ -15,7 +16,8 @@
       "name": "Flutter / Mobile (2 đề FE + 12 slide)",
       "file": "data/prm393.json",
       "total": 224,
-      "color": "#7c3aed"
+      "color": "#7c3aed",
+      "isRestricted": false
     },
     {
       "id": "jfe301",
@@ -23,7 +25,8 @@
       "name": "IT Fundamentals (FE + textbook + ôn thêm)",
       "file": "data/jfe301.json",
       "total": 726,
-      "color": "#059669"
+      "color": "#059669",
+      "isRestricted": true
     },
     {
       "id": "jit401",
@@ -31,7 +34,8 @@
       "name": "JIT401 (FE + slide + Quiz on Thao + albazzz PT)",
       "file": "data/jit401.json",
       "total": 706,
-      "color": "#dc2626"
+      "color": "#dc2626",
+      "isRestricted": true
     }
   ],
   "sources": [

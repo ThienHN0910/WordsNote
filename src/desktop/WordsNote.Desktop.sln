@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WordsNote.Desktop", "WordsNote.Desktop\WordsNote.Desktop.csproj", "{42F7FAF2-317E-4C72-825A-A51C63BA30ED}"
 EndProject
-Project("{C7167F71-6A2F-4CE4-B4C0-DC04ABF30C67}") = "WordsNote.Package", "WordsNote.Package\WordsNote.Package.wapproj", "{D81FA47B-303B-44F8-B8A5-4CDE58E9A140}"
+Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "WordsNote.Package", "WordsNote.Package\WordsNote.Package.wapproj", "{D81FA47B-303B-44F8-B8A5-4CDE58E9A140}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

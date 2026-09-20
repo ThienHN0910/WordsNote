@@ -44,6 +44,26 @@ const activeView = ref('learn');
   --wn-shadow-soft: 0 10px 28px rgba(31, 35, 51, 0.08);
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wn-bg: #101826;
+    --wn-ink: #e6ebff;
+    --wn-muted: #a4b0cc;
+    --wn-surface: #172236;
+    --wn-surface-soft: #1a2940;
+    --wn-border: #2a3a58;
+    --wn-primary: #7da5ff;
+    --wn-on-primary: #0f1c34;
+    --wn-primary-soft: #223454;
+    --wn-accent: #ffb36b;
+    --wn-shell-glow-a: rgba(62, 92, 145, 0.22);
+    --wn-shell-glow-b: rgba(242, 144, 77, 0.16);
+    --wn-topbar-bg: rgba(19, 31, 50, 0.92);
+    --wn-topbar-border: #2a3c5f;
+    --wn-shadow-soft: 0 12px 34px rgba(0, 0, 0, 0.35);
+  }
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

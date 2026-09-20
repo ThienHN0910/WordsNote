@@ -179,6 +179,7 @@ onMounted(async () => {
 
 .btn-outline-custom {
   border: 1px solid var(--wn-card-border, #cbd5e1);
+  background: var(--wn-surface, #ffffff);
   color: var(--wn-ink, #1e293b);
   font-weight: 600;
   border-radius: 10px;
@@ -193,6 +194,7 @@ onMounted(async () => {
 
 .btn-outline-custom:hover {
   background: var(--wn-badge-bg, #f1f5f9);
+  color: var(--wn-ink, #1e293b);
 }
 
 .btn-primary-custom {

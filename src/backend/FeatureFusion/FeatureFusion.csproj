@@ -23,6 +23,9 @@
 
   <ItemGroup>
     <None Update="*.json" CopyToOutputDirectory="Never" />
+    <Content Update="Data\QuizBanks\**\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   
   <ItemGroup>

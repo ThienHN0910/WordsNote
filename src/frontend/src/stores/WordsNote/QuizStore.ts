@@ -38,14 +38,14 @@ export const useQuizStore = defineStore('quizStore', () => {
 
   // User State
   const token = ref<string>(localStorage.getItem('fe_learn_token') || localStorage.getItem('access_token') || '')
-  const user = ref<QuizUser | null>(() => {
+  const user = ref<QuizUser | null>((() => {
     try {
       const raw = localStorage.getItem('fe_learn_user')
       return raw ? JSON.parse(raw) : null
     } catch {
       return null
     }
-  })
+  })())
 
   // Computed Properties
   const currentSubject = computed(() => {

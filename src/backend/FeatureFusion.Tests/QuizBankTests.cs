@@ -19,9 +19,9 @@ public class QuizBankTests
         using var catalogDoc = JsonDocument.Parse(catalogJson);
         var subjects = catalogDoc.RootElement.GetProperty("subjects").EnumerateArray().ToList();
 
-        Assert.Equal(4, subjects.Count);
+        Assert.Equal(7, subjects.Count);
 
-        var expectedCodes = new HashSet<string> { "MLN122", "PRM393", "JFE301", "JIT401" };
+        var expectedCodes = new HashSet<string> { "MLN122", "PRM393", "JFE301", "JIT401", "PRN232", "ITE302c", "HCM202" };
         int totalQuestions = 0;
 
         foreach (var sub in subjects)
@@ -48,7 +48,7 @@ public class QuizBankTests
             Assert.True(q1.TryGetProperty("answers", out var ans) && ans.ValueKind == JsonValueKind.Array);
         }
 
-        Assert.Equal(2254, totalQuestions);
+        Assert.Equal(4364, totalQuestions);
     }
 
     [Fact]
@@ -175,4 +175,52 @@ public class QuizBankTests
         recordFailure();
         Assert.True(isRateLimited());
     }
+
+    [Fact]
+    public void AdminQuizSetModel_CreationAndRestrictionToggle_ShouldWorkCorrectly()
+    {
+        var createRequest = new CreateQuizSetRequestDTO
+        {
+            Id = "test101",
+            Code = "TEST101",
+            Title = "Testing Subject 101",
+            Description = "Subject for testing",
+            Color = "#10b981",
+            IsRestricted = true
+        };
+
+        var doc = new QuizSetDocument
+        {
+            Id = createRequest.Id.Trim().ToLowerInvariant(),
+            Code = createRequest.Code.Trim().ToUpperInvariant(),
+            Title = createRequest.Title.Trim(),
+            Description = createRequest.Description,
+            Color = createRequest.Color,
+            TotalQuestions = 0,
+            IsRestricted = createRequest.IsRestricted,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        Assert.Equal("test101", doc.Id);
+        Assert.Equal("TEST101", doc.Code);
+        Assert.True(doc.IsRestricted);
+
+        // Toggle restriction
+        var toggleRequest = new ToggleRestrictionRequestDTO { IsRestricted = false };
+        doc.IsRestricted = toggleRequest.IsRestricted;
+        Assert.False(doc.IsRestricted);
+
+        // Update metadata
+        var updateRequest = new UpdateQuizSetRequestDTO
+        {
+            Title = "Updated Title",
+            Color = "#3b82f6"
+        };
+        if (!string.IsNullOrWhiteSpace(updateRequest.Title)) doc.Title = updateRequest.Title;
+        if (!string.IsNullOrWhiteSpace(updateRequest.Color)) doc.Color = updateRequest.Color;
+
+        Assert.Equal("Updated Title", doc.Title);
+        Assert.Equal("#3b82f6", doc.Color);
+    }
 }
+

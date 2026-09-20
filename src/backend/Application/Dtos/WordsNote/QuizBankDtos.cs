@@ -96,3 +96,28 @@ public class UserAccessDTO
     public bool IsAdmin { get; set; }
 }
 
+public class CreateQuizSetRequestDTO
+{
+    public string Id { get; set; } = default!;
+    public string Code { get; set; } = default!;
+    public string Title { get; set; } = default!;
+    public string? Description { get; set; }
+    public string? Color { get; set; }
+    public bool IsRestricted { get; set; }
+}
+
+public class UpdateQuizSetRequestDTO
+{
+    public string? Code { get; set; }
+    public string? Title { get; set; }
+    public string? Description { get; set; }
+    public string? Color { get; set; }
+    public bool? IsRestricted { get; set; }
+}
+
+public class ToggleRestrictionRequestDTO
+{
+    public bool IsRestricted { get; set; }
+}
+
+

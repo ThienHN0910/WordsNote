@@ -46,6 +46,13 @@
           >
             👥 Danh sách Học viên ({{ users.length }})
           </button>
+          <button
+            class="tab-btn"
+            :class="{ 'active': activeTab === 'quizsets' }"
+            @click="switchTab('quizsets')"
+          >
+            📚 Quản lý Bộ môn ({{ quizSets.length }})
+          </button>
         </div>
 
         <!-- TAB 1: KEY MANAGEMENT -->
@@ -195,6 +202,148 @@
             </table>
           </div>
         </div>
+
+        <!-- TAB 3: QUIZ SETS MANAGEMENT -->
+        <div v-else-if="activeTab === 'quizsets'" class="tab-content fade-in">
+          <div class="table-header">
+            <h4 class="section-title">Danh sách Bộ câu hỏi / Môn học ({{ quizSets.length }})</h4>
+            <div class="header-actions-group">
+              <button class="btn-create-set" @click="openCreateSetModal">
+                <i class="fa-solid fa-plus me-1"></i> Thêm môn học mới
+              </button>
+              <button class="refresh-btn" @click="fetchQuizSets"><i class="fa-solid fa-rotate me-1"></i> Làm mới</button>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Mã môn</th>
+                  <th>Tên môn học</th>
+                  <th>Số câu hỏi</th>
+                  <th>Trạng thái truy cập</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="s in quizSets" :key="s.id">
+                  <td>
+                    <span class="badge code-badge" :style="{ backgroundColor: s.color || '#2563eb' }">
+                      {{ s.code }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="subject-info">
+                      <strong class="subject-title">{{ s.title || s.name }}</strong>
+                      <div v-if="s.description" class="subject-desc">{{ s.description }}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge count-badge">{{ s.totalQuestions || s.total || 0 }} câu</span>
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      class="toggle-lock-btn"
+                      :class="s.isRestricted ? 'is-locked' : 'is-open'"
+                      :title="s.isRestricted ? 'Bấm để mở tự do cho mọi người' : 'Bấm để khóa VIP'"
+                      @click="onToggleRestriction(s)"
+                    >
+                      <i :class="s.isRestricted ? 'fa-solid fa-lock me-1' : 'fa-solid fa-lock-open me-1'"></i>
+                      {{ s.isRestricted ? 'Khóa VIP' : 'Mở tự do' }}
+                    </button>
+                  </td>
+                  <td>
+                    <div class="action-btn-group">
+                      <button class="edit-btn" title="Chỉnh sửa môn học" @click="openEditSetModal(s)">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                      </button>
+                      <button class="del-btn" title="Xóa môn học này" @click="onDeleteSet(s)">
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-if="quizSets.length === 0">
+                  <td colspan="5" class="empty-col">Chưa có môn học nào trong danh sách.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nested Modal: Create / Edit Quiz Set -->
+      <div v-if="isSetModalOpen" class="nested-modal-backdrop" @click.self="closeSetModal">
+        <div class="nested-modal-card glass-panel fade-in">
+          <div class="nested-header">
+            <h4>{{ isEditingSet ? '✏️ Chỉnh Sửa Môn Học' : '✨ Thêm Môn Học Mới' }}</h4>
+            <button class="close-btn" @click="closeSetModal">&times;</button>
+          </div>
+          <div class="nested-body">
+            <div class="form-group mb-3">
+              <label class="field-label">ID Môn (Slug không dấu, vd: prn232, csd201):</label>
+              <input
+                v-model="setForm.id"
+                type="text"
+                class="form-control"
+                placeholder="vd: prn232"
+                :disabled="isEditingSet"
+              />
+            </div>
+            <div class="form-group mb-3">
+              <label class="field-label">Mã môn (Code hiển thị, vd: PRN232):</label>
+              <input
+                v-model="setForm.code"
+                type="text"
+                class="form-control"
+                placeholder="vd: PRN232"
+              />
+            </div>
+            <div class="form-group mb-3">
+              <label class="field-label">Tên môn học (Title):</label>
+              <input
+                v-model="setForm.title"
+                type="text"
+                class="form-control"
+                placeholder="vd: Lập trình .NET & Web API"
+              />
+            </div>
+            <div class="form-group mb-3">
+              <label class="field-label">Mô tả ngắn:</label>
+              <textarea
+                v-model="setForm.description"
+                class="form-control text-area"
+                rows="2"
+                placeholder="Mô tả nội dung môn học..."
+              ></textarea>
+            </div>
+            <div class="form-row mb-3">
+              <div class="form-group flex-1">
+                <label class="field-label">Màu sắc chủ đạo:</label>
+                <div class="color-picker-wrapper">
+                  <input v-model="setForm.color" type="color" class="color-picker" />
+                  <code class="color-code">{{ setForm.color }}</code>
+                </div>
+              </div>
+              <div class="form-group flex-1 checkbox-wrapper">
+                <label class="checkbox-label">
+                  <input v-model="setForm.isRestricted" type="checkbox" class="styled-checkbox" />
+                  <span>🔒 Khóa VIP (Cần mã mở khóa)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="nested-footer">
+            <button class="btn-cancel" @click="closeSetModal">Hủy</button>
+            <button class="submit-btn" :disabled="savingSet" @click="onSaveSet">
+              <span v-if="savingSet" class="spinner-border spinner-border-sm me-1"></span>
+              <i v-else class="fa-solid fa-check me-1"></i>
+              {{ isEditingSet ? 'Lưu Thay Đổi' : 'Tạo Môn Học' }}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -203,7 +352,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { QuizAPI } from '@/apis/WordsNote/QuizAPI'
-import type { UnlockKeyItem, AdminUserItem, QuizUser } from '@/types/WordsNote'
+import type { UnlockKeyItem, AdminUserItem, QuizUser, QuizSet } from '@/types/WordsNote'
 
 const props = withDefaults(
   defineProps<{
@@ -221,15 +370,28 @@ const emit = defineEmits<{
   (e: 'open-login'): void
 }>()
 
-const activeTab = ref<'keys' | 'users'>('keys')
+const activeTab = ref<'keys' | 'users' | 'quizsets'>('keys')
 const keys = ref<UnlockKeyItem[]>([])
 const users = ref<AdminUserItem[]>([])
+const quizSets = ref<QuizSet[]>([])
 const customCode = ref('')
 const batchCount = ref(1)
 const targetOption = ref('restricted')
 
 const loading = ref(false)
 const genStatus = ref('')
+
+const isSetModalOpen = ref(false)
+const isEditingSet = ref(false)
+const savingSet = ref(false)
+const setForm = ref({
+  id: '',
+  code: '',
+  title: '',
+  description: '',
+  color: '#2563eb',
+  isRestricted: false
+})
 
 watch(
   () => [props.show, props.user?.isAdmin],
@@ -238,15 +400,17 @@ watch(
       genStatus.value = ''
       fetchKeys()
       fetchUsers()
+      fetchQuizSets()
     }
   },
   { immediate: true }
 )
 
-function switchTab(tab: 'keys' | 'users') {
+function switchTab(tab: 'keys' | 'users' | 'quizsets') {
   activeTab.value = tab
   if (tab === 'keys') fetchKeys()
   if (tab === 'users') fetchUsers()
+  if (tab === 'quizsets') fetchQuizSets()
 }
 
 async function fetchKeys() {
@@ -269,6 +433,109 @@ async function fetchUsers() {
   }
 }
 
+async function fetchQuizSets() {
+  if (!props.user?.isAdmin) return
+  try {
+    const res = await QuizAPI.getAdminQuizSets()
+    quizSets.value = res.data?.sets || []
+  } catch (err) {
+    console.error('Failed to fetch admin quiz sets:', err)
+  }
+}
+
+function openCreateSetModal() {
+  isEditingSet.value = false
+  setForm.value = {
+    id: '',
+    code: '',
+    title: '',
+    description: '',
+    color: '#2563eb',
+    isRestricted: false
+  }
+  isSetModalOpen.value = true
+}
+
+function openEditSetModal(set: QuizSet) {
+  isEditingSet.value = true
+  setForm.value = {
+    id: set.id,
+    code: set.code,
+    title: set.title || set.name || '',
+    description: set.description || '',
+    color: set.color || '#2563eb',
+    isRestricted: !!set.isRestricted
+  }
+  isSetModalOpen.value = true
+}
+
+function closeSetModal() {
+  isSetModalOpen.value = false
+}
+
+async function onSaveSet() {
+  if (!props.user?.isAdmin) return
+  if (!setForm.value.id.trim() || !setForm.value.code.trim() || !setForm.value.title.trim()) {
+    alert('Vui lòng nhập đầy đủ ID, Mã môn và Tên môn học.')
+    return
+  }
+
+  savingSet.value = true
+  try {
+    if (isEditingSet.value) {
+      await QuizAPI.updateQuizSet(setForm.value.id, {
+        code: setForm.value.code,
+        title: setForm.value.title,
+        description: setForm.value.description,
+        color: setForm.value.color,
+        isRestricted: setForm.value.isRestricted
+      })
+      alert(`Đã cập nhật môn ${setForm.value.code} thành công!`)
+    } else {
+      await QuizAPI.createQuizSet({
+        id: setForm.value.id,
+        code: setForm.value.code,
+        title: setForm.value.title,
+        description: setForm.value.description,
+        color: setForm.value.color,
+        isRestricted: setForm.value.isRestricted
+      })
+      alert(`Đã tạo môn ${setForm.value.code} thành công!`)
+    }
+    closeSetModal()
+    await fetchQuizSets()
+  } catch (err: any) {
+    alert(err?.response?.data?.message || 'Thao tác thất bại.')
+  } finally {
+    savingSet.value = false
+  }
+}
+
+async function onToggleRestriction(set: QuizSet) {
+  if (!props.user?.isAdmin) return
+  const newRestricted = !set.isRestricted
+  try {
+    await QuizAPI.toggleQuizSetRestriction(set.id, newRestricted)
+    set.isRestricted = newRestricted
+  } catch (err: any) {
+    alert(err?.response?.data?.message || 'Cập nhật trạng thái khóa thất bại.')
+  }
+}
+
+async function onDeleteSet(set: QuizSet) {
+  if (!props.user?.isAdmin) return
+  if (!confirm(`Bạn có chắc chắn muốn xóa môn ${set.code} - ${set.title || set.name}? Toàn bộ câu hỏi của môn này cũng sẽ bị xóa!`)) {
+    return
+  }
+  try {
+    await QuizAPI.deleteQuizSet(set.id)
+    alert(`Đã xóa môn ${set.code} thành công!`)
+    await fetchQuizSets()
+  } catch (err: any) {
+    alert(err?.response?.data?.message || 'Xóa môn học thất bại.')
+  }
+}
+
 async function onGenerateKeys() {
   if (!props.user?.isAdmin) return
   loading.value = true
@@ -276,7 +543,7 @@ async function onGenerateKeys() {
   try {
     let targets = ['jfe301', 'jit401']
     if (targetOption.value === 'all') {
-      targets = ['mln122', 'prm393', 'jfe301', 'jit401']
+      targets = ['mln122', 'prm393', 'jfe301', 'jit401', 'prn232', 'ite302c', 'hcm202']
     } else if (targetOption.value !== 'restricted') {
       targets = [targetOption.value]
     }
@@ -733,5 +1000,248 @@ function formatDate(isoStr: string) {
   color: #059669;
   font-size: 0.85rem;
   font-weight: 600;
+}
+
+.header-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-create-set {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: none;
+  background: #2563eb;
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: background 0.2s;
+}
+
+.btn-create-set:hover {
+  background: #1d4ed8;
+}
+
+.code-badge {
+  font-family: monospace;
+  font-weight: 700;
+  color: #ffffff;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.subject-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.subject-title {
+  color: var(--wn-ink, #0f172a);
+  font-size: 0.88rem;
+}
+
+.subject-desc {
+  font-size: 0.75rem;
+  color: var(--wn-ink-muted, #64748b);
+}
+
+.count-badge {
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--wn-ink, #0f172a);
+  font-weight: 600;
+}
+
+.toggle-lock-btn {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.toggle-lock-btn.is-locked {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid #ef4444;
+  color: #dc2626;
+}
+
+.toggle-lock-btn.is-locked:hover {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.toggle-lock-btn.is-open {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid #10b981;
+  color: #059669;
+}
+
+.toggle-lock-btn.is-open:hover {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.action-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.edit-btn {
+  background: transparent;
+  border: none;
+  color: #2563eb;
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+
+.edit-btn:hover {
+  color: #1d4ed8;
+}
+
+/* Nested Modal for Create/Edit Quiz Set */
+.nested-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 16px;
+}
+
+.nested-modal-card {
+  width: 100%;
+  max-width: 480px;
+  border-radius: 16px;
+  background: var(--wn-card-bg, #ffffff);
+  border: 1px solid var(--wn-card-border, #e2e8f0);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+}
+
+.nested-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--wn-card-border, #e2e8f0);
+  padding-bottom: 10px;
+}
+
+.nested-header h4 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mb-3 {
+  margin-bottom: 12px;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.form-control {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--wn-card-border, #e2e8f0);
+  background: var(--wn-card-bg, #ffffff);
+  color: var(--wn-ink, #0f172a);
+  font-size: 0.85rem;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+.text-area {
+  resize: vertical;
+}
+
+.color-picker-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-picker {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--wn-card-border, #e2e8f0);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 2px;
+  background: transparent;
+}
+
+.color-code {
+  font-family: monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 6px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 600;
+}
+
+.styled-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.nested-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--wn-card-border, #e2e8f0);
+}
+
+.btn-cancel {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--wn-card-border, #e2e8f0);
+  background: transparent;
+  color: var(--wn-ink, #0f172a);
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.btn-cancel:hover {
+  background: rgba(148, 163, 184, 0.1);
 }
 </style>

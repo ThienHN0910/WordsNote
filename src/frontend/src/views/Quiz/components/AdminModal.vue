@@ -439,7 +439,13 @@ async function fetchQuizSets() {
     const res = await QuizAPI.getAdminQuizSets()
     quizSets.value = res.data?.sets || []
   } catch (err) {
-    console.error('Failed to fetch admin quiz sets:', err)
+    console.warn('Failed to fetch admin quiz sets, falling back to public quiz sets:', err)
+    try {
+      const fallback = await QuizAPI.getQuizSets()
+      quizSets.value = fallback.data || []
+    } catch (fallbackErr) {
+      console.error('Failed to fetch quiz sets fallback:', fallbackErr)
+    }
   }
 }
 

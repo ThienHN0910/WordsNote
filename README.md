@@ -1,6 +1,6 @@
 # WordsNote
 
-> 🌐 **Project Showcase & Portfolio:** [https://thienhn0910.vercel.app/projects/words-note](https://thienhn0910.vercel.app/projects/words-note)
+> 🌐 **Project Showcase & Portfolio:** [https://thienhn.io.vn/projects/words-note](https://thienhn.io.vn/projects/words-note)
 
 WordsNote is a modern, high-performance learning platform for vocabulary, flashcards, and quiz examination, delivered across multiple platforms:
 
@@ -198,7 +198,7 @@ Detailed contracts are documented in docs/API_REFERENCE.md.
   - 🔒 **Zero-Trust Access Control & Single-Use Unlock Keys**: Open subjects (MLN122, PRM393) vs restricted subjects (JFE301, JIT401). Single-use 16-character unlock code management via Admin Console.
   - 🛡️ **Security Hardening**: Elimination of static password bypasses and header spoofing, atomic redemption via MongoDB `FindOneAndUpdate`, and anti-brute-force rate limiting.
   - 💾 **Flashcard SRS Integration**: One-click `+ Lưu từ` to extract exam terms directly into WordsNote decks.
-  - 🌐 **Showcase & Portfolio**: Featured at [https://thienhn0910.vercel.app/projects/words-note](https://thienhn0910.vercel.app/projects/words-note).
+  - 🌐 **Showcase & Portfolio**: Featured at [https://thienhn.io.vn/projects/words-note](https://thienhn.io.vn/projects/words-note).
 - Previous: WordsNote v1.2.0 (20/09/2026)
 - See [docs/RELEASE_NOTES.md](file:///E:/workspace/srcPrj/WordsNote/docs/RELEASE_NOTES.md) for full release details.
 - Local packaged assets: `release/microsoft-edge-addon/WordsNote-Edge-Addon-v1.2.0.zip` & `src/desktop/WordsNote.Package/AppPackages/`.
@@ -219,7 +219,7 @@ Recent builds executed successfully for:
 
 ## Featured Links & Portfolio
  
-- 🌐 **Project Showcase & Portfolio**: [https://thienhn0910.vercel.app/projects/words-note](https://thienhn0910.vercel.app/projects/words-note)
+- 🌐 **Project Showcase & Portfolio**: [https://thienhn.io.vn/projects/words-note](https://thienhn.io.vn/projects/words-note)
 - 🛒 **Microsoft Edge Add-on**: [WordsNote on Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/wordsnote/clocbppplpjhgkhcjhggljebocijhkpk)
 - 💻 **Desktop App**: Packaged via MSIX for Microsoft Store
 

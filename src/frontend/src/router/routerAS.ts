@@ -5,6 +5,10 @@ const routesAS: Array<RouteRecordRaw> = [
     path: '/login',
     name: 'login',
     component: () => import('@/pages/AS/LoginPage.vue'),
+    meta: {
+      title: 'Đăng nhập WordsNote Sync',
+      robots: 'noindex, nofollow',
+    },
   },
   {
     path: '/register',

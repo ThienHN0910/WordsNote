@@ -319,7 +319,7 @@ export const useQuizStore = defineStore('quizStore', () => {
 
   function jump(targetNum: number) {
     if (!targetNum || !queue.value.length) return
-    const idx = queue.value.findIndex((q) => q.questionNumber === targetNum || q.id === String(targetNum) || q.id === targetNum)
+    const idx = queue.value.findIndex((q) => q.questionNumber === targetNum || q.id === String(targetNum))
     if (idx >= 0) {
       pos.value = idx
       loadCurrentQuestionState()

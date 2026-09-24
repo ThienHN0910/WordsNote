@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Trang chủ Landing -->
+  <url>
+    <loc>https://words-note.thienhn.io.vn/</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <!-- Khám phá Quiz Sets -->
+  <url>
+    <loc>https://words-note.thienhn.io.vn/quiz</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <!-- Quiz Set MLN122 -->
+  <url>
+    <loc>https://words-note.thienhn.io.vn/quiz/mln122</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Quiz Set PRM393 -->
+  <url>
+    <loc>https://words-note.thienhn.io.vn/quiz/prm393</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Quiz Set JFE301 -->
+  <url>
+    <loc>https://words-note.thienhn.io.vn/quiz/jfe301</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Quiz Set JIT401 -->
+  <url>
+    <loc>https://words-note.thienhn.io.vn/quiz/jit401</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Download App & Extension -->
+  <url>
+    <loc>https://words-note.thienhn.io.vn/download</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <!-- Privacy Policy -->
+  <url>
+    <loc>https://words-note.thienhn.io.vn/privacy-policy</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+</urlset>

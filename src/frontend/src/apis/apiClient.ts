@@ -5,8 +5,20 @@ import { pinia } from '@/stores/pinia';
 
 const authStore = useAuthStore(pinia);
 
+function getBaseUrl() {
+  const envUrl = import.meta.env.VITE_APP_API_URL;
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim().length > 0) {
+    return envUrl.trim();
+  }
+  // When running on HTTPS production domain, prefer relative proxy to avoid Mixed Content
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+    return '';
+  }
+  return 'http://words-note.runasp.net';
+}
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_APP_API_URL,
+  baseURL: getBaseUrl(),
   headers: {
     'Content-Type': 'application/json'
   }
@@ -70,8 +82,13 @@ function isProtectedApiRequest(config: { url?: string; method?: string } | undef
 apiClient.interceptors.request.use(config => {
   authStore.rehydrateFromPersistedState();
 
-  const token = authStore.auth_token;
-  if (token) {
+  const token =
+    authStore.auth_token ||
+    (typeof window !== 'undefined'
+      ? localStorage.getItem('fe_learn_token') || localStorage.getItem('access_token')
+      : null);
+
+  if (token && !hasAuthorizationHeader(config)) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;

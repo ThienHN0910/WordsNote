@@ -1,6 +1,8 @@
 # WordsNote
 
-> 🌐 **Project Showcase & Portfolio:** [https://thienhn.io.vn/projects/words-note](https://thienhn.io.vn/projects/words-note)
+> 🌐 **Production Web Application:** [https://words-note.thienhn.io.vn/](https://words-note.thienhn.io.vn/)  
+> 🌐 **Project Showcase & Portfolio:** [https://thienhn.io.vn/projects/words-note](https://thienhn.io.vn/projects/words-note)  
+> 📋 **Desktop & Extension Sync Status:** [docs/DESKTOP_EXTENSION_SYNC_NOTE.md](docs/DESKTOP_EXTENSION_SYNC_NOTE.md)
 
 WordsNote is a modern, high-performance learning platform for vocabulary, flashcards, and quiz examination, delivered across multiple platforms:
 

@@ -4,7 +4,9 @@
     <main class="app-main">
       <RouterView v-slot="{ Component }">
         <Suspense timeout="0">
-          <component :is="Component" />
+          <div class="page-content-wrapper">
+            <component :is="Component" />
+          </div>
 
           <template #fallback>
             <AppLoading

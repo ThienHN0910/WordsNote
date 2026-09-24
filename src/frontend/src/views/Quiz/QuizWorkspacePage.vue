@@ -172,6 +172,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuizStore } from '@/stores/WordsNote/QuizStore'
+import { useAuthStore } from '@/stores/AS/AuthStore'
 import { useThemeStore } from '@/stores/CFS/ThemeSettingStore'
 import { StudyAPI } from '@/apis/WordsNote/StudyAPI'
 import type { StudyDeck } from '@/types/WordsNote'
@@ -188,6 +189,7 @@ import GoogleLoginModal from './components/GoogleLoginModal.vue'
 const route = useRoute()
 const router = useRouter()
 const quizStore = useQuizStore()
+const authStore = useAuthStore()
 const themeStore = useThemeStore()
 
 // Modals State
@@ -273,6 +275,7 @@ function toggleTheme() {
 
 function onLogout() {
   quizStore.logout()
+  authStore.clearAuthToken()
 }
 
 async function onRedeemKey({ code, onSuccess, onError }: { code: string; onSuccess: (msg?: string) => void; onError: (msg?: string) => void }) {
@@ -289,22 +292,22 @@ async function onGoogleLoginSuccess(credential: string) {
   try {
     // Authenticate with backend /api/auth/google
     const res = await QuizAPI.loginWithGoogle(credential)
-    const backendToken = res.data?.token || res.data?.Token || credential
+    const backendToken = res.data?.token || (res.data as any)?.Token || credential
     const backendUser = res.data?.user || (res.data as any)?.User
 
     const adminEmail = import.meta.env.VITE_GOOGLE_ALLOWED_EMAIL || 'hnt.vn.vn@gmail.com'
     const isAdmin = backendUser?.isAdmin || backendUser?.email?.toLowerCase() === adminEmail.toLowerCase()
 
-    quizStore.setUser(
-      {
-        email: backendUser?.email || '',
-        name: backendUser?.name || backendUser?.email?.split('@')[0] || 'User',
-        picture: backendUser?.picture,
-        unlockedSubjects: isAdmin ? ['mln122', 'prm393', 'jfe301', 'jit401'] : [],
-        isAdmin
-      },
-      backendToken
-    )
+    const userProfile = {
+      email: backendUser?.email || '',
+      name: backendUser?.name || backendUser?.email?.split('@')[0] || 'User',
+      picture: backendUser?.picture,
+      unlockedSubjects: isAdmin ? ['mln122', 'prm393', 'jfe301', 'jit401'] : (backendUser?.unlockedSubjects || []),
+      isAdmin
+    }
+
+    quizStore.setUser(userProfile, backendToken)
+    authStore.setAuthSession(backendToken, userProfile)
 
     await quizStore.fetchCatalog()
     await quizStore.fetchQuestions(quizStore.activeSubjectId)
@@ -325,16 +328,16 @@ async function onGoogleLoginSuccess(credential: string) {
       const adminEmail = import.meta.env.VITE_GOOGLE_ALLOWED_EMAIL || 'hnt.vn.vn@gmail.com'
       const isAdmin = payload.email?.toLowerCase() === adminEmail.toLowerCase()
 
-      quizStore.setUser(
-        {
-          email: payload.email,
-          name: payload.name || payload.email.split('@')[0],
-          picture: payload.picture,
-          unlockedSubjects: isAdmin ? ['mln122', 'prm393', 'jfe301', 'jit401'] : [],
-          isAdmin
-        },
-        credential
-      )
+      const userProfile = {
+        email: payload.email,
+        name: payload.name || payload.email.split('@')[0],
+        picture: payload.picture,
+        unlockedSubjects: isAdmin ? ['mln122', 'prm393', 'jfe301', 'jit401'] : [],
+        isAdmin
+      }
+
+      quizStore.setUser(userProfile, credential)
+      authStore.setAuthSession(credential, userProfile)
 
       await quizStore.fetchCatalog()
       await quizStore.fetchQuestions(quizStore.activeSubjectId)

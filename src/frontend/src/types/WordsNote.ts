@@ -69,6 +69,7 @@ export interface QuizQuestion {
   choose: number
   explanation?: string
   note?: string
+  alt?: string
   source?: string
   exam?: string
 }

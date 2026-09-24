@@ -175,6 +175,7 @@ import { useQuizStore } from '@/stores/WordsNote/QuizStore'
 import { useAuthStore } from '@/stores/AS/AuthStore'
 import { useThemeStore } from '@/stores/CFS/ThemeSettingStore'
 import { StudyAPI } from '@/apis/WordsNote/StudyAPI'
+import { QuizAPI } from '@/apis/WordsNote/QuizAPI'
 import type { StudyDeck } from '@/types/WordsNote'
 
 import HeaderNavbar from './components/HeaderNavbar.vue'
@@ -200,7 +201,7 @@ const showLoginModal = ref(false)
 
 // Flashcard Add Word Modal State
 const showAddWordModal = ref(false)
-const desks = ref<StudyDeck[]>([])
+const decks = ref<StudyDeck[]>([])
 const selectedDeckId = ref('')
 const newWordFront = ref('')
 const newWordBack = ref('')
@@ -402,9 +403,9 @@ function handleGlobalKeydown(e: KeyboardEvent) {
 async function loadStudyDecks() {
   try {
     const res = await StudyAPI.getDecks()
-    desks.value = res.data
-    if (desks.value.length > 0) {
-      selectedDeckId.value = desks.value[0].id
+    decks.value = res.data
+    if (decks.value.length > 0) {
+      selectedDeckId.value = decks.value[0].id
     }
   } catch {}
 }
@@ -415,13 +416,15 @@ function openAddWordModal() {
   showAddWordModal.value = true
 }
 
-async function saveWordToDesk() {
+async function saveWordToDeck() {
   if (!newWordFront.value.trim() || !selectedDeckId.value) return
   try {
-    await StudyAPI.createCard(selectedDeckId.value, {
+    await StudyAPI.createCard({
+      collectionId: selectedDeckId.value,
       front: newWordFront.value.trim(),
       back: newWordBack.value.trim(),
-      tags: [activeSubjectCode.value, 'quiz']
+      hint: '',
+      tags: [activeSubjectCode.value, 'quiz'],
     })
     showAddWordModal.value = false
     alert('Đã lưu từ vựng vào Flashcard!')

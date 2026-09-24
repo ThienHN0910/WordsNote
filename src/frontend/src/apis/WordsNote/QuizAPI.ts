@@ -41,6 +41,7 @@ export const QuizAPI = {
         picture?: string
         isAdmin: boolean
         role: string
+        unlockedSubjects?: string[]
       }
     }>('/api/auth/google', { idToken })
   },

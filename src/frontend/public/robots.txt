@@ -1,0 +1,17 @@
+# WordsNote robots.txt
+# https://words-note.thienhn.io.vn
+
+User-agent: *
+Allow: /
+Allow: /quiz
+Allow: /quiz/*
+Allow: /download
+Allow: /privacy-policy
+Disallow: /manage
+Disallow: /manage/*
+Disallow: /login
+Disallow: /register
+Disallow: /logout
+Disallow: /api/
+
+Sitemap: https://words-note.thienhn.io.vn/sitemap.xml

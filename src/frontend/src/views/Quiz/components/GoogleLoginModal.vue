@@ -55,9 +55,11 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
+import { loadGoogleIdentityScript } from '@/services/AS/GoogleIdentityLoader'
+
 onMounted(() => {
   if (props.show) {
-    initGoogleAuth()
+    void initGoogleAuth()
   }
 })
 
@@ -65,33 +67,42 @@ watch(
   () => props.show,
   (newVal) => {
     if (newVal) {
-      setTimeout(initGoogleAuth, 100)
+      setTimeout(() => void initGoogleAuth(), 100)
     }
   }
 )
 
-function initGoogleAuth() {
+async function initGoogleAuth() {
+  try {
+    await loadGoogleIdentityScript()
+  } catch (err) {
+    emit('login-error', 'Không thể tải Google Identity Service. Vui lòng thử lại.')
+    return
+  }
+
   const win = window as any
   if (win.google && win.google.accounts && win.google.accounts.id) {
-    win.google.accounts.id.initialize({
-      client_id: props.clientId,
-      callback: handleCredentialResponse,
-      auto_select: false
-    })
-
-    const btnContainer = document.getElementById('googleBtnContainer')
-    if (btnContainer) {
-      btnContainer.innerHTML = ''
-      win.google.accounts.id.renderButton(btnContainer, {
-        theme: 'outline',
-        size: 'large',
-        text: 'signin_with',
-        shape: 'pill',
-        width: 280
+    try {
+      win.google.accounts.id.initialize({
+        client_id: props.clientId,
+        callback: handleCredentialResponse,
+        auto_select: false
       })
+
+      const btnContainer = document.getElementById('googleBtnContainer')
+      if (btnContainer) {
+        btnContainer.innerHTML = ''
+        win.google.accounts.id.renderButton(btnContainer, {
+          theme: 'outline',
+          size: 'large',
+          text: 'signin_with',
+          shape: 'pill',
+          width: 280
+        })
+      }
+    } catch (e: any) {
+      emit('login-error', e?.message || 'Lỗi khởi tạo nút Google Login')
     }
-  } else {
-    setTimeout(initGoogleAuth, 300)
   }
 }
 

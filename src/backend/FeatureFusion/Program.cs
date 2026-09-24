@@ -71,8 +71,8 @@ app.UseExceptionHandler(errorApp =>
     });
 });
 
-app.UseHttpsRedirection();
 app.UseCors("AllowVue");
+app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
